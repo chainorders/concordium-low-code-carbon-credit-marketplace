@@ -1,0 +1,23 @@
+{
+	"folders": [
+		{
+			"path": "contracts/cis2-common-utils"
+		},
+		{
+			"path": "contracts/cis2-fractionalizer"
+		},
+		{
+			"path": "contracts/cis2-market"
+		},
+		{
+			"path": "contracts/cis2-multi"
+		},
+		{
+			"path": "dapps/market-ui"
+		},
+		{
+			"path": "dapps/common-ui"
+		}
+	],
+	"settings": {}
+}
