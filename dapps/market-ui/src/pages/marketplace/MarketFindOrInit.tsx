@@ -1,14 +1,14 @@
-import { ContractInfo } from "common-ui";
 import React from "react";
 
 import { WalletApi } from "@concordium/browser-wallet-api-helpers";
 import { ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk";
 import { Container, Paper, Stack, Typography } from "@mui/material";
 
-import ContractFindInstance from "../components/ContractFindInstance";
-import MarketplaceContractInit from "../components/MarketplaceContractInit";
+import ContractFindInstance from "../../components/ContractFindInstance";
+import MarketplaceContractInit from "../../components/MarketplaceContractInit";
+import { ContractInfo } from "../../models/ConcordiumContractClient";
 
-function ContractFindInstanceOrInit(props: {
+function MarketFindOrInit(props: {
   grpcClient: ConcordiumGRPCClient;
   provider: WalletApi;
   account: string;
@@ -28,4 +28,4 @@ function ContractFindInstanceOrInit(props: {
   );
 }
 
-export default ContractFindInstanceOrInit;
+export default MarketFindOrInit;

@@ -1,12 +1,11 @@
-import { list, TokenListItem } from "common-ui";
 import React, { useEffect, useState } from "react";
 
 import { WalletApi } from "@concordium/browser-wallet-api-helpers";
 import { CIS2Contract, ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk";
-import Container from "@mui/material/Container";
 import ImageList from "@mui/material/ImageList";
 
 import { MARKETPLACE_CONTRACT_INFO } from "../Constants";
+import { list, TokenListItem } from "../models/MarketplaceClient";
 import MarketplaceTokensListItem from "./MarketplaceTokensListItem";
 import MarketplaceTransferDialog from "./MarketplaceTransferDialog";
 
@@ -39,7 +38,7 @@ function MarketplaceTokensList(props: {
   }, [props.account, selectedToken]);
 
   return (
-    <Container maxWidth={"md"}>
+    <>
       <ImageList key="nft-image-list" cols={3}>
         {tokens.map((t) => (
           <MarketplaceTokensListItem
@@ -61,7 +60,7 @@ function MarketplaceTokensList(props: {
           onClose={() => setSelectedToken(undefined)}
         />
       )}
-    </Container>
+    </>
   );
 }
 

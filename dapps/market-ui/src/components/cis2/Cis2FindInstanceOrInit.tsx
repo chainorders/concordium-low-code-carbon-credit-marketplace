@@ -1,10 +1,10 @@
-import { Cis2ContractInfo } from "common-ui";
 import React from "react";
 
 import { WalletApi } from "@concordium/browser-wallet-api-helpers";
 import { ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk";
 import { Stack, Typography } from "@mui/material";
 
+import { Cis2ContractInfo } from "../../models/ConcordiumContractClient";
 import Cis2FindInstance from "./Cis2FindInstance";
 import Cis2Init from "./Cis2Init";
 

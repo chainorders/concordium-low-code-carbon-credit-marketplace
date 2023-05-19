@@ -40,12 +40,4 @@ const SUPPORTS_STANDARDS: [StandardIdentifier<'static>; 2] =
     [CIS0_STANDARD_IDENTIFIER, CIS2_STANDARD_IDENTIFIER];
 
 // Types
-
-/// Contract token ID type.
-/// To save bytes we use a small token ID type, but is limited to be represented
-/// by a `u8`.
-type ContractTokenId = TokenIdU8;
-
-/// Contract token amount type.
-type ContractTokenAmount = TokenAmountU64;
 type ContractResult<A> = Result<A, ContractError>;

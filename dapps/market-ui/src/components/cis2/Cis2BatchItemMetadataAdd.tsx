@@ -1,5 +1,4 @@
 import { Buffer } from "buffer/";
-import { Cis2ContractInfo, Metadata } from "common-ui";
 import React, { FormEvent, useState } from "react";
 
 import { CIS2, sha256 } from "@concordium/web-sdk";
@@ -20,11 +19,13 @@ import {
   Typography,
 } from "@mui/material";
 
+import { Metadata } from "../../models/Cis2Client";
+import { Cis2ContractInfo } from "../../models/ConcordiumContractClient";
+import DisplayError from "../ui/DisplayError";
 import GetMintCardStep from "./GetMintCardStep";
 import GetQuantityCardStep from "./GetQuantityCardStep";
 import GetTokenIdCardStep from "./GetTokenIdCardStep";
 import LazyCis2Metadata from "./LazyCis2Metadata";
-import DisplayError from "../ui/DisplayError";
 
 const cardMediaSx: SxProps<Theme> = { maxHeight: "200px" };
 

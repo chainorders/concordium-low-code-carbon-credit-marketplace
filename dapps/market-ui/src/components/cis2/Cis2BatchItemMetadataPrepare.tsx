@@ -1,5 +1,4 @@
 import { Buffer } from "buffer/";
-import { Metadata, PinataClient, tokenIdToNftImageFileName, tokenIdToNftMetadataFileName } from "common-ui";
 import React, { FormEvent, useState } from "react";
 
 import { CIS2, sha256 } from "@concordium/web-sdk";
@@ -20,6 +19,9 @@ import {
 import { Theme } from "@mui/system";
 
 import { IPFS_GATEWAY_URL } from "../../Constants";
+import { Metadata } from "../../models/Cis2Client";
+import { PinataClient } from "../../models/PinataClient";
+import { tokenIdToNftImageFileName, tokenIdToNftMetadataFileName } from "../../models/Utils";
 import DisplayError from "../ui/DisplayError";
 import GetMintCardStep from "./GetMintCardStep";
 import GetQuantityCardStep from "./GetQuantityCardStep";

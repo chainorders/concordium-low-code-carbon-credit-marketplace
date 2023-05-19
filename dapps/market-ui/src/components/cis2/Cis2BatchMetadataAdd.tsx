@@ -1,10 +1,11 @@
-import { Cis2ContractInfo, toTokenId } from "common-ui";
 import React, { useState } from "react";
 
+import { CIS2 } from "@concordium/web-sdk";
 import { Button, ButtonGroup, Grid, Typography } from "@mui/material";
 
+import { toTokenId } from "../../models/Cis2Client";
+import { Cis2ContractInfo } from "../../models/ConcordiumContractClient";
 import Cis2BatchItemMetadataAdd from "./Cis2BatchItemMetadataAdd";
-import { CIS2 } from "@concordium/web-sdk";
 
 function Cis2BatchMetadataAdd(props: {
   contractInfo: Cis2ContractInfo;

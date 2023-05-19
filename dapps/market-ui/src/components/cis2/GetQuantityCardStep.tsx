@@ -11,6 +11,7 @@ import {
   Theme,
   Typography,
 } from "@mui/material";
+
 import DisplayError from "../ui/DisplayError";
 
 const cardMediaSx: SxProps<Theme> = { maxHeight: "200px" };

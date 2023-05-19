@@ -2,11 +2,12 @@ import React, { FormEvent, useState } from "react";
 
 import { WalletApi } from "@concordium/browser-wallet-api-helpers";
 import { ContractAddress } from "@concordium/web-sdk";
-import { Button, Stack, TextField, Typography } from "@mui/material";
+import { Button, Stack, Typography } from "@mui/material";
 
-import { ContractInfo, initContract } from "../models/ConcordiumContractClient";
+import { ContractInfo, initContract } from "../../models/ConcordiumContractClient";
+import DisplayError from "../ui/DisplayError";
 
-function MarketplaceContractInit(props: {
+export default function FractionalizerContractInit(props: {
   provider: WalletApi;
   account: string;
   contractInfo: ContractInfo;
@@ -19,12 +20,9 @@ function MarketplaceContractInit(props: {
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const commission = parseInt(formData.get("commission")?.toString() || "0");
     setState({ ...state, processing: true });
 
-    const params = { commission: commission * 100 };
-    initContract(props.provider, props.contractInfo, props.account, params)
+    initContract(props.provider, props.contractInfo, props.account)
       .then((address) => {
         setState({ ...state, processing: false });
         props.onDone(address);
@@ -36,22 +34,7 @@ function MarketplaceContractInit(props: {
 
   return (
     <Stack component={"form"} spacing={2} onSubmit={submit}>
-      <TextField
-        name="commission"
-        id="commission"
-        type="number"
-        label="Commission %"
-        variant="standard"
-        fullWidth
-        disabled={state.processing}
-        required
-        defaultValue={0}
-      />
-      {state.error && (
-        <Typography component="div" color="error" variant="body1">
-          {state.error}
-        </Typography>
-      )}
+      <DisplayError error={state.error} />
       {state.processing && (
         <Typography component="div" variant="body1">
           Deploying..
@@ -63,5 +46,3 @@ function MarketplaceContractInit(props: {
     </Stack>
   );
 }
-
-export default MarketplaceContractInit;

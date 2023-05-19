@@ -1,4 +1,3 @@
-import { ContractInfo, mint } from "common-ui";
 import React, { useState } from "react";
 
 import { WalletApi } from "@concordium/browser-wallet-api-helpers";
@@ -6,6 +5,8 @@ import { CIS2, ContractAddress } from "@concordium/web-sdk";
 import { Button, Grid, Stack, Typography } from "@mui/material";
 
 import Cis2BatchItemMint from "./Cis2BatchItemMint";
+import { mint } from "../../models/Cis2Client";
+import { ContractInfo } from "../../models/ConcordiumContractClient";
 
 interface TokenState {
   tokenInfo: [CIS2.MetadataUrl, string];

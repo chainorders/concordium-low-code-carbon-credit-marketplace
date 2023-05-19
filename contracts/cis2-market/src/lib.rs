@@ -13,96 +13,102 @@ mod errors;
 mod params;
 mod state;
 
-use cis2_common_utils::cis2_client::Cis2Client;
-use concordium_cis2::{IsTokenAmount, IsTokenId, TokenAmountU64, TokenIdU8};
+use std::ops::{Add, Mul};
+
+use cis2_common_utils::{
+    cis2_client::Cis2Client, ContractOnReceivingCis2Params, ContractTokenAmount,
+};
+
 use concordium_std::*;
 use errors::MarketplaceError;
 use params::{AddParams, InitParams, TokenList};
-use state::{Commission, State, TokenInfo, TokenListItem, TokenRoyaltyState};
+use state::{Commission, State, TokenInfo, TokenListItem, TokenOwnedListItem, TokenRoyaltyState};
 
 use crate::{params::TransferParams, state::TokenOwnerInfo};
 
 type ContractResult<A> = Result<A, MarketplaceError>;
+type InitResult<S> = Result<State<S>, MarketplaceError>;
 
 const MAX_BASIS_POINTS: u16 = 10000;
 
-/// Type of token Id used by the CIS2 contract.
-type ContractTokenId = TokenIdU8;
-
-/// Type of Token Amount used by the CIS2 contract.
-type ContractTokenAmount = TokenAmountU64;
-
 /// Type of state.
-type ContractState<S> = State<S, ContractTokenId, ContractTokenAmount>;
+type ContractState<S> = State<S>;
 
 /// Initializes a new Marketplace Contract
 ///
 /// This function can be called by using InitParams.
 /// The commission should be less than the maximum allowed value of 10000 basis
 /// points
-#[init(contract = "Market-NFT", parameter = "InitParams")]
+#[init(
+    contract = "Market-NFT",
+    parameter = "InitParams",
+    error = "MarketplaceError"
+)]
 fn init<S: HasStateApi>(
     ctx: &impl HasInitContext,
     state_builder: &mut StateBuilder<S>,
-) -> InitResult<State<S, ContractTokenId, ContractTokenAmount>> {
-    let params: InitParams = ctx
-        .parameter_cursor()
-        .get()
-        .map_err(|_e| MarketplaceError::ParseParams)?;
+) -> InitResult<S> {
+    let params: InitParams = ctx.parameter_cursor().get()?;
 
     ensure!(
-        params.commission <= MAX_BASIS_POINTS,
-        MarketplaceError::InvalidCommission.into()
+        params.commission.cmp(&MAX_BASIS_POINTS).is_le(),
+        MarketplaceError::InvalidCommission
     );
 
     Ok(State::new(state_builder, params.commission))
 }
 
+/// Adds a new already owned token to the marketplace.
 #[receive(
     contract = "Market-NFT",
     name = "add",
     parameter = "AddParams",
-    mutable
+    mutable,
+    error = "MarketplaceError"
 )]
 fn add<S: HasStateApi>(
     ctx: &impl HasReceiveContext,
     host: &mut impl HasHost<ContractState<S>, StateApiType = S>,
 ) -> ContractResult<()> {
-    let params: AddParams = ctx
-        .parameter_cursor()
-        .get()
-        .map_err(|_e| MarketplaceError::ParseParams)?;
-
     let sender_account_address: AccountAddress = match ctx.sender() {
         Address::Account(account_address) => account_address,
         Address::Contract(_) => bail!(MarketplaceError::CalledByAContract),
     };
 
+    let params: AddParams = ctx.parameter_cursor().get()?;
     let token_info = TokenInfo {
         address: params.cis_contract_address,
         id: params.token_id,
     };
 
-    ensure_supports_cis2(host, &params.cis_contract_address)?;
-    ensure_is_operator(host, ctx, &params.cis_contract_address)?;
-    ensure_balance(
-        host,
-        params.token_id,
-        &params.cis_contract_address,
-        sender_account_address,
-        params.quantity,
-    )?;
+    let commission = host.state().commission.clone();
 
+    // Ensure that the `commission + royalty` is less than the maximum allowed value of 10000
     ensure!(
-        host.state().commission.percentage_basis + params.royalty <= MAX_BASIS_POINTS,
+        commission
+            .percentage_basis
+            .add(params.royalty)
+            .cmp(&MAX_BASIS_POINTS)
+            .is_le(),
         MarketplaceError::InvalidRoyalty
     );
-    host.state_mut().list_token(
+
+    let owned_quantity = host
+        .state()
+        .get_quantity_owned(&token_info, &sender_account_address)?;
+    // Ensure that the quantity owned is greater than 0
+    ensure!(
+        owned_quantity.cmp(&ContractTokenAmount::from(0)).is_ge(),
+        MarketplaceError::InvalidTokenQuantity
+    );
+
+    let (state, state_builder) = host.state_and_builder();
+    state.list_token(
+        state_builder,
         &token_info,
         &sender_account_address,
         params.price,
         params.royalty,
-        params.quantity,
     );
 
     Ok(())
@@ -118,65 +124,59 @@ fn add<S: HasStateApi>(
     name = "transfer",
     parameter = "TransferParams",
     mutable,
-    payable
+    payable,
+    error = "MarketplaceError"
 )]
 fn transfer<S: HasStateApi>(
     ctx: &impl HasReceiveContext,
     host: &mut impl HasHost<ContractState<S>, StateApiType = S>,
     amount: Amount,
 ) -> ContractResult<()> {
-    let params: TransferParams = ctx
-        .parameter_cursor()
-        .get()
-        .map_err(|_e| MarketplaceError::ParseParams)?;
-
+    let params: TransferParams = ctx.parameter_cursor().get()?;
     let token_info = &TokenInfo {
         id: params.token_id,
         address: params.cis_contract_address,
     };
 
-    let listed_token = host
+    let quantity_owned = host
         .state()
-        .get_listed(token_info, &params.owner)
-        .ok_or(MarketplaceError::TokenNotListed)?;
-
-    let listed_quantity = listed_token.1.quantity;
-    let price_per_unit = listed_token.1.price;
-    let token_royalty_state = listed_token.0;
+        .get_quantity_owned(&token_info, &params.owner)?;
 
     ensure!(
-        listed_quantity.cmp(&params.quantity).is_ge(),
+        quantity_owned.cmp(&params.quantity).is_ge(),
         MarketplaceError::InvalidTokenQuantity
     );
 
-    let price = price_per_unit * params.quantity.0;
-    ensure!(
-        amount.cmp(&price).is_ge(),
-        MarketplaceError::InvalidAmountPaid
-    );
+    if ctx.sender() == Address::Account(params.owner) {
+        ensure!(
+            amount.cmp(&Amount::zero()).is_eq(),
+            MarketplaceError::InvalidAmountPaid
+        );
+    } else {
+        let (token_royalty_state, price_per_unit) =
+            host.state().get_listed_token(token_info, &params.owner)?;
+        let price = price_per_unit.mul(params.quantity.into());
+        ensure!(
+            amount.cmp(&price).is_ge(),
+            MarketplaceError::InvalidAmountPaid
+        );
 
-    // Checks if the CIS2 contract supports the CIS2 interface.
-    let cis2_contract_address = match Cis2Client::supports_cis2(host, &params.cis_contract_address)?
-    {
-        None => bail!(MarketplaceError::CollectionNotCis2),
-        Some(address) => address,
+        distribute_amounts(
+            host,
+            amount,
+            &params.owner,
+            &token_royalty_state,
+            &ctx.owner(),
+        )?;
     };
 
     Cis2Client::transfer(
         host,
         params.token_id,
-        cis2_contract_address,
+        params.cis_contract_address,
         params.quantity,
         Address::Account(params.owner),
         concordium_cis2::Receiver::Account(params.to),
-    )?;
-
-    distribute_amounts(
-        host,
-        amount,
-        &params.owner,
-        &token_royalty_state,
-        &ctx.owner(),
     )?;
 
     host.state_mut().decrease_listed_quantity(
@@ -187,20 +187,100 @@ fn transfer<S: HasStateApi>(
 }
 
 /// Returns a list of Added Tokens with Metadata which contains the token price
-#[receive(contract = "Market-NFT", name = "list", return_value = "TokenList")]
+#[receive(
+    contract = "Market-NFT",
+    name = "list",
+    return_value = "TokenList",
+    error = "MarketplaceError"
+)]
 fn list<S: HasStateApi>(
     _ctx: &impl HasReceiveContext,
     host: &impl HasHost<ContractState<S>, StateApiType = S>,
 ) -> ContractResult<TokenList> {
-    let tokens: Vec<TokenListItem<ContractTokenId, ContractTokenAmount>> = host
+    let tokens: Vec<TokenListItem> = host
         .state()
-        .list()
+        .get_listed_tokens()
         .iter()
         .filter(|t| t.quantity.cmp(&ContractTokenAmount::from(0)).is_gt())
         .cloned()
-        .collect::<Vec<TokenListItem<ContractTokenId, ContractTokenAmount>>>();
+        .collect::<Vec<TokenListItem>>();
 
     Ok(TokenList(tokens))
+}
+
+#[receive(
+    contract = "Market-NFT",
+    name = "list_owned",
+    return_value = "Vec<TokenOwnedListItem>",
+    error = "MarketplaceError"
+)]
+fn list_owned<S: HasStateApi>(
+    ctx: &impl HasReceiveContext,
+    host: &impl HasHost<ContractState<S>, StateApiType = S>,
+) -> ContractResult<Vec<TokenOwnedListItem>> {
+    let sender = ctx.sender();
+
+    let list = host
+        .state()
+        .tokens_owned
+        .iter()
+        .filter(|f| sender.matches_account(&f.0.owner))
+        .map(|f| TokenOwnedListItem {
+            contract: f.0.address,
+            token_id: f.0.id,
+            owner: f.0.owner,
+            quantity: f.1.clone(),
+        })
+        .collect();
+
+    Ok(list)
+}
+
+/// This functions should be invoked by any CIS2 Contract whose token is being transferred.
+/// TO this contract
+///
+/// Upon receiving any token its added to the list of owned tokens.
+/// `add` function can be called in a separate transaction to mint a token against the collateral.
+///
+/// It rejects if:
+/// - Sender is not a contract.
+/// - It fails to parse the parameter.
+/// - Contract name part of the parameter is invalid.
+/// - Calling back `transfer` to sender contract rejects.
+#[receive(
+    contract = "Market-NFT",
+    name = "recieve_cis2",
+    error = "MarketplaceError",
+    mutable
+)]
+fn recieve_cis2<S: HasStateApi>(
+    ctx: &impl HasReceiveContext,
+    host: &mut impl HasHost<State<S>, StateApiType = S>,
+) -> ContractResult<()> {
+    // Ensure the sender is a contract.
+    let token_contract = match ctx.sender() {
+        Address::Contract(contract) => contract,
+        _ => bail!(MarketplaceError::CalledByAnAccount),
+    };
+
+    // Parse the parameter.
+    let params: ContractOnReceivingCis2Params = ctx.parameter_cursor().get()?;
+
+    let token_owner = match params.from {
+        Address::Account(a) => a,
+        Address::Contract(_) => bail!(MarketplaceError::CalledByAContract),
+    };
+
+    host.state_mut().add_owned_token(
+        &TokenOwnerInfo {
+            id: params.token_id,
+            address: token_contract,
+            owner: token_owner,
+        },
+        params.amount,
+    );
+
+    Ok(())
 }
 
 struct DistributableAmounts {
@@ -209,59 +289,9 @@ struct DistributableAmounts {
     to_marketplace: Amount,
 }
 
-/// Calls the [supports](https://proposals.concordium.software/CIS/cis-0.html#supports) function of CIS2 contract.
-/// Returns error If the contract does not support the standard.
-fn ensure_supports_cis2<S: HasStateApi, T: IsTokenId + Copy, A: IsTokenAmount + Copy>(
-    host: &mut impl HasHost<State<S, T, A>, StateApiType = S>,
-    cis_contract_address: &ContractAddress,
-) -> ContractResult<()> {
-    let supports_cis2 = Cis2Client::supports_cis2(host, cis_contract_address)
-        .map_err(MarketplaceError::Cis2ClientError)?;
-    ensure!(supports_cis2.is_some(), MarketplaceError::CollectionNotCis2);
-    Ok(())
-}
-
-/// Calls the [operatorOf](https://proposals.concordium.software/CIS/cis-2.html#operatorof) function of CIS contract.
-/// Returns error if Current Contract Address is not an Operator of Transaction
-/// Sender.
-fn ensure_is_operator<S: HasStateApi, T: IsTokenId + Copy, A: IsTokenAmount + Copy>(
-    host: &mut impl HasHost<State<S, T, A>, StateApiType = S>,
-    ctx: &impl HasReceiveContext<()>,
-    cis_contract_address: &ContractAddress,
-) -> ContractResult<()> {
-    let is_operator =
-        Cis2Client::is_operator_of(host, ctx.sender(), ctx.self_address(), cis_contract_address)
-            .map_err(MarketplaceError::Cis2ClientError)?;
-    ensure!(is_operator, MarketplaceError::NotOperator);
-    Ok(())
-}
-/// Calls the [balanceOf](https://proposals.concordium.software/CIS/cis-2.html#balanceof) function of the CIS2 contract.
-/// Returns error if the returned balance < input balance (balance param).
-fn ensure_balance<S: HasStateApi, T: IsTokenId + Copy, A: IsTokenAmount + Ord + Copy>(
-    host: &mut impl HasHost<State<S, T, A>, StateApiType = S>,
-    token_id: T,
-    cis_contract_address: &ContractAddress,
-    owner: AccountAddress,
-    minimum_balance: A,
-) -> ContractResult<()> {
-    let contract_balance: A = Cis2Client::get_balance(
-        host,
-        token_id,
-        cis_contract_address,
-        Address::Account(owner),
-    )?;
-
-    ensure!(
-        contract_balance.cmp(&minimum_balance).is_ge(),
-        MarketplaceError::NoBalance
-    );
-
-    Ok(())
-}
-
 // Distributes Selling Price, Royalty & Commission amounts.
-fn distribute_amounts<S: HasStateApi, T: IsTokenId + Copy, A: IsTokenAmount + Copy>(
-    host: &mut impl HasHost<State<S, T, A>, StateApiType = S>,
+fn distribute_amounts<S: HasStateApi>(
+    host: &mut impl HasHost<State<S>, StateApiType = S>,
     amount: Amount,
     token_owner: &AccountAddress,
     token_royalty_state: &TokenRoyaltyState,
@@ -273,23 +303,17 @@ fn distribute_amounts<S: HasStateApi, T: IsTokenId + Copy, A: IsTokenAmount + Co
         token_royalty_state.royalty,
     );
 
-    host.invoke_transfer(token_owner, amounts.to_seller)
-        .map_err(|_| MarketplaceError::InvokeTransferError)?;
+    if amounts.to_seller.cmp(&Amount::zero()).is_gt() {
+        host.invoke_transfer(token_owner, amounts.to_seller)
+            .map_err(|_| MarketplaceError::InvokeTransferError)?;
+    }
 
-    if amounts
-        .to_marketplace
-        .cmp(&Amount::from_micro_ccd(0))
-        .is_gt()
-    {
+    if amounts.to_marketplace.cmp(&Amount::zero()).is_gt() {
         host.invoke_transfer(marketplace_owner, amounts.to_marketplace)
             .map_err(|_| MarketplaceError::InvokeTransferError)?;
     }
 
-    if amounts
-        .to_primary_owner
-        .cmp(&Amount::from_micro_ccd(0))
-        .is_gt()
-    {
+    if amounts.to_primary_owner.cmp(&Amount::zero()).is_gt() {
         host.invoke_transfer(&token_royalty_state.primary_owner, amounts.to_primary_owner)
             .map_err(|_| MarketplaceError::InvokeTransferError)?;
     };
@@ -322,14 +346,16 @@ fn calculate_amounts(
 #[concordium_cfg_test]
 mod test {
     use crate::{
-        add, calculate_amounts, list,
+        add, calculate_amounts,
+        errors::MarketplaceError,
+        init, list,
         params::AddParams,
-        state::{Commission, State, TokenInfo, TokenListItem, TokenPriceState, TokenRoyaltyState},
-        ContractState, ContractTokenAmount, ContractTokenId,
+        recieve_cis2,
+        state::{Commission, State, TokenInfo, TokenListState, TokenOwnerInfo, TokenRoyaltyState},
     };
-    use cis2_common_utils::cis2_client::*;
-    use concordium_cis2::*;
+    use cis2_common_utils::*;
 
+    use concordium_cis2::AdditionalData;
     use concordium_std::{test_infrastructure::*, *};
 
     const ACCOUNT_0: AccountAddress = AccountAddress([0u8; 32]);
@@ -342,6 +368,28 @@ mod test {
         index: 2,
         subindex: 0,
     };
+
+    #[concordium_test]
+    fn should_init_contract() {
+        let mut ctx = TestInitContext::default();
+        let mut state_builder = TestStateBuilder::new();
+
+        let state = State::new(&mut state_builder, 250);
+        let host = TestHost::new(state, state_builder);
+
+        let init_params = crate::params::InitParams { commission: 250 };
+
+        let parameter_bytes = to_bytes(&init_params);
+        ctx.set_parameter(&parameter_bytes);
+
+        let result = init(&ctx, &mut TestStateBuilder::new());
+
+        assert!(result.is_ok());
+        assert_eq!(
+            host.state().commission.percentage_basis,
+            init_params.commission
+        );
+    }
 
     #[concordium_test]
     fn should_add_token() {
@@ -358,7 +406,74 @@ mod test {
             price,
             token_id: token_id_1,
             royalty: 0,
-            quantity: token_quantity_1,
+        };
+        let parameter_bytes = to_bytes(&add_params);
+        ctx.set_parameter(&parameter_bytes);
+
+        let mut state_builder = TestStateBuilder::new();
+        let mut state = State::new(&mut state_builder, 250);
+        state.add_owned_token(
+            &TokenOwnerInfo {
+                id: token_id_1,
+                address: CIS_CONTRACT_ADDRESS,
+                owner: ACCOUNT_0,
+            },
+            token_quantity_1,
+        );
+
+        let mut host = TestHost::new(state, state_builder);
+
+        let result = add(&ctx, &mut host);
+
+        assert!(result.is_ok());
+        assert!(host
+            .state()
+            .tokens_listed
+            .get(&TokenInfo {
+                address: CIS_CONTRACT_ADDRESS,
+                id: token_id_1
+            })
+            .is_some());
+
+        let listed_token = host
+            .state()
+            .tokens_listed
+            .get(&TokenInfo {
+                address: CIS_CONTRACT_ADDRESS,
+                id: token_id_1,
+            })
+            .unwrap();
+        assert_eq!(
+            listed_token.token_royalty,
+            TokenRoyaltyState {
+                primary_owner: ACCOUNT_0,
+                royalty: 0
+            }
+        );
+        assert_eq!(
+            listed_token
+                .token_prices
+                .get(&ACCOUNT_0)
+                .unwrap()
+                .to_owned(),
+            price
+        );
+    }
+
+    #[concordium_test]
+    fn should_not_add_not_owned_token() {
+        let token_id_1 = ContractTokenId::from(1);
+        let price = Amount::from_ccd(1);
+
+        let mut ctx = TestReceiveContext::default();
+        ctx.set_sender(ADDRESS_0);
+        ctx.set_self_address(MARKET_CONTRACT_ADDRESS);
+
+        let add_params = AddParams {
+            cis_contract_address: CIS_CONTRACT_ADDRESS,
+            price,
+            token_id: token_id_1,
+            royalty: 0,
         };
         let parameter_bytes = to_bytes(&add_params);
         ctx.set_parameter(&parameter_bytes);
@@ -367,179 +482,99 @@ mod test {
         let state = State::new(&mut state_builder, 250);
         let mut host = TestHost::new(state, state_builder);
 
-        fn mock_supports(
-            _p: Parameter,
-            _a: Amount,
-            _a2: &mut Amount,
-            _s: &mut ContractState<TestStateApi>,
-        ) -> Result<(bool, SupportsQueryResponse), CallContractError<SupportsQueryResponse>>
-        {
-            Ok((
-                false,
-                SupportsQueryResponse {
-                    results: vec![SupportResult::Support],
-                },
-            ))
-        }
+        let result = add(&ctx, &mut host);
 
-        fn mock_is_operator_of(
-            _p: Parameter,
-            _a: Amount,
-            _a2: &mut Amount,
-            _s: &mut ContractState<TestStateApi>,
-        ) -> Result<(bool, OperatorOfQueryResponse), CallContractError<OperatorOfQueryResponse>>
-        {
-            Ok((false, OperatorOfQueryResponse { 0: vec![true] }))
-        }
-
-        fn mock_balance_of(
-            _p: Parameter,
-            _a: Amount,
-            _a2: &mut Amount,
-            _s: &mut ContractState<TestStateApi>,
-        ) -> Result<
-            (bool, BalanceOfQueryResponse<ContractTokenAmount>),
-            CallContractError<BalanceOfQueryResponse<ContractTokenAmount>>,
-        > {
-            Ok((false, BalanceOfQueryResponse(vec![1.into()])))
-        }
-
-        TestHost::setup_mock_entrypoint(
-            &mut host,
-            CIS_CONTRACT_ADDRESS,
-            OwnedEntrypointName::new_unchecked(SUPPORTS_ENTRYPOINT_NAME.to_string()),
-            MockFn::new_v1(mock_supports),
-        );
-
-        TestHost::setup_mock_entrypoint(
-            &mut host,
-            CIS_CONTRACT_ADDRESS,
-            OwnedEntrypointName::new_unchecked(OPERATOR_OF_ENTRYPOINT_NAME.to_string()),
-            MockFn::new_v1(mock_is_operator_of),
-        );
-
-        TestHost::setup_mock_entrypoint(
-            &mut host,
-            CIS_CONTRACT_ADDRESS,
-            OwnedEntrypointName::new_unchecked(BALANCE_OF_ENTRYPOINT_NAME.to_string()),
-            MockFn::new_v1(mock_balance_of),
-        );
-
-        let res = add(&ctx, &mut host);
-
-        claim!(res.is_ok(), "Results in rejection");
-        claim!(
-            host.state().token_prices.iter().count() != 0,
-            "Token not added"
-        );
-        claim!(
-            host.state().token_royalties.iter().count() != 0,
-            "Token not added"
-        );
-        claim_eq!(
-            host.state().commission,
-            Commission {
-                percentage_basis: 250,
-            }
-        );
-
-        let token_list_tuple = host
-            .state()
-            .get_listed(
-                &TokenInfo {
-                    id: token_id_1,
-                    address: CIS_CONTRACT_ADDRESS,
-                },
-                &ACCOUNT_0,
-            )
-            .expect("Should not be None");
-
-        claim_eq!(
-            token_list_tuple.0.to_owned(),
-            TokenRoyaltyState {
-                primary_owner: ACCOUNT_0,
-                royalty: 0,
-            }
-        );
-        claim_eq!(
-            token_list_tuple.1.to_owned(),
-            TokenPriceState {
-                price,
-                quantity: token_quantity_1
-            },
-        )
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), MarketplaceError::TokenNotInCustody);
     }
 
     #[concordium_test]
-    fn should_list_token() {
-        let token_quantity_1 = ContractTokenAmount::from(1);
+    fn should_recieve_cis2() {
+        // Tests that the contract can receive cis2 tokens
         let token_id_1 = ContractTokenId::from(1);
-        let token_id_2 = ContractTokenId::from(2);
-        let token_price_1 = Amount::from_ccd(1);
-        let token_price_2 = Amount::from_ccd(2);
+        let token_quantity_1 = ContractTokenAmount::from(1);
 
+        let mut ctx = TestReceiveContext::default();
+        ctx.set_sender(Address::Contract(CIS_CONTRACT_ADDRESS));
+        ctx.set_self_address(MARKET_CONTRACT_ADDRESS);
+
+        let params = ContractOnReceivingCis2Params {
+            token_id: token_id_1,
+            amount: token_quantity_1,
+            from: Address::Account(ACCOUNT_0),
+            data: AdditionalData::empty(),
+        };
+        let parameter_bytes = to_bytes(&params);
+        ctx.set_parameter(&parameter_bytes);
+
+        let mut state_builder = TestStateBuilder::new();
+        let state = State::new(&mut state_builder, 250);
+        let mut host = TestHost::new(state, state_builder);
+
+        let result = recieve_cis2(&ctx, &mut host);
+        assert!(result.is_ok());
+        assert!(host
+            .state()
+            .tokens_owned
+            .get(&TokenOwnerInfo {
+                id: token_id_1,
+                address: CIS_CONTRACT_ADDRESS,
+                owner: ACCOUNT_0,
+            })
+            .is_some());
+    }
+
+    #[concordium_test]
+    fn should_list_tokens() {
         let mut ctx = TestReceiveContext::default();
         ctx.set_sender(ADDRESS_0);
         ctx.set_self_address(MARKET_CONTRACT_ADDRESS);
 
         let mut state_builder = TestStateBuilder::new();
         let mut state = State::new(&mut state_builder, 250);
-        state.list_token(
-            &TokenInfo {
-                id: token_id_1,
+        state.add_owned_token(
+            &TokenOwnerInfo {
+                id: ContractTokenId::from(1),
                 address: CIS_CONTRACT_ADDRESS,
+                owner: ACCOUNT_0,
             },
-            &ACCOUNT_0,
-            token_price_1,
-            0,
-            token_quantity_1,
+            ContractTokenAmount::from(1),
         );
-        state.list_token(
-            &TokenInfo {
-                id: token_id_2,
+        state.add_owned_token(
+            &TokenOwnerInfo {
+                id: ContractTokenId::from(2),
                 address: CIS_CONTRACT_ADDRESS,
+                owner: ACCOUNT_0,
             },
-            &ACCOUNT_0,
-            token_price_2,
-            0,
-            token_quantity_1,
+            ContractTokenAmount::from(1),
         );
-        let host = TestHost::new(state, state_builder);
-        let list_result = list(&ctx, &host);
-
-        claim!(list_result.is_ok());
-        let token_list = list_result.unwrap();
-        let list = token_list.0;
-        claim_eq!(list.len(), 2);
-
-        let first_token = list.first().unwrap();
-        let second_token = list.last().unwrap();
-
-        claim_eq!(
-            first_token,
-            &TokenListItem {
-                token_id: token_id_1,
-                contract: CIS_CONTRACT_ADDRESS,
-                price: token_price_1,
-                owner: ACCOUNT_0,
-                primary_owner: ACCOUNT_0,
-                quantity: token_quantity_1,
-                royalty: 0,
-            }
+        state.tokens_listed.insert(
+            TokenInfo {
+                address: CIS_CONTRACT_ADDRESS,
+                id: ContractTokenId::from(1),
+            },
+            TokenListState {
+                token_royalty: TokenRoyaltyState {
+                    primary_owner: ACCOUNT_0,
+                    royalty: 0,
+                },
+                token_prices: {
+                    let mut map = state_builder.new_map();
+                    map.insert(ACCOUNT_0, Amount::from_ccd(1));
+                    map
+                },
+            },
         );
 
-        claim_eq!(
-            second_token,
-            &TokenListItem {
-                token_id: token_id_2,
-                contract: CIS_CONTRACT_ADDRESS,
-                price: token_price_2,
-                owner: ACCOUNT_0,
-                primary_owner: ACCOUNT_0,
-                quantity: token_quantity_1,
-                royalty: 0,
-            }
-        )
+        let result = list(&ctx, &mut TestHost::new(state, state_builder));
+        assert!(result.is_ok());
+        let tokens_list = result.unwrap();
+        assert_eq!(tokens_list.0.len(), 1);
+        assert_eq!(tokens_list.0[0].token_id, ContractTokenId::from(1));
+        assert_eq!(tokens_list.0[0].price, Amount::from_ccd(1));
+        assert_eq!(tokens_list.0[0].royalty, 0);
+        assert_eq!(tokens_list.0[0].primary_owner, ACCOUNT_0);
+        assert_eq!(tokens_list.0[0].contract, CIS_CONTRACT_ADDRESS);
     }
 
     #[concordium_test]

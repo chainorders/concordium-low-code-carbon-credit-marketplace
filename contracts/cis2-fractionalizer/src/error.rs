@@ -25,6 +25,7 @@ pub enum CustomContractError {
     NoBalanceToBurn,
     AccountsOnly,
     Cis2ClientError(Cis2ClientError),
+    NotImplemented
 }
 
 /// Mapping the logging errors to ContractError.

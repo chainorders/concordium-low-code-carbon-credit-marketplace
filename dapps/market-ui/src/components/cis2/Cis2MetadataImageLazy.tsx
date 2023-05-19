@@ -1,8 +1,9 @@
-import { fetchJson, Metadata } from "common-ui";
 import React, { useEffect, useState } from "react";
 
 import { CIS2Contract } from "@concordium/web-sdk";
 import { Skeleton } from "@mui/material";
+import { Metadata } from "../../models/Cis2Client";
+import { fetchJson } from "../../models/Utils";
 
 function Cis2MetadataImageLazy(props: { account: string; tokenId: string; cis2Contract: CIS2Contract }) {
   const [state, setState] = useState<{

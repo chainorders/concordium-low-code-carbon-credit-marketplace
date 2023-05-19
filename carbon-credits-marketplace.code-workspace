@@ -14,9 +14,6 @@
 		},
 		{
 			"path": "dapps/market-ui"
-		},
-		{
-			"path": "dapps/common-ui"
 		}
 	],
 	"settings": {}

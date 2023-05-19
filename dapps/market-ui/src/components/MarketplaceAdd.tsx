@@ -1,19 +1,21 @@
-import { add, AddParams, toParamContractAddress } from "common-ui";
 import React, { FormEvent, useState } from "react";
 
 import { WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { ContractAddress } from "@concordium/web-sdk";
+import { CIS2Contract, ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk";
 import { Button, Stack, TextField, Typography } from "@mui/material";
 
 import { MARKETPLACE_CONTRACT_INFO } from "../Constants";
+import { toParamContractAddress } from "../models/ConcordiumContractClient";
+import { add, AddParams } from "../models/MarketplaceClient";
 
 interface MarketplaceAddProps {
+  grpcClient: ConcordiumGRPCClient;
   provider: WalletApi;
   account: string;
   marketContractAddress: ContractAddress;
   nftContractAddress: ContractAddress;
+  cis2Contract: CIS2Contract;
   tokenId: string;
-  maxQuantity: bigint;
   onDone: () => void;
 }
 
@@ -31,7 +33,6 @@ function MarketplaceAdd(props: MarketplaceAddProps) {
     const formData = new FormData(event.currentTarget);
     const price = formData.get("price")?.toString() || "";
     const royalty = formData.get("royalty")?.toString() || "0";
-    const quantity = formData.get("quantity")?.toString() || "0";
 
     if (!price || BigInt(price) <= 0) {
       setState({ ...state, error: "Invalid Price" });
@@ -43,14 +44,6 @@ function MarketplaceAdd(props: MarketplaceAddProps) {
       return;
     }
 
-    if (!quantity || BigInt(quantity) <= 0 || BigInt(quantity) > props.maxQuantity) {
-      setState({
-        ...state,
-        error: `Invalid Quantity: ${quantity.toString()}, Should be less than Or equal to ${props.maxQuantity.toString()}`,
-      });
-      return;
-    }
-
     setState({ ...state, adding: true, error: "" });
 
     const paramJson: AddParams = {
@@ -58,7 +51,6 @@ function MarketplaceAdd(props: MarketplaceAddProps) {
       royalty: parseInt(royalty) * 100, //conversion to basis points
       cis_contract_address: toParamContractAddress(props.nftContractAddress),
       token_id: props.tokenId,
-      quantity,
     };
 
     add(props.provider, props.account, props.marketContractAddress, paramJson, MARKETPLACE_CONTRACT_INFO)
@@ -94,17 +86,6 @@ function MarketplaceAdd(props: MarketplaceAddProps) {
         disabled={state.adding}
         required
         defaultValue="0"
-      />
-      <TextField
-        name="quantity"
-        id="quantity"
-        type="number"
-        label="Quantity"
-        variant="standard"
-        fullWidth
-        disabled={state.adding}
-        required
-        defaultValue={props.maxQuantity.toString()}
       />
       {state.error && (
         <Typography color={"error"} variant={"body1"} component="div" gutterBottom>

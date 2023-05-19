@@ -2,24 +2,52 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use concordium_cis2::{IsTokenAmount, IsTokenId};
+use std::ops::Sub;
+
+use cis2_common_utils::{ContractTokenAmount, ContractTokenId};
 use concordium_std::*;
 
+use crate::errors::MarketplaceError;
+
 #[derive(Clone, Serialize, PartialEq, Eq, Debug)]
-pub struct TokenInfo<T: Serial + Deserial> {
-    pub id: T,
+pub struct TokenInfo {
+    pub id: ContractTokenId,
     pub address: ContractAddress,
 }
 
+// impl From<&TokenOwnerInfo> for TokenInfo {
+//     fn from(token_owner_info: &TokenOwnerInfo) -> Self {
+//         TokenInfo {
+//             id: token_owner_info.id,
+//             address: token_owner_info.address,
+//         }
+//     }
+// }
+
 #[derive(Clone, Serialize, PartialEq, Eq, Debug)]
-pub struct TokenOwnerInfo<T: Serial + Deserial> {
-    pub id: T,
+pub struct TokenOwnerInfo {
+    pub id: ContractTokenId,
     pub address: ContractAddress,
     pub owner: AccountAddress,
 }
 
-impl<T: Serial + Deserial + Copy> TokenOwnerInfo<T> {
-    pub fn from(token_info: &TokenInfo<T>, owner: &AccountAddress) -> Self {
+impl Into<TokenInfo> for &TokenOwnerInfo {
+    fn into(self) -> TokenInfo {
+        TokenInfo {
+            id: self.id,
+            address: self.address,
+        }
+    }
+}
+
+impl Into<TokenInfo> for TokenOwnerInfo {
+    fn into(self) -> TokenInfo {
+        Into::<TokenInfo>::into(&self)
+    }
+}
+
+impl TokenOwnerInfo {
+    pub fn from(token_info: &TokenInfo, owner: &AccountAddress) -> Self {
         TokenOwnerInfo {
             owner: *owner,
             id: token_info.id,
@@ -29,8 +57,8 @@ impl<T: Serial + Deserial + Copy> TokenOwnerInfo<T> {
 }
 
 #[derive(Clone, Serialize, Copy, PartialEq, Eq, Debug)]
-pub struct TokenPriceState<A: IsTokenAmount> {
-    pub quantity: A,
+pub struct TokenPriceState {
+    pub quantity: ContractTokenAmount,
     pub price: Amount,
 }
 
@@ -53,31 +81,69 @@ pub struct Commission {
 }
 
 #[derive(Debug, Serialize, SchemaType, PartialEq, Eq, Clone)]
-pub struct TokenListItem<T: IsTokenId, A: IsTokenAmount> {
-    pub token_id: T,
+pub struct TokenListItem {
+    pub token_id: ContractTokenId,
     pub contract: ContractAddress,
     pub price: Amount,
     pub owner: AccountAddress,
     pub royalty: u16,
     pub primary_owner: AccountAddress,
-    pub quantity: A,
+    pub quantity: ContractTokenAmount,
+}
+
+#[derive(Debug, Serialize, SchemaType, PartialEq, Eq, Clone)]
+pub struct TokenOwnedListItem {
+    pub token_id: ContractTokenId,
+    pub contract: ContractAddress,
+    pub owner: AccountAddress,
+    pub quantity: ContractTokenAmount,
 }
 
 #[derive(Serial, DeserialWithState, StateClone)]
 #[concordium(state_parameter = "S")]
-pub struct State<S, T, A>
+pub struct TokenListState<S>
 where
     S: HasStateApi,
-    T: IsTokenId,
-    A: IsTokenAmount + Copy,
 {
-    pub commission: Commission,
-    pub token_royalties: StateMap<TokenInfo<T>, TokenRoyaltyState, S>,
-    pub token_prices: StateMap<TokenOwnerInfo<T>, TokenPriceState<A>, S>,
+    pub token_royalty: TokenRoyaltyState,
+    pub token_prices: StateMap<AccountAddress, Amount, S>,
 }
 
-impl<S: HasStateApi, T: IsTokenId + Copy, A: IsTokenAmount + Copy + ops::Sub<Output = A>>
-    State<S, T, A>
+impl<S: HasStateApi> TokenListState<S> {
+    pub fn new(
+        state_builder: &mut StateBuilder<S>,
+        owner: &AccountAddress,
+        royalty: u16,
+        price: Amount,
+    ) -> Self {
+        TokenListState {
+            token_royalty: TokenRoyaltyState {
+                primary_owner: *owner,
+                royalty,
+            },
+            token_prices: {
+                let mut map = state_builder.new_map();
+                map.insert(owner.to_owned(), price);
+                map
+            },
+        }
+    }
+}
+
+#[derive(Serial, DeserialWithState, StateClone)]
+#[concordium(state_parameter = "S")]
+pub struct State<S>
+where
+    S: HasStateApi,
+{
+    pub commission: Commission,
+    pub tokens_owned: StateMap<TokenOwnerInfo, ContractTokenAmount, S>,
+    pub tokens_listed: StateMap<TokenInfo, TokenListState<S>, S>,
+}
+
+impl<S> State<S>
+where
+    S: HasStateApi,
 {
     /// Creates a new state with the given commission.
     /// The commission is given as a percentage basis, i.e. 10000 is 100%.
@@ -86,95 +152,111 @@ impl<S: HasStateApi, T: IsTokenId + Copy, A: IsTokenAmount + Copy + ops::Sub<Out
             commission: Commission {
                 percentage_basis: commission,
             },
-            token_royalties: state_builder.new_map(),
-            token_prices: state_builder.new_map(),
+            tokens_owned: state_builder.new_map(),
+            tokens_listed: state_builder.new_map(),
         }
+    }
+
+    pub fn add_owned_token(
+        &mut self,
+        token_owner_info: &TokenOwnerInfo,
+        quantity: ContractTokenAmount,
+    ) {
+        self.tokens_owned
+            .entry(token_owner_info.clone())
+            .and_modify(|q| {
+                *q += quantity;
+            })
+            .or_insert(quantity);
     }
 
     /// Adds a token to Buyable Token List.
     pub fn list_token(
         &mut self,
-        token_info: &TokenInfo<T>,
+        state_builder: &mut StateBuilder<S>,
+        token_info: &TokenInfo,
         owner: &AccountAddress,
         price: Amount,
         royalty: u16,
-        quantity: A,
     ) {
-        match self.token_royalties.get(token_info) {
-            // If the token is already listed, do nothing.
-            Some(_) => None,
-            // If the token is not listed, add it to the list.
-            None => self.token_royalties.insert(
-                token_info.clone(),
-                TokenRoyaltyState {
-                    primary_owner: *owner,
-                    royalty,
-                },
-            ),
-        };
-
-        // Add the token to the buyable token list.
-        // If the token is already listed, update the price.
-        self.token_prices.insert(
-            TokenOwnerInfo::from(token_info, owner),
-            TokenPriceState { price, quantity },
-        );
+        self.tokens_listed
+            .entry(token_info.clone())
+            .and_modify(|l| {
+                l.token_prices.insert(owner.to_owned(), price);
+            })
+            .or_insert(TokenListState::new(state_builder, owner, royalty, price));
     }
 
     /// Decreases the quantity of a token in the buyable token list.
-    pub fn decrease_listed_quantity(&mut self, token_info: &TokenOwnerInfo<T>, delta: A) {
-        let price = match self.token_prices.get(token_info) {
-            Option::None => return,
-            Option::Some(price) => price,
-        };
+    pub fn decrease_listed_quantity(
+        &mut self,
+        token_owner_info: &TokenOwnerInfo,
+        delta: ContractTokenAmount,
+    ) {
+        match self.tokens_owned.get(token_owner_info) {
+            Some(quantity) => {
+                let new_quantity = quantity.sub(delta);
+                if new_quantity.eq(&ContractTokenAmount::from(0)) {
+                    self.tokens_owned.remove(token_owner_info);
+                    match self.tokens_listed.get_mut(&token_owner_info.into()) {
+                        Some(mut token) => {
+                            token.token_prices.remove(&token_owner_info.owner);
+                        }
+                        None => {}
+                    };
+                } else {
+                    self.tokens_owned
+                        .insert(token_owner_info.clone(), new_quantity);
+                }
+            }
+            None => {}
+        }
+    }
 
-        self.token_prices.insert(
-            token_info.clone(),
-            TokenPriceState {
-                quantity: price.quantity - delta,
-                price: price.price,
-            },
-        );
+    pub fn get_quantity_owned(
+        &self,
+        token_info: &TokenInfo,
+        owner: &AccountAddress,
+    ) -> Result<ContractTokenAmount, MarketplaceError> {
+        self.tokens_owned
+            .get(&TokenOwnerInfo::from(token_info, owner))
+            .map(|q| q.clone())
+            .ok_or(MarketplaceError::TokenNotInCustody)
     }
 
     /// Gets a token from the buyable token list.
-    pub fn get_listed(
+    pub fn get_listed_token(
         &self,
-        token_info: &TokenInfo<T>,
+        token_info: &TokenInfo,
         owner: &AccountAddress,
-    ) -> Option<(TokenRoyaltyState, TokenPriceState<A>)> {
-        match self.token_royalties.get(token_info) {
-            Some(r) => self
-                .token_prices
-                .get(&TokenOwnerInfo::from(token_info, owner))
-                .map(|p| (*r, *p)),
-            None => Option::None,
+    ) -> Result<(TokenRoyaltyState, Amount), MarketplaceError> {
+        match self.tokens_listed.get(token_info) {
+            Some(token) => match token.token_prices.get(owner) {
+                Some(price) => Ok((token.token_royalty, *price)),
+                None => Err(MarketplaceError::TokenNotListed),
+            },
+            None => Err(MarketplaceError::TokenNotListed),
         }
     }
 
     /// Gets a list of all tokens in the buyable token list.
-    pub fn list(&self) -> Vec<TokenListItem<T, A>> {
-        self.token_prices
+    pub fn get_listed_tokens(&self) -> Vec<TokenListItem> {
+        self.tokens_owned
             .iter()
-            .filter_map(|p| -> Option<TokenListItem<T, A>> {
-                let token_info = TokenInfo {
-                    id: p.0.id,
-                    address: p.0.address,
-                };
-
-                match self.token_royalties.get(&token_info) {
-                    Option::None => Option::None,
-                    Option::Some(r) => Option::Some(TokenListItem {
-                        token_id: token_info.id,
-                        contract: token_info.address,
-                        price: p.1.price,
-                        owner: p.0.owner,
-                        royalty: r.royalty,
-                        primary_owner: r.primary_owner,
-                        quantity: p.1.quantity,
-                    }),
-                }
+            .map(|t| match self.tokens_listed.get(&t.0.to_owned().into()) {
+                Some(l) => Some(TokenListItem {
+                    token_id: t.0.id,
+                    contract: t.0.address,
+                    price: *l.token_prices.get(&t.0.owner).unwrap(),
+                    owner: t.0.owner,
+                    royalty: l.token_royalty.royalty,
+                    primary_owner: l.token_royalty.primary_owner,
+                    quantity: t.1.to_owned(),
+                }),
+                None => None,
             })
+            .filter(|t| t.is_some())
+            .map(|t| t.unwrap())
             .collect()
     }
 }

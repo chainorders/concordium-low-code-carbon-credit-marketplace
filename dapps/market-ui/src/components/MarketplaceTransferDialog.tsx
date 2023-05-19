@@ -1,4 +1,3 @@
-import { TokenListItem, transfer } from "common-ui";
 import React, { FormEvent, useState } from "react";
 
 import { WalletApi } from "@concordium/browser-wallet-api-helpers";
@@ -14,6 +13,7 @@ import { Container } from "@mui/system";
 
 import Alert from "../components/ui/Alert";
 import { MARKETPLACE_CONTRACT_INFO } from "../Constants";
+import { TokenListItem, transfer } from "../models/MarketplaceClient";
 
 export default function MarketplaceTransferDialog(props: {
   isOpen: boolean;

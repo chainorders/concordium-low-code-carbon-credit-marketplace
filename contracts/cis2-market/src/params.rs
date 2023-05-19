@@ -1,11 +1,12 @@
 //! Defines the parameters for the marketplace contract.
 //! [Read more](https://developer.concordium.software/en/mainnet/smart-contracts/general/develop-contracts.html#working-with-parameters) about working with parameters
 
+use cis2_common_utils::{ContractTokenAmount, ContractTokenId};
 use concordium_std::{
     AccountAddress, Amount, ContractAddress, Deserial, SchemaType, Serial, Serialize,
 };
 
-use crate::{state::TokenListItem, ContractTokenAmount, ContractTokenId};
+use crate::state::TokenListItem;
 
 /// Parameters for the `add` method for Market Contract.
 #[derive(Serial, Deserial, SchemaType)]
@@ -20,10 +21,6 @@ pub(crate) struct AddParams {
     /// Royalty basis points. This is equal to Royalty% * 100. So can be a max
     /// of 100*100 `MAX_BASIS_POINTS`
     pub royalty: u16,
-
-    /// Quantity of the token which can be listed on the marketplace
-    /// In case of an NFT this will always be one
-    pub quantity: ContractTokenAmount,
 }
 
 /// Parameters for the `transfer` method for Market Contract.
@@ -46,9 +43,7 @@ pub(crate) struct TransferParams {
 }
 
 #[derive(Debug, Serialize, SchemaType)]
-pub struct TokenList(
-    #[concordium(size_length = 2)] pub Vec<TokenListItem<ContractTokenId, ContractTokenAmount>>,
-);
+pub struct TokenList(pub Vec<TokenListItem>);
 
 /// Parameters for the `init` method for Market Contract.
 #[derive(Serial, Deserial, SchemaType)]

@@ -1,31 +1,44 @@
 import "./App.css";
 
-import React, { useEffect, useState } from "react";
-import { Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
-
+import { useEffect, useState } from "react";
 import { detectConcordiumProvider, WalletApi } from "@concordium/browser-wallet-api-helpers";
+import { AppBar, Box, Button, Container, Link, Toolbar, Typography } from "@mui/material";
+import { Route, Routes, useParams, Navigate, useNavigate } from "react-router-dom";
 import { ConcordiumGRPCClient, ContractAddress, createConcordiumClient } from "@concordium/web-sdk";
-import { Box, Link, Typography } from "@mui/material";
 
-import ConnectWallet from "./components/ConnectWallet";
-import Header from "./components/ui/Header";
+import MarketFindOrInit from "./pages/marketplace/MarketFindOrInit";
 import {
   CIS2_MULTI_CONTRACT_INFO,
   CONCORDIUM_NODE_PORT,
   CONNCORDIUM_NODE_ENDPOINT,
-  CREATE_NEW_MARKETPLACE,
-  MARKET_CONTRACT_ADDRESS,
+  FRACTIONALIZER_CONTRACT_ADDRESS,
+  FRACTIONALIZER_CONTRACT_INFO,
   MARKETPLACE_CONTRACT_INFO,
-  MINTING_UI_ONLY,
+  MARKET_CONTRACT_ADDRESS,
 } from "./Constants";
-import BuyPage from "./pages/BuyPage";
-import ContractFindInstanceOrInit from "./pages/ContractFindInstanceOrInit";
-import MintPage from "./pages/MintPage";
-import SellPage from "./pages/SellPage";
+import ConnectWallet from "./components/ConnectWallet";
+import { MINTING_UI_ONLY } from "./Constants";
+import MarketPage from "./pages/marketplace/MarketPage";
+import CIS2Page from "./pages/cis2/CIS2Page";
+import SellPage from "./pages/marketplace/SellPage";
+import FractionalizerPage from "./pages/fractionalizer/FractionalizerPage";
+import MarketplaceTokensList from "./components/MarketplaceTokensList";
+import MintPage from "./pages/cis2/MintPage";
+import FractionalizeToken from "./components/cis2-fractionalizer/FractionalizeToken";
+import FractionalizerFindOrInit from "./pages/fractionalizer/FractionalizerFindOrInit";
 
 function App() {
   const params = useParams();
   const navigate = useNavigate();
+  const { mIndex, mSubindex, fIndex, fSubindex } = useParams();
+  const marketContract = {
+    index: BigInt(mIndex || MARKET_CONTRACT_ADDRESS.index.toString()),
+    subindex: BigInt(mSubindex || MARKET_CONTRACT_ADDRESS.subindex.toString()),
+  };
+  const fracContract = {
+    index: BigInt(fIndex || FRACTIONALIZER_CONTRACT_ADDRESS.index.toString()),
+    subindex: BigInt(fSubindex || FRACTIONALIZER_CONTRACT_ADDRESS.subindex.toString()),
+  };
 
   let marketplaceContractAddress: ContractAddress | undefined = undefined;
   if (!MINTING_UI_ONLY) {
@@ -92,115 +105,136 @@ function App() {
     return !!state.provider && !!state.account;
   }
 
-  function onMarketplaceContractChanged(marketplaceContractAddress: ContractAddress) {
-    setState({ ...state, marketplaceContractAddress });
-    navigate("/");
-  }
-
-  const pages = new Array<{
-    path: string;
-    href?: string;
-    name: string;
-    component: JSX.Element;
-    display: "primary" | "secondary";
-  }>();
-
-  if (state.marketplaceContractAddress) {
-    pages.push({
-      path: "/buy/:index/:subindex",
-      href: `/buy/${state.marketplaceContractAddress.index.toString()}/${state.marketplaceContractAddress.subindex.toString()}`,
-      name: "Buy",
-      component: (
-        <BuyPage
-          provider={state.provider!}
-          account={state.account!}
-          marketContractAddress={state.marketplaceContractAddress!}
-          grpcClient={state.grpcClient!}
-        />
-      ),
-      display: "primary",
-    });
-
-    pages.push({
-      path: "/sell/:index/:subindex",
-      href: `/sell/${state.marketplaceContractAddress.index.toString()}/${state.marketplaceContractAddress.subindex.toString()}`,
-      name: "Sell",
-      component: (
-        <SellPage
-          provider={state.provider!}
-          grpcClient={state.grpcClient!}
-          account={state.account!}
-          marketContractAddress={state.marketplaceContractAddress!}
-          contractInfo={CIS2_MULTI_CONTRACT_INFO}
-        />
-      ),
-      display: "primary",
-    });
-  }
-
-  pages.push({
-    path: "/mint-multi-batch",
-    name: "Mint",
-    component: (
-      <MintPage
-        key={CIS2_MULTI_CONTRACT_INFO.contractName}
-        contractInfo={CIS2_MULTI_CONTRACT_INFO}
-        provider={state.provider!}
-        account={state.account!}
-        grpcClient={state.grpcClient}
-      />
-    ),
-    display: "primary",
-  });
-
-  if (CREATE_NEW_MARKETPLACE) {
-    pages.push({
-      path: "/marketplace-init-or-add",
-      name: "Create My Marketplace",
-      component: (
-        <ContractFindInstanceOrInit
-          provider={state.provider!}
-          grpcClient={state.grpcClient}
-          account={state.account!}
-          contractInfo={MARKETPLACE_CONTRACT_INFO}
-          onDone={(address) => onMarketplaceContractChanged(address)}
-        />
-      ),
-      display: "secondary",
-    });
-  }
-
-  function DefaultRouteElement() {
-    if (MINTING_UI_ONLY) {
-      return <Navigate replace to={"/mint-multi-batch"} />;
-    } else if (state.marketplaceContractAddress) {
-      return (
-        <Navigate
-          replace
-          to={`/buy/${state.marketplaceContractAddress.index.toString()}/${state.marketplaceContractAddress.subindex.toString()}`}
-        />
-      );
-    } else if (CREATE_NEW_MARKETPLACE) {
-      return <Navigate replace to={"/marketplace-init-or-add"} />;
-    } else {
-      return <Navigate replace to={"/mint-multi-batch"} />;
-    }
+  if (!isConnected()) {
+    return <ConnectWallet connect={connect} />;
   }
 
   return (
     <>
-      <Header pages={pages} />
+      <AppBar position="static">
+        <Container maxWidth={"xl"}>
+          <Toolbar>
+            <Box sx={{ flexGrow: 1 }}>
+              <Typography variant="h4" component="div">
+                Concordium
+              </Typography>
+            </Box>
+            <Button color="inherit" onClick={() => navigate("/market")}>
+              Market
+            </Button>
+            <Button color="inherit" onClick={() => navigate("/fractionalizer")}>
+              Fractionalizer
+            </Button>
+            <Button color="inherit" onClick={() => navigate("/cis2")}>
+              CIS2 Token Tools
+            </Button>
+          </Toolbar>
+        </Container>
+      </AppBar>
       <Box className="App">
-        {isConnected() ? (
+        <Container maxWidth={"lg"}>
           <Routes>
-            {pages.map((p) => (
-              <Route path={p.path} element={p.component} key={p.name} />
-            ))}
-            <Route path="/" element={<DefaultRouteElement />} />
+            <Route path="/market" element={<MarketPage marketContract={marketContract} />} key="market">
+              <Route
+                path="buy/:mIndex/:mSubindex"
+                element={
+                  <MarketplaceTokensList
+                    grpcClient={state.grpcClient!}
+                    account={state.account!}
+                    provider={state.provider!}
+                    marketContractAddress={marketContract}
+                  />
+                }
+              />
+              <Route
+                path="sell"
+                element={
+                  <SellPage
+                    grpcClient={state.grpcClient!}
+                    provider={state.provider!}
+                    account={state.account!}
+                    marketContractAddress={marketContract}
+                    contractInfo={CIS2_MULTI_CONTRACT_INFO}
+                  />
+                }
+              />
+              <Route
+                path="create"
+                element={
+                  <MarketFindOrInit
+                    grpcClient={state.grpcClient!}
+                    provider={state.provider!}
+                    account={state.account!}
+                    contractInfo={MARKETPLACE_CONTRACT_INFO}
+                    onDone={(address) => navigate(`buy/${address.index.toString()}/${address.subindex.toString()}`)}
+                  />
+                }
+              />
+              <Route
+                path=""
+                element={
+                  <Navigate
+                    to={`buy/${marketContract.index.toString()}/${marketContract.subindex.toString()}`}
+                    replace={true}
+                  />
+                }
+              />
+            </Route>
+            <Route path="/cis2" element={<CIS2Page />} key="cis2">
+              <Route
+                path="mint"
+                element={
+                  <MintPage
+                    grpcClient={state.grpcClient!}
+                    key={CIS2_MULTI_CONTRACT_INFO.contractName}
+                    contractInfo={CIS2_MULTI_CONTRACT_INFO}
+                    provider={state.provider!}
+                    account={state.account!}
+                  />
+                }
+              />
+              <Route path="" element={<Navigate to={"mint"} replace={true} />} />
+            </Route>
+            <Route path="/fractionalizer" element={<FractionalizerPage fracContract={fracContract} />}>
+              <Route
+                path="fractionalize/:fIndex/:fSubindex"
+                element={
+                  <FractionalizeToken
+                    grpcClient={state.grpcClient!}
+                    provider={state.provider!}
+                    account={state.account!}
+                    fracContractAddress={fracContract}
+                    contractInfo={CIS2_MULTI_CONTRACT_INFO}
+                  />
+                }
+              />
+              <Route
+                path="create"
+                element={
+                  <FractionalizerFindOrInit
+                    grpcClient={state.grpcClient!}
+                    provider={state.provider!}
+                    account={state.account!}
+                    contractInfo={FRACTIONALIZER_CONTRACT_INFO}
+                    onDone={(address) =>
+                      navigate(`fractionalize/${address.index.toString()}/${address.subindex.toString()}`)
+                    }
+                  />
+                }
+              />
+              <Route
+                path=""
+                element={
+                  <Navigate
+                    to={`fractionalize/${fracContract.index.toString()}/${fracContract.subindex.toString()}`}
+                    replace={true}
+                  />
+                }
+              />
+            </Route>
+            <Route path="*" element={<Navigate to={"/market"} replace={true} />} />
           </Routes>
-        ) : (
-          <ConnectWallet connect={connect} />
-        )}
+        </Container>
       </Box>
       <footer className="footer">
         <Typography textAlign={"center"} sx={{ color: "white" }}>

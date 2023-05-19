@@ -1,9 +1,9 @@
-import { Cis2ContractInfo } from "common-ui";
 import React, { useState } from "react";
 
 import { CIS2 } from "@concordium/web-sdk";
 import { Stack, Typography } from "@mui/material";
 
+import { Cis2ContractInfo } from "../../models/ConcordiumContractClient";
 import Cis2BatchMetadataAdd from "./Cis2BatchMetadataAdd";
 import Cis2BatchMetadataPrepare from "./Cis2BatchMetadataPrepare";
 

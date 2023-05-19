@@ -141,6 +141,13 @@ impl Cis2Client {
         from: Address,
         to: Receiver,
     ) -> Result<(), Cis2ClientError> {
+        // Checks if the CIS2 contract supports the CIS2 interface.
+        let cis_contract_address =
+            match Cis2Client::supports_cis2(host, &cis_contract_address)? {
+                None => bail!(Cis2ClientError::CollectionNotCis2),
+                Some(address) => address,
+            };
+
         let params = TransferParams(vec![Transfer {
             token_id,
             amount,

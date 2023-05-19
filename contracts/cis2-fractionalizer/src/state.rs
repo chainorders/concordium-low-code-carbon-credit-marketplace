@@ -1,10 +1,13 @@
+use core::ops::{AddAssign, SubAssign};
+
+use cis2_common_utils::{ContractTokenAmount, ContractTokenId};
 use concordium_cis2::*;
 use concordium_std::*;
 
 use crate::{
     error::{ContractError, CustomContractError},
     params::TokenMetadata,
-    ContractResult, ContractTokenAmount, ContractTokenId,
+    ContractResult,
 };
 
 /// The state for each address.
@@ -12,22 +15,21 @@ use crate::{
 #[concordium(state_parameter = "S")]
 pub struct AddressState<S> {
     /// The amount of tokens owned by this address.
-    pub(crate) balances: StateMap<ContractTokenId, ContractTokenAmount, S>,
-    /// The address which are currently enabled as operators for this address.
-    pub(crate) operators: StateSet<Address, S>,
+    pub balances: StateMap<ContractTokenId, ContractTokenAmount, S>,
 }
 
 impl<S: HasStateApi> AddressState<S> {
     fn empty(state_builder: &mut StateBuilder<S>) -> Self {
         AddressState {
             balances: state_builder.new_map(),
-            operators: state_builder.new_set(),
         }
     }
 }
 
+/// Collateral Key.
+/// The Token which is fractionalized and hence used as collateral.
 #[derive(Serial, Deserial, Clone, SchemaType, Copy)]
-pub struct CollateralKey {
+pub struct CollateralToken {
     pub contract: ContractAddress,
     pub token_id: ContractTokenId,
     pub owner: AccountAddress,
@@ -56,30 +58,26 @@ impl CollateralState {
 #[concordium(state_parameter = "S")]
 pub struct State<S> {
     /// The state of addresses.
-    pub(crate) state: StateMap<Address, AddressState<S>, S>,
+    pub state: StateMap<Address, AddressState<S>, S>,
     /// All of the token IDs
-    pub(crate) tokens: StateMap<ContractTokenId, MetadataUrl, S>,
-    pub(crate) token_supply: StateMap<ContractTokenId, ContractTokenAmount, S>,
-    /// Map with contract addresses providing implementations of additional
-    /// standards.
-    pub(crate) implementors: StateMap<StandardIdentifierOwned, Vec<ContractAddress>, S>,
-    pub(crate) collaterals: StateMap<CollateralKey, CollateralState, S>,
+    pub tokens: StateMap<ContractTokenId, MetadataUrl, S>,
+    pub token_supply: StateMap<ContractTokenId, ContractTokenAmount, S>,
+    pub tokens_owned: StateMap<CollateralToken, CollateralState, S>,
 }
 
 impl<S: HasStateApi> State<S> {
     /// Construct a state with no tokens
-    pub(crate) fn empty(state_builder: &mut StateBuilder<S>) -> Self {
+    pub fn empty(state_builder: &mut StateBuilder<S>) -> Self {
         State {
             state: state_builder.new_map(),
             tokens: state_builder.new_map(),
-            implementors: state_builder.new_map(),
-            collaterals: state_builder.new_map(),
+            tokens_owned: state_builder.new_map(),
             token_supply: state_builder.new_map(),
         }
     }
 
     /// Mints an amount of tokens with a given address as the owner.
-    pub(crate) fn mint(
+    pub fn mint(
         &mut self,
         token_id: &ContractTokenId,
         token_metadata: &TokenMetadata,
@@ -87,58 +85,51 @@ impl<S: HasStateApi> State<S> {
         owner: &Address,
         state_builder: &mut StateBuilder<S>,
     ) {
-        {
-            self.tokens
-                .insert(*token_id, token_metadata.to_metadata_url());
-            let mut owner_state = self
-                .state
-                .entry(*owner)
-                .or_insert_with(|| AddressState::empty(state_builder));
-            let mut owner_balance = owner_state.balances.entry(*token_id).or_insert(0.into());
-            *owner_balance += amount;
-        }
+        self.tokens
+            .insert(*token_id, token_metadata.to_metadata_url());
 
-        self.increase_supply(*token_id, amount);
+        self.state
+            .entry(*owner)
+            .and_modify(|b| {
+                b.balances
+                    .entry(*token_id)
+                    .and_modify(|a| *a += amount)
+                    .or_insert(amount);
+            })
+            .or_insert_with(|| AddressState::empty(state_builder));
+
+        self.token_supply
+            .entry(*token_id)
+            .and_modify(|a| a.add_assign(amount))
+            .or_insert(amount);
     }
 
-    pub(crate) fn burn(
+    pub fn burn(
         &mut self,
         token_id: &ContractTokenId,
         amount: ContractTokenAmount,
         owner: &Address,
-    ) -> ContractResult<ContractTokenAmount> {
-        let ret = {
-            match self.state.get_mut(owner) {
-                Some(address_state) => match address_state.balances.get_mut(token_id) {
-                    Some(mut b) => {
-                        ensure!(
-                            b.cmp(&amount).is_ge(),
-                            Cis2Error::Custom(CustomContractError::NoBalanceToBurn)
-                        );
+    ) {
+        self.state.entry(owner.to_owned()).and_modify(|f| {
+            f.balances
+                .entry(*token_id)
+                .and_modify(|a| a.sub_assign(amount));
+        });
 
-                        *b -= amount;
-                        Ok(*b)
-                    }
-                    None => Err(Cis2Error::Custom(CustomContractError::NoBalanceToBurn)),
-                },
-                None => Err(Cis2Error::Custom(CustomContractError::NoBalanceToBurn)),
-            }
-        };
-
-        self.decrease_supply(*token_id, amount);
-
-        ret
+        self.token_supply
+            .entry(*token_id)
+            .and_modify(|a| a.sub_assign(amount));
     }
 
     /// Check that the token ID currently exists in this contract.
     #[inline(always)]
-    pub(crate) fn contains_token(&self, token_id: &ContractTokenId) -> bool {
+    pub fn contains_token(&self, token_id: &ContractTokenId) -> bool {
         self.tokens.get(token_id).is_some()
     }
 
     /// Get the current balance of a given token id for a given address.
     /// Results in an error if the token id does not exist in the state.
-    pub(crate) fn balance(
+    pub fn balance(
         &self,
         token_id: &ContractTokenId,
         address: &Address,
@@ -153,41 +144,17 @@ impl<S: HasStateApi> State<S> {
         Ok(balance)
     }
 
-    fn increase_supply(&mut self, token_id: ContractTokenId, amount: ContractTokenAmount) {
-        let curr_supply = self.get_supply(&token_id);
-        self.token_supply.insert(token_id, curr_supply + amount);
-    }
-
-    fn decrease_supply(&mut self, token_id: ContractTokenId, amount: ContractTokenAmount) {
-        let curr_supply = self.get_supply(&token_id);
-        let remaining_supply = curr_supply - amount;
-
-        if remaining_supply.cmp(&ContractTokenAmount::from(0)).is_eq() {
-            self.token_supply.remove(&token_id);
-        } else {
-            self.token_supply.insert(token_id, curr_supply - amount);
-        }
-    }
-
-    pub(crate) fn get_supply(&self, token_id: &ContractTokenId) -> ContractTokenAmount {
+    pub fn get_supply(&self, token_id: &ContractTokenId) -> ContractTokenAmount {
         match self.token_supply.get(token_id) {
-            Some(amount) => *amount,
+            Some(amount) => amount.to_owned(),
             None => ContractTokenAmount::from(0),
         }
-    }
-
-    /// Check if an address is an operator of a given owner address.
-    pub(crate) fn is_operator(&self, address: &Address, owner: &Address) -> bool {
-        self.state
-            .get(owner)
-            .map(|address_state| address_state.operators.contains(address))
-            .unwrap_or(false)
     }
 
     /// Update the state with a transfer.
     /// Results in an error if the token id does not exist in the state or if
     /// the from address have insufficient tokens to do the transfer.
-    pub(crate) fn transfer(
+    pub fn transfer(
         &mut self,
         token_id: &ContractTokenId,
         amount: ContractTokenAmount,
@@ -230,82 +197,49 @@ impl<S: HasStateApi> State<S> {
         Ok(())
     }
 
-    /// Update the state adding a new operator for a given address.
-    /// Succeeds even if the `operator` is already an operator for the
-    /// `address`.
-    pub(crate) fn add_operator(
-        &mut self,
-        owner: &Address,
-        operator: &Address,
-        state_builder: &mut StateBuilder<S>,
-    ) {
-        let mut owner_state = self
-            .state
-            .entry(*owner)
-            .or_insert_with(|| AddressState::empty(state_builder));
-        owner_state.operators.insert(*operator);
-    }
-
-    /// Update the state removing an operator for a given address.
-    /// Succeeds even if the `operator` is not an operator for the `address`.
-    pub(crate) fn remove_operator(&mut self, owner: &Address, operator: &Address) {
-        self.state.entry(*owner).and_modify(|address_state| {
-            address_state.operators.remove(operator);
-        });
-    }
-
-    /// Check if state contains any implementors for a given standard.
-    pub(crate) fn have_implementors(&self, std_id: &StandardIdentifierOwned) -> SupportResult {
-        if let Some(addresses) = self.implementors.get(std_id) {
-            SupportResult::SupportBy(addresses.to_vec())
-        } else {
-            SupportResult::NoSupport
-        }
-    }
-
-    pub(crate) fn add_collateral(
+    pub fn add_owned_token(
         &mut self,
         contract: ContractAddress,
         token_id: ContractTokenId,
         owner: AccountAddress,
         received_token_amount: ContractTokenAmount,
     ) {
-        let key = CollateralKey {
+        let key = CollateralToken {
             contract,
             token_id,
             owner,
         };
 
-        let mut cs = match self.collaterals.get(&key) {
+        let mut cs = match self.tokens_owned.get(&key) {
             Some(v) => *v,
             None => CollateralState::new(),
         };
 
         cs.received_token_amount += received_token_amount;
 
-        self.collaterals.insert(key, cs);
+        self.tokens_owned.insert(key, cs);
     }
 
-    pub(crate) fn has_collateral(
+    /// Returns false if the owned token is used for any token Id other than the token being minted.
+    pub fn has_unsed_owned_token(
         &self,
-        contract: &ContractAddress,
-        token_id: &ContractTokenId,
-        owner: &AccountAddress,
+        collateral_key: &CollateralToken,
+        minted_token_id: &ContractTokenId,
     ) -> bool {
-        let key = CollateralKey {
-            contract: *contract,
-            token_id: *token_id,
-            owner: *owner,
-        };
-
-        self.collaterals.get(&key).is_some()
+        match self.tokens_owned.get(&collateral_key) {
+            Some(c) => match c.minted_token_id {
+                Some(minted_token) => minted_token.eq(minted_token_id),
+                None => true,
+            },
+            None => false,
+        }
     }
 
-    pub(crate) fn find_collateral(
+    pub fn find_owned_token_from_minted_token_id(
         &self,
         token_id: &ContractTokenId,
-    ) -> Option<(CollateralKey, ContractTokenAmount)> {
-        for c in self.collaterals.iter() {
+    ) -> Option<(CollateralToken, ContractTokenAmount)> {
+        for c in self.tokens_owned.iter() {
             match c.1.minted_token_id {
                 Some(t) => {
                     if t.eq(token_id) {
@@ -319,34 +253,22 @@ impl<S: HasStateApi> State<S> {
         None
     }
 
-    pub(crate) fn update_collateral_token(
-        &mut self,
-        contract: ContractAddress,
-        token_id: ContractTokenId,
-        owner: AccountAddress,
-        minted_token_id: ContractTokenId,
-    ) -> ContractResult<()> {
-        let key = CollateralKey {
-            contract,
-            token_id,
-            owner,
-        };
+    pub fn remove_owned_token(&mut self, collateral_key: &CollateralToken) {
+        self.tokens_owned.remove(collateral_key);
+    }
 
-        match self.collaterals.entry(key) {
+    /// Updates the owned token to attached a Minted Token Id
+    pub fn use_owned_token(
+        &mut self,
+        owned_token: &CollateralToken,
+        minted_token_id: &ContractTokenId,
+    ) -> ContractResult<()> {
+        match self.tokens_owned.entry(owned_token.to_owned()) {
             Entry::Vacant(_) => bail!(Cis2Error::Custom(CustomContractError::InvalidCollateral)),
             Entry::Occupied(mut e) => {
-                e.modify(|s| s.minted_token_id = Some(minted_token_id));
+                e.modify(|s| s.minted_token_id = Some(minted_token_id.to_owned()));
                 Ok(())
             }
         }
-    }
-
-    /// Set implementors for a given standard.
-    pub(crate) fn set_implementors(
-        &mut self,
-        std_id: StandardIdentifierOwned,
-        implementors: Vec<ContractAddress>,
-    ) {
-        self.implementors.insert(std_id, implementors);
     }
 }

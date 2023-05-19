@@ -1,17 +1,17 @@
+use cis2_common_utils::{ContractTokenAmount, ContractTokenId};
 use concordium_cis2::*;
 use concordium_std::*;
 use core::convert::TryInto;
 
-use crate::{
-    state::{CollateralKey, CollateralState},
-    ContractTokenAmount, ContractTokenId,
-};
+use crate::state::{CollateralState, CollateralToken};
 
 #[derive(Serial, Deserial, SchemaType)]
 pub struct TokenMintParams {
     pub metadata: TokenMetadata,
     pub amount: ContractTokenAmount,
+    /// Collateral Contract
     pub contract: ContractAddress,
+    /// Collateral Token
     pub token_id: ContractTokenId,
 }
 
@@ -23,17 +23,6 @@ pub struct MintParams {
     pub owner: Address,
     /// A collection of tokens to mint.
     pub tokens: collections::BTreeMap<ContractTokenId, TokenMintParams>,
-}
-
-/// The parameter type for the contract function `setImplementors`.
-/// Takes a standard identifier and a list of contract addresses providing
-/// implementations of this standard.
-#[derive(Debug, Serialize, SchemaType)]
-pub struct SetImplementorsParams {
-    /// The identifier for the standard.
-    pub id: StandardIdentifierOwned,
-    /// The addresses of the implementors of the standard.
-    pub implementors: Vec<ContractAddress>,
 }
 
 #[derive(Debug, Serialize, Clone, SchemaType)]
@@ -71,14 +60,13 @@ impl TokenMetadata {
 #[derive(Serialize, SchemaType)]
 pub struct ViewAddressState {
     pub balances: Vec<(ContractTokenId, ContractTokenAmount)>,
-    pub operators: Vec<Address>,
 }
 
 #[derive(Serialize, SchemaType)]
 pub struct ViewState {
     pub state: Vec<(Address, ViewAddressState)>,
     pub tokens: Vec<ContractTokenId>,
-    pub collaterals: Vec<(CollateralKey, CollateralState)>,
+    pub tokens_owned: Vec<(CollateralToken, CollateralState)>,
 }
 
 /// Parameter type for the CIS-2 function `balanceOf` specialized to the subset

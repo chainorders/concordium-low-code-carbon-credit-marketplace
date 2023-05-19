@@ -4,24 +4,30 @@
 use cis2_common_utils::errors::Cis2ClientError;
 use concordium_std::*;
 
-#[derive(Serialize, Debug, PartialEq, Eq, Reject)]
+#[derive(Serialize, Debug, PartialEq, Eq, Reject, SchemaType)]
 pub enum MarketplaceError {
     ParseParams,
     CalledByAContract,
     TokenNotListed,
     Cis2ClientError(Cis2ClientError),
-    CollectionNotCis2,
     InvalidAmountPaid,
     InvokeTransferError,
     NoBalance,
-    NotOperator,
     InvalidCommission,
     InvalidTokenQuantity,
     InvalidRoyalty,
+    TokenNotInCustody,
+    CalledByAnAccount,
 }
 
 impl From<Cis2ClientError> for MarketplaceError {
     fn from(e: Cis2ClientError) -> Self {
         MarketplaceError::Cis2ClientError(e)
+    }
+}
+
+impl From<ParseError> for MarketplaceError {
+    fn from(_: ParseError) -> Self {
+        MarketplaceError::ParseParams
     }
 }

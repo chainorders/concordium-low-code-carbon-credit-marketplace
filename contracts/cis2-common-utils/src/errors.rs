@@ -1,10 +1,11 @@
 use concordium_std::*;
 
-#[derive(Serialize, Debug, PartialEq, Eq, Reject)]
+#[derive(Serialize, Debug, PartialEq, Eq, Reject, SchemaType)]
 pub enum Cis2ClientError {
     InvokeContractError,
     ParseParams,
     ParseResult,
+    CollectionNotCis2
 }
 
 impl<T> From<CallContractError<T>> for Cis2ClientError {

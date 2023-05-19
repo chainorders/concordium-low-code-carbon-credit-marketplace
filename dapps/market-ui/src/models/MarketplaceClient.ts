@@ -5,13 +5,12 @@ import {
   deserializeReceiveReturnValue,
   TransactionSummary,
 } from "@concordium/web-sdk";
-
 import {
   ContractInfo,
   invokeContract,
-  ParamContractAddress,
-  toParamContractAddress,
   updateContract,
+  toParamContractAddress,
+  ParamContractAddress,
 } from "./ConcordiumContractClient";
 
 const enum MethodNames {
@@ -32,14 +31,12 @@ export async function list(
   contractInfo: ContractInfo,
 ): Promise<TokenList> {
   const retValue = await invokeContract(grpcClient, contractInfo, marketContractAddress, MethodNames.list);
-
   const retValueDe = deserializeReceiveReturnValue(
     retValue,
     contractInfo.schemaBuffer,
     contractInfo.contractName,
     MethodNames.list,
   );
-
   const tokens = retValueDe[0].map(
     (t: any) =>
       ({
@@ -146,7 +143,6 @@ export interface AddParams {
   token_id: string;
   price: string;
   royalty: number;
-  quantity: string;
 }
 
 export interface TransferParams {

@@ -1,4 +1,3 @@
-import { Cis2ContractInfo } from "common-ui";
 import React, { useState } from "react";
 
 import { WalletApi } from "@concordium/browser-wallet-api-helpers";
@@ -6,13 +5,13 @@ import { CIS2, ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk
 import { ArrowBackRounded } from "@mui/icons-material";
 import { AlertColor, Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography } from "@mui/material";
 import { Container } from "@mui/system";
-
-import Cis2BatchMetadataPrepareOrAdd from "../components/cis2/Cis2BatchMetadataPrepareOrAdd";
-import Cis2BatchMint from "../components/cis2/Cis2BatchMint";
-import Cis2FindInstanceOrInit from "../components/cis2/Cis2FindInstanceOrInit";
-import ConnectPinata from "../components/ConnectPinata";
-import Alert from "../components/ui/Alert";
-import UploadFiles from "../components/ui/UploadFiles";
+import ConnectPinata from "../../components/ConnectPinata";
+import Cis2BatchMetadataPrepareOrAdd from "../../components/cis2/Cis2BatchMetadataPrepareOrAdd";
+import Cis2BatchMint from "../../components/cis2/Cis2BatchMint";
+import Cis2FindInstanceOrInit from "../../components/cis2/Cis2FindInstanceOrInit";
+import UploadFiles from "../../components/ui/UploadFiles";
+import { Cis2ContractInfo } from "../../models/ConcordiumContractClient";
+import Alert from "../../components/ui/Alert";
 
 enum Steps {
   GetOrInitCis2,

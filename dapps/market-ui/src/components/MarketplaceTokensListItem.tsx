@@ -1,4 +1,3 @@
-import { fetchJson, Metadata, TokenListItem } from "common-ui";
 import React, { useEffect, useState } from "react";
 
 import { CIS2Contract, ContractAddress } from "@concordium/web-sdk";
@@ -8,6 +7,10 @@ import { Typography } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import ImageListItem from "@mui/material/ImageListItem";
 import ImageListItemBar from "@mui/material/ImageListItemBar";
+
+import { Metadata } from "../models/Cis2Client";
+import { TokenListItem } from "../models/MarketplaceClient";
+import { fetchJson } from "../models/Utils";
 import Cis2MetadataImageLazy from "./cis2/Cis2MetadataImageLazy";
 
 type ListItem = TokenListItem & { cis2Contract: CIS2Contract };
