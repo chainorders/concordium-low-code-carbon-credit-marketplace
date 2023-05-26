@@ -1,12 +1,13 @@
 import React, { FormEvent, useState } from "react";
 
 import { WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { CIS2Contract, ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk";
-import { Button, Stack, TextField, Typography } from "@mui/material";
+import { CIS2Contract, ConcordiumGRPCClient, ContractAddress, TransactionStatusEnum } from "@concordium/web-sdk";
+import { Button, Container, Stack, TextField, Typography } from "@mui/material";
 
 import { MARKETPLACE_CONTRACT_INFO } from "../Constants";
 import { toParamContractAddress } from "../models/ConcordiumContractClient";
 import { add, AddParams } from "../models/MarketplaceClient";
+import TransactionProgress from "./ui/TransactionProgress";
 
 interface MarketplaceAddProps {
   grpcClient: ConcordiumGRPCClient;
@@ -24,9 +25,10 @@ interface MarketplaceAddProps {
  */
 function MarketplaceAdd(props: MarketplaceAddProps) {
   const [state, setState] = useState({
-    adding: false,
+    inProgress: false,
     error: "",
   });
+  const [txn, setTxn] = useState<{ hash?: string; status?: TransactionStatusEnum }>({});
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -44,7 +46,7 @@ function MarketplaceAdd(props: MarketplaceAddProps) {
       return;
     }
 
-    setState({ ...state, adding: true, error: "" });
+    setState({ ...state, inProgress: true, error: "" });
 
     const paramJson: AddParams = {
       price,
@@ -53,18 +55,42 @@ function MarketplaceAdd(props: MarketplaceAddProps) {
       token_id: props.tokenId,
     };
 
-    add(props.provider, props.account, props.marketContractAddress, paramJson, MARKETPLACE_CONTRACT_INFO)
+    add(
+      props.provider,
+      props.account,
+      props.marketContractAddress,
+      paramJson,
+      MARKETPLACE_CONTRACT_INFO,
+      BigInt(9999),
+      (status, hash) => setTxn({ hash, status }),
+    )
       .then(() => {
-        setState({ ...state, error: "", adding: false });
+        setState({ ...state, error: "", inProgress: false });
         props.onDone();
       })
       .catch((err: Error) => {
-        setState({ ...state, error: err.message, adding: false });
+        setState({ ...state, error: err.message, inProgress: false });
       });
   }
 
   return (
     <Stack component={"form"} onSubmit={submit} spacing={2}>
+      <TextField
+        id="nft-contract-address-index"
+        label="NFT Contract Address Index"
+        variant="standard"
+        value={props.nftContractAddress.index.toString()}
+        disabled
+        fullWidth
+      />
+      <TextField
+        id="nft-contract-address-subindex"
+        label="NFT Contract Address Subindex"
+        variant="standard"
+        value={props.nftContractAddress.subindex.toString()}
+        disabled
+        fullWidth
+      />
       <TextField id="token-id" label="Token Id" variant="standard" value={props.tokenId} disabled fullWidth />
       <TextField
         name="price"
@@ -73,7 +99,7 @@ function MarketplaceAdd(props: MarketplaceAddProps) {
         label="Token Price in CCD"
         variant="standard"
         fullWidth
-        disabled={state.adding}
+        disabled={state.inProgress}
         required
       />
       <TextField
@@ -83,7 +109,7 @@ function MarketplaceAdd(props: MarketplaceAddProps) {
         label="Primary Seller Royalty %"
         variant="standard"
         fullWidth
-        disabled={state.adding}
+        disabled={state.inProgress}
         required
         defaultValue="0"
       />
@@ -92,12 +118,10 @@ function MarketplaceAdd(props: MarketplaceAddProps) {
           {state.error}
         </Typography>
       )}
-      {state.adding && (
-        <Typography variant={"body1"} component="div" gutterBottom>
-          Adding..
-        </Typography>
-      )}
-      <Button variant="contained" disabled={state.adding} type="submit">
+      <Container>
+        <TransactionProgress hash={txn.hash} status={txn.status} inProgress={state.inProgress} />
+      </Container>
+      <Button variant="contained" disabled={state.inProgress} type="submit">
         Add
       </Button>
     </Stack>

@@ -42,6 +42,8 @@ export async function initContract(
   params?: SmartContractParameters,
   maxContractExecutionEnergy = BigInt(9999),
   ccdAmount = BigInt(0),
+  statusUpdate: (status: TransactionStatusEnum, txnHash: string) => void = (status, hash) =>
+    console.log(`txn #${hash}, status:${status}`),
 ): Promise<ContractAddress> {
   const { moduleRef, schemaBuffer, contractName } = contractInfo;
   if (!moduleRef) {
@@ -61,7 +63,7 @@ export async function initContract(
     schemaBuffer.toString("base64"),
   );
 
-  let outcomes = await waitForTransaction(provider, txnHash);
+  let outcomes = await waitForTransaction(provider, txnHash, (status, hash) => statusUpdate(status, hash));
   outcomes = ensureValidOutcome(outcomes);
   return parseContractAddress(outcomes);
 }
@@ -99,6 +101,7 @@ export async function invokeContract<T>(
       `failed invoking contract ` +
       `method:${methodName}, ` +
       `contract:(index: ${contract.index.toString()}, subindex: ${contract.subindex.toString()})`;
+    console.error(res);
     return Promise.reject(new Error(msg, { cause: res }));
   }
 
@@ -135,6 +138,8 @@ export async function updateContract(
   methodName: string,
   maxContractExecutionEnergy = BigInt(9999),
   amount = BigInt(0),
+  onStatusUpdate: (status: TransactionStatusEnum, txnHash: string) => void = () =>
+    console.log(`txn #${txnHash}, status:${status}`),
 ): Promise<Record<string, TransactionSummary>> {
   const { schemaBuffer, contractName } = contractInfo;
   const txnHash = await provider.sendTransaction(
@@ -150,11 +155,15 @@ export async function updateContract(
     schemaBuffer.toString("base64"),
   );
 
-  return await waitAndThrowError(provider, txnHash);
+  return await waitAndThrowError(provider, txnHash, onStatusUpdate);
 }
 
-export async function waitAndThrowError(provider: WalletApi, txnHash: string) {
-  const outcomes = await waitForTransaction(provider, txnHash);
+export async function waitAndThrowError(
+  provider: WalletApi,
+  txnHash: string,
+  onStatusUpdate: (status: TransactionStatusEnum, txnHash: string) => void,
+) {
+  const outcomes = await waitForTransaction(provider, txnHash, onStatusUpdate);
   return ensureValidOutcome(outcomes);
 }
 
@@ -167,9 +176,10 @@ export async function waitAndThrowError(provider: WalletApi, txnHash: string) {
 function waitForTransaction(
   provider: WalletApi,
   txnHash: string,
+  onStatusUpdate: (status: TransactionStatusEnum, txnHash: string) => void,
 ): Promise<Record<string, TransactionSummary> | undefined> {
   return new Promise((res, rej) => {
-    _wait(provider, txnHash, res, rej);
+    _wait(provider, txnHash, res, rej, (status, hash) => onStatusUpdate(status, hash));
   });
 }
 
@@ -211,6 +221,7 @@ function _wait(
   txnHash: string,
   res: (p: Record<string, TransactionSummary> | undefined) => void,
   rej: (reason: any) => void,
+  onStatusUpdate: (status: TransactionStatusEnum, txnHash: string) => void,
 ) {
   setTimeout(() => {
     provider
@@ -221,12 +232,13 @@ function _wait(
           return rej("Transaction Status is null");
         }
 
-        console.info(`txn : ${txnHash}, status: ${txnStatus?.status}`);
+        // console.info(`txn : ${txnHash}, status: ${txnStatus?.status}`);
+        onStatusUpdate(txnStatus.status, txnHash);
         if (txnStatus?.status === TransactionStatusEnum.Finalized) {
           return res(txnStatus.outcomes);
         }
 
-        _wait(provider, txnHash, res, rej);
+        _wait(provider, txnHash, res, rej, onStatusUpdate);
       })
       .catch((err) => rej(err));
   }, 1000);

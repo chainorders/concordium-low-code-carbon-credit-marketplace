@@ -34,7 +34,7 @@ function Cis2MetadataImageLazy(props: { account: string; tokenId: string; cis2Co
       srcSet={state.metadata?.display?.url}
       alt={state.metadata?.name}
       loading="lazy"
-      width="100%"
+      style={{ width: "100%", height: "200px", objectFit: "contain" }}
     />
   );
 }

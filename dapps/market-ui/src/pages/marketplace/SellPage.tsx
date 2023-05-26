@@ -9,6 +9,9 @@ import { Paper, Step, StepLabel, Stepper, Typography } from "@mui/material";
 import MarketplaceAdd from "../../components/MarketplaceAdd";
 import { Cis2ContractInfo } from "../../models/ConcordiumContractClient";
 import Cis2Transfer from "../../components/cis2/Cis2Transfer";
+import { useParamsContractAddress } from "../../components/utils";
+import { MARKET_CONTRACT_ADDRESS } from "../../Constants";
+import MarketplaceOwnedTokensList from "../../components/cis2-market/MarketplaceOwnedTokensList";
 
 enum Steps {
   TransferToken,
@@ -20,9 +23,9 @@ function SellPage(props: {
   grpcClient: ConcordiumGRPCClient;
   provider: WalletApi;
   account: string;
-  marketContractAddress: ContractAddress;
   contractInfo: Cis2ContractInfo;
 }) {
+  const marketContractAddress = useParamsContractAddress() || MARKET_CONTRACT_ADDRESS;
   const steps = [
     {
       title: "Transfer Token",
@@ -61,16 +64,23 @@ function SellPage(props: {
     switch (state.activeStep.step) {
       case Steps.TransferToken:
         return (
-          <Cis2Transfer
-            grpcClient={props.grpcClient}
-            provider={props.provider}
-            account={props.account}
-            to={{
-              address: props.marketContractAddress,
-              hookName: "recieve_cis2",
-            }}
-            onDone={(address, tokenId, quantity) => onTransferred(address, tokenId, quantity)}
-          />
+          <>
+            <MarketplaceOwnedTokensList
+              account={props.account}
+              grpcClient={props.grpcClient}
+              onSelected={(item) => onTransferred(item.contract, item.tokenId, item.quantity.toString())}
+            />
+            <Cis2Transfer
+              grpcClient={props.grpcClient}
+              provider={props.provider}
+              account={props.account}
+              to={{
+                address: marketContractAddress,
+                hookName: "recieve_cis2",
+              }}
+              onDone={(address, tokenId, quantity) => onTransferred(address, tokenId, quantity)}
+            />
+          </>
         );
       case Steps.AddToken:
         return (
@@ -78,7 +88,7 @@ function SellPage(props: {
             grpcClient={props.grpcClient}
             provider={props.provider}
             account={props.account}
-            marketContractAddress={props.marketContractAddress}
+            marketContractAddress={marketContractAddress}
             nftContractAddress={state.nftContract!}
             tokenId={state.tokenId!}
             cis2Contract={state.cis2Contract!}

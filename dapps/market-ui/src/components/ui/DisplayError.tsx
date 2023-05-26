@@ -4,8 +4,15 @@ import { Typography } from "@mui/material";
 
 function DisplayError(props: { error?: string }) {
   const { error } = props;
+  if (!error) {
+    return <></>;
+  }
 
-  return error ? <Typography fontSize={10}>{error}</Typography> : <></>;
+  return (
+    <Typography variant="body1" color={"error"}>
+      {error}
+    </Typography>
+  );
 }
 
 export default DisplayError;

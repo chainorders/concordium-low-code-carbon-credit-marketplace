@@ -243,18 +243,28 @@ where
     pub fn get_listed_tokens(&self) -> Vec<TokenListItem> {
         self.tokens_owned
             .iter()
-            .map(|t| match self.tokens_listed.get(&t.0.to_owned().into()) {
-                Some(l) => Some(TokenListItem {
-                    token_id: t.0.id,
-                    contract: t.0.address,
-                    price: *l.token_prices.get(&t.0.owner).unwrap(),
-                    owner: t.0.owner,
-                    royalty: l.token_royalty.royalty,
-                    primary_owner: l.token_royalty.primary_owner,
-                    quantity: t.1.to_owned(),
-                }),
-                None => None,
-            })
+            .map(
+                |owned_token| match self.tokens_listed.get(&owned_token.0.to_owned().into()) {
+                    Some(listed_token) => {
+                        match listed_token
+                            .token_prices
+                            .get(&owned_token.0.owner.to_owned())
+                        {
+                            Some(price) => Some(TokenListItem {
+                                token_id: owned_token.0.id,
+                                contract: owned_token.0.address,
+                                price: *price,
+                                owner: owned_token.0.owner,
+                                royalty: listed_token.token_royalty.royalty,
+                                primary_owner: listed_token.token_royalty.primary_owner,
+                                quantity: *owned_token.1,
+                            }),
+                            None => None,
+                        }
+                    }
+                    None => None,
+                },
+            )
             .filter(|t| t.is_some())
             .map(|t| t.unwrap())
             .collect()

@@ -2,22 +2,24 @@ import { Outlet, useNavigate } from "react-router-dom";
 
 import { AppBar, Button, Stack, Toolbar, Typography } from "@mui/material";
 import { AddCircleOutline } from "@mui/icons-material";
-import { ContractAddress } from "@concordium/web-sdk";
+import { useParamsContractAddress } from "../../components/utils";
+import { MARKET_CONTRACT_ADDRESS } from "../../Constants";
 
-export default function MarketPage(props: { marketContract: ContractAddress }) {
+export default function MarketPage() {
   const navigate = useNavigate();
+  const marketContractAddress = useParamsContractAddress() || MARKET_CONTRACT_ADDRESS;
 
   return (
     <Stack spacing={1} mt={1}>
       <AppBar position="static" color="secondary">
         <Toolbar>
           <Typography textAlign={"left"} variant="h5" component={"div"} sx={{ flexGrow: 1 }}>
-            Market ({props.marketContract.index.toString()}/{props.marketContract.subindex.toString()})
+            Market ({marketContractAddress.index.toString()}/{marketContractAddress.subindex.toString()})
           </Typography>
           <Button
             color="inherit"
             onClick={(_) =>
-              navigate(`buy/${props.marketContract.index.toString()}/${props.marketContract.subindex.toString()}`)
+              navigate(`buy/${marketContractAddress.index.toString()}/${marketContractAddress.subindex.toString()}`)
             }
           >
             Buy

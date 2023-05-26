@@ -1,10 +1,19 @@
-import { cis0Supports, CIS0, ConcordiumGRPCClient, ContractAddress, CIS2, CIS2Contract } from "@concordium/web-sdk";
-import { Button, Stack, TextField, Typography } from "@mui/material";
+import {
+  cis0Supports,
+  CIS0,
+  ConcordiumGRPCClient,
+  ContractAddress,
+  CIS2,
+  CIS2Contract,
+  TransactionStatusEnum,
+} from "@concordium/web-sdk";
+import { Button, Container, Stack, TextField } from "@mui/material";
 import { FormEvent, useState } from "react";
 import { CIS2_MULTI_CONTRACT_INFO } from "../../Constants";
 import { WalletApi, SchemaWithContext } from "@concordium/browser-wallet-api-helpers";
 import { waitAndThrowError } from "../../models/ConcordiumContractClient";
 import DisplayError from "../ui/DisplayError";
+import TransactionProgress from "../ui/TransactionProgress";
 
 export default function Cis2Transfer(props: {
   onDone: (address: ContractAddress, tokenId: string, quantity: string) => void;
@@ -23,6 +32,7 @@ export default function Cis2Transfer(props: {
     tokenId: "01",
     quantity: "1",
   });
+  const [txn, setTxn] = useState<{ hash?: string; status?: TransactionStatusEnum }>({});
 
   function setFormValue(key: string, value: string) {
     setForm({ ...form, [key]: value });
@@ -39,7 +49,7 @@ export default function Cis2Transfer(props: {
       .then(() => cis0Supports(props.grpcClient, address, "CIS-2"))
       .then((supports) => validateSupportsCis2(supports))
       .then(() => transfer(cis2Contract))
-      .then((txnHash) => waitAndThrowError(props.provider, txnHash))
+      .then((txnHash) => waitAndThrowError(props.provider, txnHash, (status, hash) => setTxn({ hash, status })))
       .then(() => {
         setState({ ...state, error: "", inProgress: false });
         props.onDone(address, form.tokenId, form.quantity);
@@ -92,7 +102,9 @@ export default function Cis2Transfer(props: {
         onChange={(e) => setFormValue("quantity", e.target.value)}
       />
       <DisplayError error={state.error} />
-      <Typography variant="body2">{state.inProgress ? "In Progress" : ""}</Typography>
+      <Container>
+        <TransactionProgress hash={txn.hash} status={txn.status} inProgress={state.inProgress} />
+      </Container>
       <Button type="submit" variant="contained" disabled={state.inProgress}>
         Transfer
       </Button>

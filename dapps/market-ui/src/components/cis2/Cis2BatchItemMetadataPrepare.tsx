@@ -10,6 +10,7 @@ import {
   CardMedia,
   Checkbox,
   FormControlLabel,
+  FormGroup,
   Link,
   Stack,
   SxProps,
@@ -101,6 +102,59 @@ function UploadMetadataIpfsCardStep(props: {
     error: "",
   });
 
+  const attributes = [
+    {
+      type: "string",
+      name: "Registry",
+      value: "",
+    },
+    {
+      type: "string",
+      name: "Serial Key",
+      value: "",
+    },
+    {
+      type: "number",
+      name: "Number of Credits",
+      value: "",
+    },
+    {
+      type: "string",
+      name: "Project Name",
+      value: "",
+    },
+    {
+      type: "string",
+      name: "Project Description",
+      value: "",
+    },
+    {
+      type: "string",
+      name: "Methodology",
+      value: "",
+    },
+    {
+      type: "string",
+      name: "Vintage",
+      value: "",
+    },
+    {
+      type: "string",
+      name: "Country",
+      value: "",
+    },
+    {
+      type: "string",
+      name: "Latitude",
+      value: "",
+    },
+    {
+      type: "string",
+      name: "Longitude",
+      value: "",
+    },
+  ];
+
   function uploadMetadataClicked(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -111,6 +165,13 @@ function UploadMetadataIpfsCardStep(props: {
         url: props.imageIpfsUrl,
       },
       unique: !!formData.get("unique")?.toString(),
+      attributes: attributes
+        .map((a) => ({
+          type: a.type,
+          name: a.name,
+          value: formData.get(a.name)?.toString() || "",
+        }))
+        .filter((a) => !!a.value),
     };
     const includeHash = formData.get("includeHash")?.toString();
     setState({ ...state, isUploadingMetadata: true });
@@ -146,32 +207,50 @@ function UploadMetadataIpfsCardStep(props: {
               Image IPFS Url
             </Link>
             <Stack spacing={2}>
-              <TextField
-                name="name"
-                id="name"
-                label="Name"
-                variant="outlined"
-                size="small"
-                fullWidth={true}
-                required={true}
-                defaultValue={`Token ${props.tokenId}`}
-              />
-              <TextField
-                multiline={true}
-                name="description"
-                id="description"
-                label="Description"
-                variant="outlined"
-                size="small"
-                fullWidth={true}
-                required={true}
-                defaultValue={`Image for token: ${props.tokenId}`}
-              />
-              <FormControlLabel
-                control={<Checkbox defaultChecked name="includeHash" id="include-hash" />}
-                label="Include Hash"
-              />
-              <FormControlLabel control={<Checkbox defaultChecked name="unique" id="unique" />} label="Unique" />
+              <FormGroup>
+                <TextField
+                  name="name"
+                  id="name"
+                  label="Name"
+                  variant="outlined"
+                  size="small"
+                  fullWidth={true}
+                  required={true}
+                  defaultValue={`Token ${props.tokenId}`}
+                />
+                <TextField
+                  multiline={true}
+                  name="description"
+                  id="description"
+                  label="Description"
+                  variant="outlined"
+                  size="small"
+                  fullWidth={true}
+                  required={true}
+                  defaultValue={`Image for token: ${props.tokenId}`}
+                />
+              </FormGroup>
+              <FormGroup>
+                {attributes.map((attribute) => (
+                  <TextField
+                    key={attribute.name}
+                    type={attribute.type}
+                    name={attribute.name}
+                    label={attribute.name}
+                    variant="outlined"
+                    size="small"
+                    fullWidth={true}
+                    defaultValue={attribute.value}
+                  />
+                ))}
+              </FormGroup>
+              <FormGroup>
+                <FormControlLabel
+                  control={<Checkbox defaultChecked name="includeHash" id="include-hash" />}
+                  label="Include Hash"
+                />
+                <FormControlLabel control={<Checkbox defaultChecked name="unique" id="unique" />} label="Unique" />
+              </FormGroup>
             </Stack>
             <DisplayError error={state.error} />
           </CardContent>

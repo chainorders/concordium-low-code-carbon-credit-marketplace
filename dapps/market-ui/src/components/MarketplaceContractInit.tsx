@@ -21,7 +21,7 @@ function MarketplaceContractInit(props: {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const commission = parseInt(formData.get("commission")?.toString() || "0");
-    setState({ ...state, processing: true });
+    setState({ ...state, processing: true, error: "" });
 
     const params = { commission: commission * 100 };
     initContract(props.provider, props.contractInfo, props.account, params)
@@ -30,6 +30,7 @@ function MarketplaceContractInit(props: {
         props.onDone(address);
       })
       .catch((err: Error) => {
+        console.error(err);
         setState({ ...state, processing: false, error: err.message });
       });
   }
