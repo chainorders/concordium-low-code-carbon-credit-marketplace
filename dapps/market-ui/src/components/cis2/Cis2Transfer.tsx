@@ -7,13 +7,12 @@ import {
   CIS2Contract,
   TransactionStatusEnum,
 } from "@concordium/web-sdk";
-import { Button, Container, MenuItem, Select, Stack, TextField } from "@mui/material";
-import { FormEvent, useEffect, useState } from "react";
+import { Button, Container, Stack, TextField } from "@mui/material";
+import { FormEvent, useState } from "react";
 import { WalletApi, SchemaWithContext } from "@concordium/browser-wallet-api-helpers";
 import { waitAndThrowError } from "../../models/ConcordiumContractClient";
 import DisplayError from "../ui/DisplayError";
 import TransactionProgress from "../ui/TransactionProgress";
-import { CIS2_MULTI_CONTRACT_INFO, FRACTIONALIZER_CONTRACT_INFO } from "../../Constants";
 
 export default function Cis2Transfer(props: {
   onDone: (address: ContractAddress, tokenId: string, quantity: string) => void;
@@ -33,7 +32,6 @@ export default function Cis2Transfer(props: {
     quantity: "1",
   });
   const [txn, setTxn] = useState<{ hash?: string; status?: TransactionStatusEnum }>({});
-  const [contractName, setContractName] = useState<string>(CIS2_MULTI_CONTRACT_INFO.contractName);
 
   function setFormValue(key: string, value: string) {
     setForm({ ...form, [key]: value });
@@ -43,13 +41,16 @@ export default function Cis2Transfer(props: {
     event.preventDefault();
 
     const address = { index: BigInt(form.index), subindex: BigInt(form.subindex) };
-    const cis2Contract = new CIS2Contract(props.grpcClient, address, contractName);
     setState({ ...state, error: "", inProgress: true });
     props.grpcClient
       .getInstanceInfo(address)
-      .then(() => cis0Supports(props.grpcClient, address, "CIS-2"))
-      .then((supports) => validateSupportsCis2(supports))
-      .then(() => transfer(cis2Contract))
+      .then(async (instanceInfo) => {
+        const supports = await cis0Supports(props.grpcClient, address, "CIS-2");
+        validateSupportsCis2(supports);
+        const contractName = instanceInfo.name.replace("init_", "");
+        return new CIS2Contract(props.grpcClient, address, contractName);
+      })
+      .then((cis2Contract) => transfer(cis2Contract))
       .then((txnHash) => waitAndThrowError(props.provider, txnHash, (status, hash) => setTxn({ hash, status })))
       .then(() => {
         setState({ ...state, error: "", inProgress: false });
@@ -61,43 +62,6 @@ export default function Cis2Transfer(props: {
       });
   }
 
-  function onContractChange(fieldName: "index" | "subindex", value: string): void {
-    setFormValue(fieldName, value);
-  }
-
-  useEffect(() => {
-    if (!form.index || !form.subindex) {
-      return;
-    }
-
-    setState({ ...state, error: "" });
-    const address: ContractAddress = { index: BigInt(form.index), subindex: BigInt(form.subindex) };
-    props.grpcClient
-      .getInstanceInfo(address)
-      .then((instanceInfo) => {
-        const contractName = instanceInfo.name.replace("init_", "");
-
-        switch (contractName) {
-          case CIS2_MULTI_CONTRACT_INFO.contractName:
-          case FRACTIONALIZER_CONTRACT_INFO.contractName:
-            setContractName(contractName);
-            setState({ ...state, error: "" });
-            break;
-          default:
-            setState({ ...state, error: `Invalid Contract Name: ${contractName}` });
-            setContractName("");
-            break;
-        }
-      })
-      .then(() => cis0Supports(props.grpcClient, address, "CIS-2"))
-      .then((supports) => validateSupportsCis2(supports))
-      .catch((e: Error) => {
-        console.error(e);
-        setState({ ...state, error: e.message });
-        setContractName("");
-      });
-  }, [form.index, form.subindex]);
-
   return (
     <Stack component={"form"} onSubmit={submit} spacing={2}>
       <TextField
@@ -107,7 +71,7 @@ export default function Cis2Transfer(props: {
         variant="standard"
         type={"number"}
         value={form.index.toString()}
-        onChange={(e) => onContractChange("index", e.target.value)}
+        onChange={(e) => setFormValue("index", e.target.value)}
         disabled={state.inProgress}
       />
       <TextField
@@ -118,7 +82,7 @@ export default function Cis2Transfer(props: {
         type={"number"}
         disabled={state.inProgress}
         value={form.subindex.toString()}
-        onChange={(e) => onContractChange("subindex", e.target.value)}
+        onChange={(e) => setFormValue("subindex", e.target.value)}
       />
       <TextField
         id="token-id"
@@ -140,21 +104,6 @@ export default function Cis2Transfer(props: {
         value={form.quantity.toString()}
         onChange={(e) => setFormValue("quantity", e.target.value)}
       />
-      <Select
-        label="Contract Name"
-        variant="standard"
-        value={contractName}
-        onChange={(e) => setContractName(e.target.value as string)}
-        disabled
-        sx={{ textAlign: "left" }}
-      >
-        <MenuItem value={FRACTIONALIZER_CONTRACT_INFO.contractName}>
-          Fractionalizer Contract ({FRACTIONALIZER_CONTRACT_INFO.contractName})
-        </MenuItem>
-        <MenuItem value={CIS2_MULTI_CONTRACT_INFO.contractName}>
-          CIS2 Multi ({CIS2_MULTI_CONTRACT_INFO.contractName})
-        </MenuItem>
-      </Select>
       <DisplayError error={state.error} />
       <Container>
         <TransactionProgress hash={txn.hash} status={txn.status} inProgress={state.inProgress} />
