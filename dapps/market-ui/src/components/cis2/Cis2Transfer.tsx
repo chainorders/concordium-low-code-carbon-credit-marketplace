@@ -55,6 +55,7 @@ export default function Cis2Transfer(props: {
         props.onDone(address, form.tokenId, form.quantity);
       })
       .catch((e: Error) => {
+        console.error(e);
         setState({ ...state, inProgress: false, error: e.message });
       });
   }

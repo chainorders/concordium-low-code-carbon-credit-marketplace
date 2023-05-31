@@ -13,7 +13,7 @@ export const MARKET_CONTRACT_ADDRESS = {
 };
 
 export const FRACTIONALIZER_CONTRACT_ADDRESS = {
-  index: BigInt(4567),
+  index: BigInt(4709),
   subindex: BigInt(0),
 };
 

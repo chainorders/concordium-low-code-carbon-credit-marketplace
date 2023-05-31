@@ -56,10 +56,15 @@ export default function FractionalizerMint(props: {
         ],
       },
       FRACTIONALIZER_CONTRACT_INFO,
-    ).then(() => {
-      setState({ ...state, inProgress: false });
-      props.onDone(form.tokenId, form.quantity);
-    });
+    )
+      .then(() => {
+        setState({ ...state, inProgress: false });
+        props.onDone(form.tokenId, form.quantity);
+      })
+      .catch((e: Error) => {
+        console.error(e);
+        setState({ ...state, inProgress: false, error: e.message });
+      });
   }
 
   return (

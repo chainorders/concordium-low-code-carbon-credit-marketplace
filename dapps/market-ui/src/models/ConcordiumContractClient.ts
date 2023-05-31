@@ -138,7 +138,7 @@ export async function updateContract(
   methodName: string,
   maxContractExecutionEnergy = BigInt(9999),
   amount = BigInt(0),
-  onStatusUpdate: (status: TransactionStatusEnum, txnHash: string) => void = () =>
+  onStatusUpdate: (status: TransactionStatusEnum, txnHash: string) => void = (status, txnHash) =>
     console.log(`txn #${txnHash}, status:${status}`),
 ): Promise<Record<string, TransactionSummary>> {
   const { schemaBuffer, contractName } = contractInfo;
@@ -188,18 +188,41 @@ function ensureValidOutcome(outcomes?: Record<string, TransactionSummary>): Reco
     throw Error("Null Outcome");
   }
 
-  const successTxnSummary = Object.keys(outcomes)
-    .map((k) => outcomes[k])
-    .find((s) => s.result.outcome === "success");
+  Object.keys(outcomes).map((o) => {
+    const result = outcomes[o].result;
+    switch (result.outcome) {
+      case "success":
+        return result;
+      case "reject":
+        switch (result.rejectReason.tag) {
+          case "InvalidReceiveMethod":
+            throw Error(`Invalid Receive Method: ${result.rejectReason.contents.join(",")}`);
+          case "InvalidInitMethod":
+            throw Error(`Invalid Init Method: ${result.rejectReason.contents.join(",")}`);
+          case "AmountTooLarge":
+            throw Error(`Amount Too Large: ${result.rejectReason.contents.join(",")}`);
+          case "InvalidContractAddress":
+            throw Error(
+              `Invalid Contract Address: ${result.rejectReason.contents.index.toString()}, ${result.rejectReason.contents.subindex.toString()}`,
+            );
+          default:
+            throw Error(`Unknown Reject Reason: ${result.rejectReason.tag}`);
+        }
+    }
+  });
 
-  if (!successTxnSummary) {
-    const failures = Object.keys(outcomes)
-      .map((k) => outcomes[k])
-      .filter((s) => s.result.outcome === "reject")
-      .map((s) => (s.result as any).rejectReason.tag)
-      .join(",");
-    throw Error(`Transaction failed, reasons: ${failures}`);
-  }
+  // const successTxnSummary = Object.keys(outcomes)
+  //   .map((k) => outcomes[k])
+  //   .find((s) => s.result.outcome === "success");
+
+  // if (!successTxnSummary) {
+  //   const failures = Object.keys(outcomes)
+  //     .map((k) => outcomes[k])
+  //     .filter((s) => s.result.outcome === "reject")
+  //     .map((s) => (s.result as any).rejectReason.tag)
+  //     .join(",");
+  //   throw Error(`Transaction failed, reasons: ${failures}`);
+  // }
 
   return outcomes;
 }
