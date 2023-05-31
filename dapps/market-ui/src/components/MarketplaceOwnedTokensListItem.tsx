@@ -46,6 +46,10 @@ function MarketplaceTokensListItem(props: {
       .then((m) => fetchJson<Metadata>(m.url))
       .then((metadata) => {
         setStateMetadata(metadata);
+      })
+      .catch((e) => { 
+        console.error(e);
+        setStateMetadata({} as Metadata);
       });
   }, [props.item.cis2Contract, props.item.tokenId]);
 

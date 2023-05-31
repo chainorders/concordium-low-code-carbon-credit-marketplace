@@ -23,6 +23,10 @@ function Cis2MetadataImageLazy(props: { account: string; tokenId: string; cis2Co
       .then((m) => fetchJson<Metadata>(m.url))
       .then((metadata) => {
         setState({ ...state, loading: false, metadata });
+      })
+      .catch((e) => { 
+        console.error(e);
+        setState({ ...state, loading: false, metadata: undefined });
       });
   }, [props.tokenId, props.cis2Contract]);
 

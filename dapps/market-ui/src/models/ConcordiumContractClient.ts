@@ -205,6 +205,8 @@ function ensureValidOutcome(outcomes?: Record<string, TransactionSummary>): Reco
             throw Error(
               `Invalid Contract Address: ${result.rejectReason.contents.index.toString()}, ${result.rejectReason.contents.subindex.toString()}`,
             );
+          case "RejectedReceive":
+            throw Error(`Rejected Receive: ${result.rejectReason.rejectReason}`);
           default:
             throw Error(`Unknown Reject Reason: ${result.rejectReason.tag}`);
         }

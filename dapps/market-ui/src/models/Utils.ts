@@ -1,6 +1,11 @@
 export async function fetchJson<T>(metadataUrl: string): Promise<T> {
   const jsonStr = await fetchJsonString(metadataUrl);
-  return JSON.parse(jsonStr);
+
+  try { 
+    return JSON.parse(jsonStr);
+  } catch (e) {
+    return Promise.reject(new Error("Could not parse Metadata"));
+  }
 }
 
 export async function fetchJsonString(metadataUrl: string): Promise<string> {
