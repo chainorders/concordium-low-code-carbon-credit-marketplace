@@ -226,7 +226,7 @@ impl<S: HasStateApi> State<S> {
         collateral_key: &CollateralToken,
         minted_token_id: &ContractTokenId,
     ) -> bool {
-        match self.tokens_owned.get(&collateral_key) {
+        match self.tokens_owned.get(collateral_key) {
             Some(c) => match c.minted_token_id {
                 Some(minted_token) => minted_token.eq(minted_token_id),
                 None => true,
@@ -243,7 +243,7 @@ impl<S: HasStateApi> State<S> {
             match c.1.minted_token_id {
                 Some(t) => {
                     if t.eq(token_id) {
-                        return Some((c.0.clone(), c.1.received_token_amount));
+                        return Some((*c.0, c.1.received_token_amount));
                     }
                 }
                 None => continue,

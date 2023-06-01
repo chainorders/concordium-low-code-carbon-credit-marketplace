@@ -138,9 +138,7 @@ fn transfer<S: HasStateApi>(
         address: params.cis_contract_address,
     };
 
-    let quantity_owned = host
-        .state()
-        .get_quantity_owned(&token_info, &params.owner)?;
+    let quantity_owned = host.state().get_quantity_owned(token_info, &params.owner)?;
 
     ensure!(
         quantity_owned.cmp(&params.quantity).is_ge(),
@@ -238,7 +236,7 @@ fn list_owned<S: HasStateApi>(
             contract: f.0.address,
             token_id: f.0.id,
             owner: f.0.owner,
-            quantity: f.1.clone(),
+            quantity: *f.1,
         })
         .collect();
 

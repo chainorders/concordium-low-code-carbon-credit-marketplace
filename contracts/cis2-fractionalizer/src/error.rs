@@ -9,23 +9,23 @@ pub type ContractError = Cis2Error<CustomContractError>;
 pub enum CustomContractError {
     /// Failed parsing the parameter.
     #[from(ParseError)]
-    ParseParams,
+    ParseParams, //-1
     /// Failed logging: Log is full.
-    LogFull,
+    LogFull, //-2
     /// Failed logging: Log is malformed.
-    LogMalformed,
+    LogMalformed, //-3
     /// Invalid contract name.
-    InvalidContractName,
+    InvalidContractName, //-4
     /// Only a smart contract can call this function.
-    ContractOnly,
+    ContractOnly, //-5
     /// Failed to invoke a contract.
-    InvokeContractError,
-    TokenAlreadyMinted,
-    InvalidCollateral,
-    NoBalanceToBurn,
-    AccountsOnly,
-    Cis2ClientError(Cis2ClientError),
-    NotImplemented
+    InvokeContractError, //-6
+    TokenAlreadyMinted,               //-7
+    InvalidCollateral,                //-8
+    NoBalanceToBurn,                  //-9
+    AccountsOnly,                     //-10
+    Cis2ClientError(Cis2ClientError), //-11
+    NotImplemented,                   //-12
 }
 
 /// Mapping the logging errors to ContractError.
