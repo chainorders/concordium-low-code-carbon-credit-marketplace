@@ -105,9 +105,12 @@ export default function Cis2Transfer(props: {
         onChange={(e) => setFormValue("quantity", e.target.value)}
       />
       <DisplayError error={state.error} />
-      <Container>
-        <TransactionProgress hash={txn.hash} status={txn.status} inProgress={state.inProgress} />
-      </Container>
+      {txn.hash && txn.status && (
+        <Container>
+          <TransactionProgress hash={txn.hash} status={txn.status}/>
+        </Container>
+      )}
+
       <Button type="submit" variant="contained" disabled={state.inProgress}>
         Transfer
       </Button>

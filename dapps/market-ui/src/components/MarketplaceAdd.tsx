@@ -118,9 +118,11 @@ function MarketplaceAdd(props: MarketplaceAddProps) {
           {state.error}
         </Typography>
       )}
-      <Container>
-        <TransactionProgress hash={txn.hash} status={txn.status} inProgress={state.inProgress} />
-      </Container>
+      {txn.hash && txn.status && (
+        <Container>
+          <TransactionProgress hash={txn.hash} status={txn.status}/>
+        </Container>
+      )}
       <Button variant="contained" disabled={state.inProgress} type="submit">
         Add
       </Button>

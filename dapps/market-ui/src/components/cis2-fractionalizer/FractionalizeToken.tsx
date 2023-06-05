@@ -2,11 +2,12 @@ import React, { useState } from "react";
 
 import { WalletApi } from "@concordium/browser-wallet-api-helpers";
 import { ConcordiumGRPCClient, ContractAddress } from "@concordium/common-sdk";
-import { Paper, Step, StepLabel, Stepper, Typography } from "@mui/material";
+import { Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography } from "@mui/material";
 
 import { Cis2ContractInfo } from "../../models/ConcordiumContractClient";
 import Cis2Transfer from "../cis2/Cis2Transfer";
 import FractionalizerMint from "./FractionalizerMint";
+import { ArrowBackRounded } from "@mui/icons-material";
 
 enum Steps {
   TransferToken,
@@ -83,6 +84,13 @@ function FractionalizeToken(props: {
     }
   }
 
+  function goBack(): void {
+    const activeStepIndex = steps.findIndex((s) => s.step === state.activeStep.step);
+    const previousStepIndex = Math.max(activeStepIndex - 1, 0);
+
+    setState({ ...state, activeStep: steps[previousStepIndex] });
+  }
+
   return (
     <>
       <Stepper activeStep={state.activeStep.step} alternativeLabel sx={{ padding: "20px" }}>
@@ -93,9 +101,18 @@ function FractionalizeToken(props: {
         ))}
       </Stepper>
       <Paper sx={{ padding: "20px" }} variant="outlined">
-        <Typography variant="h4" gutterBottom sx={{ pt: "20px" }} textAlign="left">
-          {state.activeStep.title}
-        </Typography>
+        <Grid container>
+          <Grid item xs={1}>
+            <IconButton sx={{ border: "1px solid black", borderRadius: "100px" }} onClick={() => goBack()}>
+              <ArrowBackRounded></ArrowBackRounded>
+            </IconButton>
+          </Grid>
+          <Grid item xs={11}>
+            <Typography variant="h4" gutterBottom sx={{ pt: "20px", width: "100%" }} textAlign="center">
+              {state.activeStep.title}
+            </Typography>
+          </Grid>
+        </Grid>
         <StepContent />
       </Paper>
     </>

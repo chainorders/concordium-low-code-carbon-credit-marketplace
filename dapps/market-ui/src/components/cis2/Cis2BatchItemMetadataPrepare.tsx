@@ -25,7 +25,6 @@ import { PinataClient } from "../../models/PinataClient";
 import { tokenIdToNftImageFileName, tokenIdToNftMetadataFileName } from "../../models/Utils";
 import DisplayError from "../ui/DisplayError";
 import GetMintCardStep from "./GetMintCardStep";
-import GetQuantityCardStep from "./GetQuantityCardStep";
 import GetTokenIdCardStep from "./GetTokenIdCardStep";
 
 const cardMediaSx: SxProps<Theme> = { maxHeight: "200px" };
@@ -328,15 +327,6 @@ function Cis2BatchItemMetadataPrepare(props: {
           imageIpfsUrl={state.imageIpfsUrl}
           key={state.tokenId}
           onDone={(data) => metadataUploaded(data.tokenId, data.metadataUrl)}
-        />
-      );
-    case Steps.GetQuantity:
-      return (
-        <GetQuantityCardStep
-          imageUrl={state.imageDisplayUrl}
-          tokenId={state.tokenId}
-          key={state.tokenId}
-          onDone={(data) => quantityUpdated(data.tokenId, data.quantity)}
         />
       );
     case Steps.Mint:
