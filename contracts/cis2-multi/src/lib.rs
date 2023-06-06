@@ -38,7 +38,7 @@ const SUPPORTS_STANDARDS: [StandardIdentifier<'static>; 2] =
 /// Contract token ID type.
 /// To save bytes we use a small token ID type, but is limited to be represented
 /// by a `u8`.
-type ContractTokenId = TokenIdU8;
+type ContractTokenId = TokenIdU64;
 
 /// Contract token amount type.
 type ContractTokenAmount = TokenAmountU64;
@@ -56,7 +56,7 @@ struct MintParams {
     /// Owner of the newly minted tokens.
     owner: Address,
     /// A collection of tokens to mint.
-    tokens: collections::BTreeMap<ContractTokenId, MintParam>,
+    tokens: Vec<MintParam>, //collections::BTreeMap<ContractTokenId, MintParam>,
 }
 
 /// The parameter type for the contract function `setImplementors`.
@@ -89,6 +89,41 @@ impl<S: HasStateApi> AddressState<S> {
     }
 }
 
+//// Event
+///
+#[derive(Debug, Serial, SchemaType)]
+pub struct CarbonRetiredEvent {
+    retire_time: Timestamp,
+    token_id: ContractTokenId,
+}
+
+//// Event
+///
+#[derive(Debug, Serial, SchemaType)]
+pub struct CarbonRetractedEvent {
+    retire_time: Timestamp,
+    token_id: ContractTokenId,
+    retracter_address: Address,
+}
+
+#[derive(Debug, SchemaType, Serial)]
+pub enum CarbonEvent {
+    CarbonRetired(CarbonRetiredEvent),
+    CarbonRetracted(CarbonRetractedEvent),
+}
+
+///// Roles
+#[derive(Serialize, Debug, PartialEq, Eq, Reject, SchemaType, Clone)]
+pub enum Roles {
+    Verifier,
+    User,
+}
+
+#[derive(Serial, DeserialWithState, Deletable)]
+#[concordium(state_parameter = "S")]
+struct AddressRoleState<S> {
+    roles: StateSet<Roles, S>,
+}
 /// The contract state,
 ///
 /// Note: The specification does not specify how to structure the contract state
@@ -100,6 +135,13 @@ struct State<S> {
     state: StateMap<Address, AddressState<S>, S>,
     /// All of the token IDs
     tokens: StateMap<ContractTokenId, MetadataUrl, S>,
+    /// safeMint auto incremental token_ids
+    token_ids: ContractTokenId,
+    /// Retired Carbon Map
+    total_credit: StateMap<ContractTokenId, ContractTokenAmount, S>,
+
+    /// Roles
+    roles: StateMap<Address, AddressRoleState<S>, S>,
     /// Map with contract addresses providing implementations of additional
     /// standards.
     implementors: StateMap<StandardIdentifierOwned, Vec<ContractAddress>, S>,
@@ -121,6 +163,12 @@ enum CustomContractError {
     ContractOnly,
     /// Failed to invoke a contract.
     InvokeContractError,
+    /// No credit or Already retired
+    NoBalanceToBurn,
+    /// Retracted by Verifier
+    RetractedByVerifier,
+    ///
+    TokenAlreadyMinted,
 }
 
 type ContractError = Cis2Error<CustomContractError>;
@@ -168,27 +216,86 @@ impl<S: HasStateApi> State<S> {
     fn empty(state_builder: &mut StateBuilder<S>) -> Self {
         State {
             state: state_builder.new_map(),
+            token_ids: TokenIdU64(0),
             tokens: state_builder.new_map(),
+            total_credit: state_builder.new_map(),
             implementors: state_builder.new_map(),
+            roles: state_builder.new_map(),
         }
     }
 
     /// Mints an amount of tokens with a given address as the owner.
     fn mint(
         &mut self,
-        token_id: &ContractTokenId,
+        // token_id: &ContractTokenId,
         mint_param: &MintParam,
         owner: &Address,
         state_builder: &mut StateBuilder<S>,
-    ) {
+    ) -> TokenIdU64 {
+        let token_id = TokenIdU64::from(self.token_ids.0.checked_add(1).unwrap());
+        self.token_ids = token_id;
+
         self.tokens
-            .insert(*token_id, mint_param.metadata_url.to_owned());
+            .insert(token_id, mint_param.metadata_url.to_owned());
+
+        /// when its minted, 0 tokens are retired.
+        // self.retired_token_amount.insert(token_id, 0.into());
         let mut owner_state = self
             .state
             .entry(*owner)
             .or_insert_with(|| AddressState::empty(state_builder));
-        let mut owner_balance = owner_state.balances.entry(*token_id).or_insert(0.into());
+        let mut owner_balance = owner_state.balances.entry(token_id).or_insert(0.into());
         *owner_balance += mint_param.token_amount;
+
+        let mut circulating_supply = self.total_credit.entry(token_id).or_insert(0.into());
+        *circulating_supply += mint_param.token_amount;
+
+        token_id
+    }
+    // /// retire
+    // #[inline(always)]
+    // fn retire_token(&mut self, token_id: &ContractTokenId, amount: ContractTokenAmount) {
+    //     //self.retired_token_amount.insert(*token_id, true);
+    //     let mut retired_balance = self
+    //         .retired_token_amount
+    //         .entry(*token_id)
+    //         .or_insert(0.into());
+    //     *retired_balance += amount;
+    // }
+    /// retire, retracts and burn function the same way.
+    ///
+    fn burn(
+        &mut self,
+        token_id: &ContractTokenId,
+        amount: ContractTokenAmount,
+        owner: &Address,
+    ) -> ContractResult<ContractTokenAmount> {
+        ensure!(
+            self.contains_token(&token_id),
+            ContractError::InvalidTokenId
+        );
+        if amount == 0u64.into() {
+            return Ok(amount);
+        }
+
+        match self.state.get_mut(owner) {
+            Some(address_state) => match address_state.balances.get_mut(token_id) {
+                Some(mut b) => {
+                    ensure!(
+                        b.cmp(&amount).is_ge(),
+                        Cis2Error::Custom(CustomContractError::NoBalanceToBurn)
+                    );
+
+                    *b -= amount;
+
+                    // self.retire_token(&token_id, amount);
+
+                    Ok(*b)
+                }
+                None => Err(Cis2Error::Custom(CustomContractError::NoBalanceToBurn)),
+            },
+            None => Err(Cis2Error::Custom(CustomContractError::NoBalanceToBurn)),
+        }
     }
 
     /// Check that the token ID currently exists in this contract.
@@ -313,6 +420,31 @@ impl<S: HasStateApi> State<S> {
     ) {
         self.implementors.insert(std_id, implementors);
     }
+    //// Roles
+    fn has_role(&self, account: &Address, role: Roles) -> bool {
+        return match self.roles.get(account) {
+            None => false,
+            Some(roles) => roles.roles.contains(&role),
+        };
+    }
+
+    fn grant_role(&mut self, account: &Address, role: Roles, state_builder: &mut StateBuilder<S>) {
+        self.roles
+            .entry(*account)
+            .or_insert_with(|| AddressRoleState {
+                roles: state_builder.new_set(),
+            });
+
+        self.roles.entry(*account).and_modify(|entry| {
+            entry.roles.insert(role);
+        });
+    }
+
+    fn remove_role(&mut self, account: &Address, role: Roles) {
+        self.roles.entry(*account).and_modify(|entry| {
+            entry.roles.remove(&role);
+        });
+    }
 }
 
 // Contract functions
@@ -421,9 +553,10 @@ fn contract_mint<S: HasStateApi>(
     let params: MintParams = ctx.parameter_cursor().get()?;
 
     let (state, builder) = host.state_and_builder();
-    for (token_id, mint_param) in params.tokens {
+    for (mint_param) in params.tokens {
         // Mint the token in the state.
-        state.mint(&token_id, &mint_param, &params.owner, builder);
+        // it returns the incremented token_id for emitting the event
+        let token_id = state.mint(&mint_param, &params.owner, builder);
 
         // Event for minted token.
         logger.log(&Cis2Event::Mint(MintEvent {
@@ -440,6 +573,119 @@ fn contract_mint<S: HasStateApi>(
             },
         ))?;
     }
+    Ok(())
+}
+
+#[derive(Serial, Deserial, SchemaType)]
+struct BurnParams {
+    // account: Address,
+    token_id: ContractTokenId,
+    amount: ContractTokenAmount,
+}
+#[receive(
+    contract = "cis2_multi",
+    name = "burn",
+    parameter = "BurnParams",
+    error = "ContractError",
+    enable_logger,
+    mutable
+)]
+fn contract_burn<S: HasStateApi>(
+    ctx: &impl HasReceiveContext,
+    host: &mut impl HasHost<State<S>, StateApiType = S>,
+    logger: &mut impl HasLogger,
+) -> ContractResult<()> {
+    // Get the contract owner
+    // let owner = ctx.owner();
+    // Get the sender of the transaction
+    let sender = ctx.sender();
+
+    // ensure!(sender.matches_account(&owner), ContractError::Unauthorized);
+
+    // Parse the parameter.
+    let params: BurnParams = ctx.parameter_cursor().get()?;
+    let token_id = params.token_id;
+    // let from = params.account;
+    let amount = params.amount;
+
+    let (state, builder) = host.state_and_builder();
+
+    // can use the value to store it in the state.
+    let remaining_amount: ContractTokenAmount = state.burn(&token_id, amount, &sender)?;
+
+    // log burn event
+    logger.log(&Cis2Event::Burn(BurnEvent {
+        token_id,
+        amount,
+        owner: sender,
+    }))?;
+    Ok(())
+}
+
+type RetractParam = ContractTokenId;
+
+struct AddressBalance {
+    address: Address,
+    balance: ContractTokenAmount,
+}
+
+#[receive(
+    contract = "cis2_multi",
+    name = "retract",
+    parameter = "RetractParam",
+    error = "ContractError",
+    enable_logger,
+    mutable
+)]
+fn contract_retract<S: HasStateApi>(
+    ctx: &impl HasReceiveContext,
+    host: &mut impl HasHost<State<S>, StateApiType = S>,
+    logger: &mut impl HasLogger,
+) -> ContractResult<()> {
+    // Get the contract owner
+    // let owner = ctx.owner();
+    // Get the sender of the transaction
+    let sender = ctx.sender();
+
+    // ensure!(sender.matches_account(&owner), ContractError::Unauthorized);
+
+    // Parse the parameter.
+    let token_id: RetractParam = ctx.parameter_cursor().get()?;
+
+    let (state, builder) = host.state_and_builder();
+    // let state = host.state();
+
+    let mut amount = TokenAmountU64(0);
+
+    let mut account_balance_vec = Vec::new();
+
+    for address_balance in state.state.iter() {
+        let individual_amount = state.balance(&token_id, &address_balance.0)?;
+        account_balance_vec.push({
+            AddressBalance {
+                address: *address_balance.0,
+                balance: individual_amount,
+            }
+        });
+        amount += individual_amount;
+    }
+
+    for elem in account_balance_vec {
+        state.burn(&token_id, elem.balance, &elem.address);
+    }
+    // can use the value to store it in the state.
+    //let remaining_amount: ContractTokenAmount = state.burn(&token_id, amount, &sender)?;
+    // retire_time: Timestamp,
+    // token_id: ContractTokenId,
+    // retracter_address: Address,
+    // log burn event
+    logger.log(&CarbonEvent::CarbonRetracted({
+        CarbonRetractedEvent {
+            retire_time: ctx.metadata().slot_time(),
+            token_id: token_id,
+            retracter_address: sender,
+        }
+    }))?;
     Ok(())
 }
 
@@ -669,6 +915,75 @@ fn contract_token_metadata<S: HasStateApi>(
     Ok(result)
 }
 
+/// Authorize/Unauthorize
+#[derive(Serial, Deserial, SchemaType)]
+struct Auth {
+    addresses: Vec<Address>,
+}
+
+////
+//// assign role as admin
+////
+#[receive(
+    contract = "cis2_multi",
+    name = "authorize",
+    parameter = "Auth",
+    error = "ContractError",
+    enable_logger,
+    mutable
+)]
+fn contract_authorize<S: HasStateApi>(
+    ctx: &impl HasReceiveContext,
+    host: &mut impl HasHost<State<S>, StateApiType = S>,
+    _logger: &mut impl HasLogger,
+) -> ContractResult<()> {
+    // Get the contract owner
+    let owner = ctx.owner();
+    // Get the sender of the transaction
+    let sender = ctx.sender();
+
+    ensure!(sender.matches_account(&owner), ContractError::Unauthorized);
+
+    let accounts: Auth = ctx.parameter_cursor().get()?;
+    let (state, builder) = host.state_and_builder();
+    // Build the respons
+    for acc in accounts.addresses {
+        state.grant_role(&acc, Roles::Verifier, builder);
+    }
+    Ok(())
+}
+
+////
+//// remove admin roles
+////
+#[receive(
+    contract = "cis2_multi",
+    name = "unauthorize",
+    parameter = "Auth",
+    error = "ContractError",
+    enable_logger,
+    mutable
+)]
+fn contract_unauthorize<S: HasStateApi>(
+    ctx: &impl HasReceiveContext,
+    host: &mut impl HasHost<State<S>, StateApiType = S>,
+    _logger: &mut impl HasLogger,
+) -> ContractResult<()> {
+    let owner = ctx.owner();
+    // Get the sender of the transaction
+    let sender = ctx.sender();
+
+    ensure!(sender.matches_account(&owner), ContractError::Unauthorized);
+
+    let accounts: Auth = ctx.parameter_cursor().get()?;
+    let state = host.state_mut();
+    // Build the respons
+    for acc in accounts.addresses {
+        state.remove_role(&acc, Roles::Verifier);
+    }
+    Ok(())
+}
+
 /// Example of implementing a function for receiving transfers.
 /// It is not required to be implemented by the token contract, but is required
 /// to implement such a function by any contract which should receive CIS2
@@ -803,15 +1118,15 @@ mod tests {
     const ADDRESS_0: Address = Address::Account(ACCOUNT_0);
     const ACCOUNT_1: AccountAddress = AccountAddress([1u8; 32]);
     const ADDRESS_1: Address = Address::Account(ACCOUNT_1);
-    const TOKEN_0: ContractTokenId = TokenIdU8(2);
-    const TOKEN_1: ContractTokenId = TokenIdU8(42);
+    const TOKEN_0: ContractTokenId = concordium_cis2::TokenIdU64(2);
+    const TOKEN_1: ContractTokenId = concordium_cis2::TokenIdU64(42);
 
     /// Test helper function which creates a contract state with two tokens with
     /// id `TOKEN_0` and id `TOKEN_1` owned by `ADDRESS_0`
     fn initial_state<S: HasStateApi>(state_builder: &mut StateBuilder<S>) -> State<S> {
         let mut state = State::empty(state_builder);
         state.mint(
-            &TOKEN_0,
+            // &TOKEN_0,
             &MintParam {
                 token_amount: 400.into(),
                 metadata_url: MetadataUrl {
@@ -823,7 +1138,7 @@ mod tests {
             state_builder,
         );
         state.mint(
-            &TOKEN_1,
+            // &TOKEN_1,
             &MintParam {
                 token_amount: 1.into(),
                 metadata_url: MetadataUrl {
@@ -868,9 +1183,9 @@ mod tests {
         ctx.set_owner(ACCOUNT_0);
 
         // and parameter.
-        let mut tokens = collections::BTreeMap::new();
-        tokens.insert(
-            TOKEN_0,
+        let mut tokens = Vec::new();
+        tokens.push(
+            // TOKEN_0,
             MintParam {
                 token_amount: 400.into(),
                 metadata_url: MetadataUrl {
@@ -879,8 +1194,8 @@ mod tests {
                 },
             },
         );
-        tokens.insert(
-            TOKEN_1,
+        tokens.push(
+            // TOKEN_1,
             MintParam {
                 token_amount: 1.into(),
                 metadata_url: MetadataUrl {
