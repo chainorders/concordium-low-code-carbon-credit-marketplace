@@ -106,10 +106,20 @@ pub struct CarbonRetractedEvent {
     retracter_address: Address,
 }
 
+//// Event
+///
+#[derive(Debug, Serial, SchemaType)]
+pub struct CarbonVerifiedEvent {
+    retire_time: Timestamp,
+    token_id: ContractTokenId,
+    verifier_address: Address,
+}
+
 #[derive(Debug, SchemaType, Serial)]
 pub enum CarbonEvent {
-    CarbonRetired(CarbonRetiredEvent),
-    CarbonRetracted(CarbonRetractedEvent),
+    CarbonCreditRetired(CarbonRetiredEvent),
+    CarbonCreditRetracted(CarbonRetractedEvent),
+    CarbonCreditVerified(CarbonVerifiedEvent),
 }
 
 ///// Roles
@@ -137,9 +147,12 @@ struct State<S> {
     tokens: StateMap<ContractTokenId, MetadataUrl, S>,
     /// safeMint auto incremental token_ids
     token_ids: ContractTokenId,
+    /// verifier can set it's as verified, if its not it will be retracted by the verifier
+    /// if its verified then transfer & retire will be available for the token owner.
+    /// all register tokens are not verified initially (if they are not fractions)
+    is_token_verified: StateMap<ContractTokenId, bool, S>,
     /// Retired Carbon Map
     total_credit: StateMap<ContractTokenId, ContractTokenAmount, S>,
-
     /// Roles
     roles: StateMap<Address, AddressRoleState<S>, S>,
     /// Map with contract addresses providing implementations of additional
@@ -169,6 +182,10 @@ enum CustomContractError {
     RetractedByVerifier,
     ///
     TokenAlreadyMinted,
+    ///
+    TokenIsNotVerified,
+    ///
+    Unauthorized,
 }
 
 type ContractError = Cis2Error<CustomContractError>;
@@ -218,6 +235,7 @@ impl<S: HasStateApi> State<S> {
             state: state_builder.new_map(),
             token_ids: TokenIdU64(0),
             tokens: state_builder.new_map(),
+            is_token_verified: state_builder.new_map(),
             total_credit: state_builder.new_map(),
             implementors: state_builder.new_map(),
             roles: state_builder.new_map(),
@@ -225,6 +243,7 @@ impl<S: HasStateApi> State<S> {
     }
 
     /// Mints an amount of tokens with a given address as the owner.
+    /// returns token id for the emitted event.
     fn mint(
         &mut self,
         // token_id: &ContractTokenId,
@@ -238,6 +257,9 @@ impl<S: HasStateApi> State<S> {
         self.tokens
             .insert(token_id, mint_param.metadata_url.to_owned());
 
+        // registered but not verified
+        self.is_token_verified.insert(token_id, false);
+
         /// when its minted, 0 tokens are retired.
         // self.retired_token_amount.insert(token_id, 0.into());
         let mut owner_state = self
@@ -245,23 +267,14 @@ impl<S: HasStateApi> State<S> {
             .entry(*owner)
             .or_insert_with(|| AddressState::empty(state_builder));
         let mut owner_balance = owner_state.balances.entry(token_id).or_insert(0.into());
-        *owner_balance += mint_param.token_amount;
+        *owner_balance += 1.into(); //mint_param.token_amount;
 
-        let mut circulating_supply = self.total_credit.entry(token_id).or_insert(0.into());
-        *circulating_supply += mint_param.token_amount;
+        // let mut circulating_supply = self.total_credit.entry(token_id).or_insert(0.into());
+        // *circulating_supply += mint_param.token_amount;
 
         token_id
     }
-    // /// retire
-    // #[inline(always)]
-    // fn retire_token(&mut self, token_id: &ContractTokenId, amount: ContractTokenAmount) {
-    //     //self.retired_token_amount.insert(*token_id, true);
-    //     let mut retired_balance = self
-    //         .retired_token_amount
-    //         .entry(*token_id)
-    //         .or_insert(0.into());
-    //     *retired_balance += amount;
-    // }
+
     /// retire, retracts and burn function the same way.
     ///
     fn burn(
@@ -561,7 +574,7 @@ fn contract_mint<S: HasStateApi>(
         // Event for minted token.
         logger.log(&Cis2Event::Mint(MintEvent {
             token_id,
-            amount: mint_param.token_amount,
+            amount: TokenAmountU64(1),
             owner: params.owner,
         }))?;
 
@@ -577,15 +590,15 @@ fn contract_mint<S: HasStateApi>(
 }
 
 #[derive(Serial, Deserial, SchemaType)]
-struct BurnParams {
+struct RetireParams {
     // account: Address,
     token_id: ContractTokenId,
     amount: ContractTokenAmount,
 }
 #[receive(
     contract = "cis2_multi",
-    name = "burn",
-    parameter = "BurnParams",
+    name = "retire",
+    parameter = "RetireParams",
     error = "ContractError",
     enable_logger,
     mutable
@@ -603,7 +616,7 @@ fn contract_burn<S: HasStateApi>(
     // ensure!(sender.matches_account(&owner), ContractError::Unauthorized);
 
     // Parse the parameter.
-    let params: BurnParams = ctx.parameter_cursor().get()?;
+    let params: RetireParams = ctx.parameter_cursor().get()?;
     let token_id = params.token_id;
     // let from = params.account;
     let amount = params.amount;
@@ -613,20 +626,25 @@ fn contract_burn<S: HasStateApi>(
     // can use the value to store it in the state.
     let remaining_amount: ContractTokenAmount = state.burn(&token_id, amount, &sender)?;
 
-    // log burn event
-    logger.log(&Cis2Event::Burn(BurnEvent {
-        token_id,
-        amount,
-        owner: sender,
+    logger.log(&CarbonEvent::CarbonCreditRetired({
+        CarbonRetiredEvent {
+            retire_time: ctx.metadata().slot_time(),
+            token_id: token_id,
+        }
     }))?;
     Ok(())
 }
 
-type RetractParam = ContractTokenId;
+#[derive(Serial, Deserial, SchemaType)]
+struct AddressBurnState {
+    account: Address,
+    token_id: ContractTokenId,
+}
 
-struct AddressBalance {
-    address: Address,
-    balance: ContractTokenAmount,
+#[derive(Serial, Deserial, SchemaType)]
+struct RetractParam {
+    /// A collection of tokens to burn.
+    tokens: Vec<AddressBurnState>,
 }
 
 #[receive(
@@ -643,49 +661,95 @@ fn contract_retract<S: HasStateApi>(
     logger: &mut impl HasLogger,
 ) -> ContractResult<()> {
     // Get the contract owner
-    // let owner = ctx.owner();
+    let owner = ctx.owner();
     // Get the sender of the transaction
     let sender = ctx.sender();
 
-    // ensure!(sender.matches_account(&owner), ContractError::Unauthorized);
+    let (state, builder) = host.state_and_builder();
+
+    ensure!(
+        sender.matches_account(&owner) || state.has_role(&sender, Roles::Verifier),
+        ContractError::Unauthorized
+    );
 
     // Parse the parameter.
-    let token_id: RetractParam = ctx.parameter_cursor().get()?;
+    let params: RetractParam = ctx.parameter_cursor().get()?;
+
+    for burn_param in params.tokens {
+        let account = burn_param.account;
+        let token_id = burn_param.token_id;
+        let amount = 1.into();
+        // can use the value to store it in the state.
+        let remaining_amount: ContractTokenAmount = state.burn(&token_id, amount, &account)?;
+
+        // retire_time: Timestamp,
+        // token_id: ContractTokenId,
+        // retracter_address: Address,
+        // log burn event
+        logger.log(&CarbonEvent::CarbonCreditRetracted({
+            CarbonRetractedEvent {
+                retire_time: ctx.metadata().slot_time(),
+                token_id: token_id,
+                retracter_address: sender,
+            }
+        }))?;
+    }
+    Ok(())
+}
+
+#[derive(Serial, Deserial, SchemaType)]
+struct VerifytParam {
+    /// A collection of tokens to burn.
+    tokens: Vec<ContractTokenId>,
+}
+
+////
+///
+///
+///
+#[receive(
+    contract = "cis2_multi",
+    name = "verify_credit",
+    parameter = "VerifyParam",
+    error = "ContractError",
+    enable_logger,
+    mutable
+)]
+fn contract_verify_credit<S: HasStateApi>(
+    ctx: &impl HasReceiveContext,
+    host: &mut impl HasHost<State<S>, StateApiType = S>,
+    logger: &mut impl HasLogger,
+) -> ContractResult<()> {
+    // Get the contract owner
+    let owner = ctx.owner();
+    // Get the sender of the transaction
+    let sender = ctx.sender();
 
     let (state, builder) = host.state_and_builder();
-    // let state = host.state();
 
-    let mut amount = TokenAmountU64(0);
+    ensure!(
+        state.has_role(&sender, Roles::Verifier),
+        ContractError::Unauthorized
+    );
 
-    let mut account_balance_vec = Vec::new();
+    // Parse the parameter.
+    let params: VerifytParam = ctx.parameter_cursor().get()?;
 
-    for address_balance in state.state.iter() {
-        let individual_amount = state.balance(&token_id, &address_balance.0)?;
-        account_balance_vec.push({
-            AddressBalance {
-                address: *address_balance.0,
-                balance: individual_amount,
+    for token_id in params.tokens {
+        *state.is_token_verified.get_mut(&token_id).unwrap() = true;
+
+        // retire_time: Timestamp,
+        // token_id: ContractTokenId,
+        // retracter_address: Address,
+        // log burn event
+        logger.log(&CarbonEvent::CarbonCreditVerified({
+            CarbonVerifiedEvent {
+                retire_time: ctx.metadata().slot_time(),
+                token_id: token_id,
+                verifier_address: sender,
             }
-        });
-        amount += individual_amount;
+        }))?;
     }
-
-    for elem in account_balance_vec {
-        state.burn(&token_id, elem.balance, &elem.address);
-    }
-    // can use the value to store it in the state.
-    //let remaining_amount: ContractTokenAmount = state.burn(&token_id, amount, &sender)?;
-    // retire_time: Timestamp,
-    // token_id: ContractTokenId,
-    // retracter_address: Address,
-    // log burn event
-    logger.log(&CarbonEvent::CarbonRetracted({
-        CarbonRetractedEvent {
-            retire_time: ctx.metadata().slot_time(),
-            token_id: token_id,
-            retracter_address: sender,
-        }
-    }))?;
     Ok(())
 }
 
@@ -736,6 +800,11 @@ fn contract_transfer<S: HasStateApi>(
         ensure!(
             from == sender || state.is_operator(&sender, &from),
             ContractError::Unauthorized
+        );
+
+        ensure!(
+            state.is_token_verified.get(&token_id).is_some(),
+            ContractError::Custom(CustomContractError::TokenIsNotVerified)
         );
         let to_address = to.address();
         // Update the contract state
@@ -1529,3 +1598,73 @@ mod tests {
         )
     }
 }
+
+// #[receive(
+//     contract = "cis2_multi",
+//     name = "retract",
+//     parameter = "RetractParam",
+//     error = "ContractError",
+//     enable_logger,
+//     mutable
+// )]
+// fn contract_retract<S: HasStateApi>(
+//     ctx: &impl HasReceiveContext,
+//     host: &mut impl HasHost<State<S>, StateApiType = S>,
+//     logger: &mut impl HasLogger,
+// ) -> ContractResult<()> {
+//     // Get the contract owner
+//     let owner = ctx.owner();
+//     // Get the sender of the transaction
+//     let sender = ctx.sender();
+
+//     let (state, builder) = host.state_and_builder();
+
+//     ensure!(
+//         sender.matches_account(&owner) || state.has_role(&sender, Roles::Verifier),
+//         ContractError::Unauthorized
+//     );
+
+//     ensure!(
+//         sender.matches_account(&owner) || state.has_role(&sender, Roles::Verifier),
+//         ContractError::Unauthorized
+//     );
+
+//     // Parse the parameter.
+//     let token_id: RetractParam = ctx.parameter_cursor().get()?;
+
+//     let (state, builder) = host.state_and_builder();
+//     // let state = host.state();
+
+//     let mut amount = TokenAmountU64(0);
+
+//     let mut account_balance_vec = Vec::new();
+
+//     for address_balance in state.state.iter() {
+//         let individual_amount = state.balance(&token_id, &address_balance.0)?;
+//         account_balance_vec.push({
+//             AddressBalance {
+//                 address: *address_balance.0,
+//                 balance: individual_amount,
+//             }
+//         });
+//         amount += individual_amount;
+//     }
+
+//     for elem in account_balance_vec {
+//         state.burn(&token_id, elem.balance, &elem.address);
+//     }
+//     // can use the value to store it in the state.
+//     //let remaining_amount: ContractTokenAmount = state.burn(&token_id, amount, &sender)?;
+//     // retire_time: Timestamp,
+//     // token_id: ContractTokenId,
+//     // retracter_address: Address,
+//     // log burn event
+//     logger.log(&CarbonEvent::CarbonRetracted({
+//         CarbonRetractedEvent {
+//             retire_time: ctx.metadata().slot_time(),
+//             token_id: token_id,
+//             retracter_address: sender,
+//         }
+//     }))?;
+//     Ok(())
+// }

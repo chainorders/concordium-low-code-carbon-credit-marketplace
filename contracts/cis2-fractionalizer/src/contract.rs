@@ -144,6 +144,61 @@ fn contract_mint<S: HasStateApi>(
     Ok(())
 }
 
+/////
+///
+///
+#[derive(Serial, Deserial, SchemaType)]
+struct BurnParams {
+    // account: Address,
+    token_id: ContractTokenId,
+    amount: ContractTokenAmount,
+}
+////
+///
+///
+///
+///
+
+#[receive(
+    contract = "CIS2-Fractionalizer",
+    name = "burn",
+    parameter = "BurnParams",
+    error = "ContractError",
+    enable_logger,
+    mutable
+)]
+fn contract_burn<S: HasStateApi>(
+    ctx: &impl HasReceiveContext,
+    host: &mut impl HasHost<State<S>, StateApiType = S>,
+    logger: &mut impl HasLogger,
+) -> ContractResult<()> {
+    // Get the contract owner
+    // let owner = ctx.owner();
+    // Get the sender of the transaction
+    let sender = ctx.sender();
+
+    // ensure!(sender.matches_account(&owner), ContractError::Unauthorized);
+
+    // Parse the parameter.
+    let params: BurnParams = ctx.parameter_cursor().get()?;
+    let token_id = params.token_id;
+    // let from = params.account;
+    let amount = params.amount;
+
+    let (state, builder) = host.state_and_builder();
+
+    // can use the value to store it in the state.
+    let remaining_amount: ContractTokenAmount = state.burn(&token_id, amount, &sender)?;
+
+    // log burn event
+    logger.log(&Cis2Event::Burn(BurnEvent {
+        token_id,
+        amount,
+        owner: sender,
+    }))?;
+    Ok(())
+}
+
 /// Execute a list of token transfers, in the order of the list.
 /// If the transfer is to the self address the tokens are burned instead.
 /// If the balance after burning is zero then the collateral is returned back to the original sender.
