@@ -1,17 +1,15 @@
-import React from "react";
+import React from 'react';
 
-import { WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk";
-import { Stack, Typography } from "@mui/material";
+import { WalletApi } from '@concordium/browser-wallet-api-helpers';
+import { ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
+import { Stack, Typography } from '@mui/material';
 
-import { Cis2ContractInfo } from "../../models/ConcordiumContractClient";
-import Cis2FindInstance from "./Cis2FindInstance";
-import Cis2Init from "./Cis2Init";
+import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
+import Cis2FindInstance from './Cis2FindInstance';
+import Cis2Init from './Cis2Init';
 
 function Cis2FindInstanceOrInit(props: {
   grpcClient: ConcordiumGRPCClient;
-  provider: WalletApi;
-  account: string;
   contractInfo: Cis2ContractInfo;
   address?: ContractAddress;
   onDone: (address: ContractAddress) => void;

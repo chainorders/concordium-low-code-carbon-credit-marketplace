@@ -1,18 +1,13 @@
-import { Buffer } from "buffer/";
+import { Buffer } from 'buffer/';
 
-import { SmartContractParameters, WalletApi } from "@concordium/browser-wallet-api-helpers";
 import {
-  AccountAddress,
-  AccountTransactionType,
-  CcdAmount,
-  ConcordiumGRPCClient,
-  ContractAddress,
-  ModuleReference,
-  serializeUpdateContractParameters,
-  TransactionStatusEnum,
-  TransactionSummary,
-  UpdateContractPayload,
-} from "@concordium/web-sdk";
+    detectConcordiumProvider, SmartContractParameters, WalletApi
+} from '@concordium/browser-wallet-api-helpers';
+import {
+    AccountAddress, AccountTransactionType, CcdAmount, ConcordiumGRPCClient, ContractAddress,
+    ModuleReference, serializeUpdateContractParameters, TransactionStatusEnum, TransactionSummary,
+    UpdateContractPayload
+} from '@concordium/web-sdk';
 
 export interface ContractInfo {
   schemaBuffer: Buffer;
@@ -22,6 +17,16 @@ export interface ContractInfo {
 
 export interface Cis2ContractInfo extends ContractInfo {
   tokenIdByteSize: number;
+}
+
+export async function connectToWallet(): Promise<{ provider: WalletApi; account: string }> {
+  const provider = await detectConcordiumProvider();
+  const account = await provider.connect();
+  if (!account) {
+    throw new Error("Could not connect to the Wallet Account");
+  }
+
+  return { provider, account };
 }
 
 /**

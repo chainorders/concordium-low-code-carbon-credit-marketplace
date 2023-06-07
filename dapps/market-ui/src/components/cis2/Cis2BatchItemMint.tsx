@@ -1,10 +1,12 @@
-import React from "react";
+import React from 'react';
 
-import { CIS2 } from "@concordium/web-sdk";
-import { Card, CardContent, CardMedia, Link, Skeleton, SxProps, Theme, Typography } from "@mui/material";
+import { CIS2 } from '@concordium/web-sdk';
+import {
+    Card, CardContent, CardMedia, Link, Skeleton, SxProps, Theme, Typography
+} from '@mui/material';
 
-import { ContractInfo } from "../../models/ConcordiumContractClient";
-import LazyCis2Metadata from "./LazyCis2Metadata";
+import { ContractInfo } from '../../models/ConcordiumContractClient';
+import LazyCis2Metadata from './LazyCis2Metadata';
 
 const cardMediaSx: SxProps<Theme> = { maxHeight: "200px" };
 

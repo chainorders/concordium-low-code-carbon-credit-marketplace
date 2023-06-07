@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { Button, ButtonGroup, Stack, TextField, Typography } from "@mui/material";
+import { Button, ButtonGroup, Stack, TextField, Typography } from '@mui/material';
 
-import { PinataClient } from "../models/PinataClient";
+import { PinataClient } from '../models/PinataClient';
 
 function ConnectPinata(props: { jwt: string; onDone: (jwt: string) => void; onSkip: () => void }) {
   const [state, setState] = useState({

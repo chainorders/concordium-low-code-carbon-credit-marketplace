@@ -1,25 +1,20 @@
+import { FormEvent, useState } from 'react';
+
+import { SchemaWithContext, WalletApi } from '@concordium/browser-wallet-api-helpers';
 import {
-  cis0Supports,
-  CIS0,
-  ConcordiumGRPCClient,
-  ContractAddress,
-  CIS2,
-  CIS2Contract,
-  TransactionStatusEnum,
-} from "@concordium/web-sdk";
-import { Button, Container, Stack, TextField } from "@mui/material";
-import { FormEvent, useState } from "react";
-import { WalletApi, SchemaWithContext } from "@concordium/browser-wallet-api-helpers";
-import { waitAndThrowError } from "../../models/ConcordiumContractClient";
-import DisplayError from "../ui/DisplayError";
-import TransactionProgress from "../ui/TransactionProgress";
+    CIS0, cis0Supports, CIS2, CIS2Contract, ConcordiumGRPCClient, ContractAddress,
+    TransactionStatusEnum
+} from '@concordium/web-sdk';
+import { Button, Container, Stack, TextField } from '@mui/material';
+
+import { connectToWallet, waitAndThrowError } from '../../models/ConcordiumContractClient';
+import DisplayError from '../ui/DisplayError';
+import TransactionProgress from '../ui/TransactionProgress';
 
 export default function Cis2Transfer(props: {
   onDone: (address: ContractAddress, tokenId: string, quantity: string) => void;
   grpcClient: ConcordiumGRPCClient;
-  account: string;
   to: CIS2.Receiver;
-  provider: WalletApi;
 }) {
   const [state, setState] = useState({
     error: "",
@@ -50,8 +45,11 @@ export default function Cis2Transfer(props: {
         const contractName = instanceInfo.name.replace("init_", "");
         return new CIS2Contract(props.grpcClient, address, contractName);
       })
-      .then((cis2Contract) => transfer(cis2Contract))
-      .then((txnHash) => waitAndThrowError(props.provider, txnHash, (status, hash) => setTxn({ hash, status })))
+      .then(async (cis2Contract) => {
+        const wallet = await connectToWallet();
+        const txnHash = await transfer(wallet.provider, wallet.account, cis2Contract);
+        await waitAndThrowError(wallet.provider, txnHash, (status, hash) => setTxn({ hash, status }));
+      })
       .then(() => {
         setState({ ...state, error: "", inProgress: false });
         props.onDone(address, form.tokenId, form.quantity);
@@ -107,7 +105,7 @@ export default function Cis2Transfer(props: {
       <DisplayError error={state.error} />
       {txn.hash && txn.status && (
         <Container>
-          <TransactionProgress hash={txn.hash} status={txn.status}/>
+          <TransactionProgress hash={txn.hash} status={txn.status} />
         </Container>
       )}
 
@@ -129,9 +127,9 @@ export default function Cis2Transfer(props: {
     }
   }
 
-  function transfer(cis2Contract: CIS2Contract) {
+  function transfer(provider: WalletApi, account: string, cis2Contract: CIS2Contract) {
     const transfer = {
-      from: props.account,
+      from: account,
       to: props.to,
       tokenAmount: BigInt(form.quantity),
       tokenId: form.tokenId,
@@ -143,6 +141,6 @@ export default function Cis2Transfer(props: {
       schema,
     } = cis2Contract.createTransfer({ energy: BigInt(10000) }, transfer);
 
-    return props.provider.sendTransaction(props.account, type, payload, json, schema as SchemaWithContext);
+    return provider.sendTransaction(account, type, payload, json, schema as SchemaWithContext);
   }
 }

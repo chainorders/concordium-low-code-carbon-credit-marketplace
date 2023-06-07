@@ -1,17 +1,19 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { CIS2, ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk";
-import { ArrowBackRounded } from "@mui/icons-material";
-import { AlertColor, Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography } from "@mui/material";
-import { Container } from "@mui/system";
-import ConnectPinata from "../../components/ConnectPinata";
-import Cis2BatchMetadataPrepareOrAdd from "../../components/cis2/Cis2BatchMetadataPrepareOrAdd";
-import Cis2BatchMint from "../../components/cis2/Cis2BatchMint";
-import Cis2FindInstanceOrInit from "../../components/cis2/Cis2FindInstanceOrInit";
-import UploadFiles from "../../components/ui/UploadFiles";
-import { Cis2ContractInfo } from "../../models/ConcordiumContractClient";
-import Alert from "../../components/ui/Alert";
+import { CIS2, ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
+import { ArrowBackRounded } from '@mui/icons-material';
+import {
+    AlertColor, Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography
+} from '@mui/material';
+import { Container } from '@mui/system';
+
+import Cis2BatchMetadataPrepareOrAdd from '../../components/cis2/Cis2BatchMetadataPrepareOrAdd';
+import Cis2BatchMint from '../../components/cis2/Cis2BatchMint';
+import Cis2FindInstanceOrInit from '../../components/cis2/Cis2FindInstanceOrInit';
+import ConnectPinata from '../../components/ConnectPinata';
+import Alert from '../../components/ui/Alert';
+import UploadFiles from '../../components/ui/UploadFiles';
+import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
 
 enum Steps {
   GetOrInitCis2,
@@ -25,8 +27,6 @@ type StepType = { step: Steps; title: string };
 
 function MintPage(props: {
   grpcClient: ConcordiumGRPCClient;
-  provider: WalletApi;
-  account: string;
   contractInfo: Cis2ContractInfo;
 }) {
   const steps: StepType[] = [
@@ -123,9 +123,7 @@ function MintPage(props: {
       case Steps.GetOrInitCis2:
         return (
           <Cis2FindInstanceOrInit
-            provider={props.provider}
             grpcClient={props.grpcClient}
-            account={props.account}
             contractInfo={props.contractInfo}
             address={state.nftContract}
             onDone={(address) => onGetCollectionAddress(address)}
@@ -148,8 +146,6 @@ function MintPage(props: {
         return (
           <Cis2BatchMint
             contractInfo={props.contractInfo}
-            provider={props.provider}
-            account={props.account}
             nftContractAddress={state.nftContract as ContractAddress}
             tokenMetadataMap={state.tokenMetadataMap!}
             onDone={() => onNftsMinted()}

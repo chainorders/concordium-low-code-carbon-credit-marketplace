@@ -1,18 +1,18 @@
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useState } from 'react';
 
-import { WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { CIS2Contract, ConcordiumGRPCClient, ContractAddress, TransactionStatusEnum } from "@concordium/web-sdk";
-import { Button, Container, Stack, TextField, Typography } from "@mui/material";
+import { WalletApi } from '@concordium/browser-wallet-api-helpers';
+import {
+    CIS2Contract, ConcordiumGRPCClient, ContractAddress, TransactionStatusEnum
+} from '@concordium/web-sdk';
+import { Button, Container, Stack, TextField, Typography } from '@mui/material';
 
-import { MARKETPLACE_CONTRACT_INFO } from "../Constants";
-import { toParamContractAddress } from "../models/ConcordiumContractClient";
-import { add, AddParams } from "../models/MarketplaceClient";
-import TransactionProgress from "./ui/TransactionProgress";
+import { MARKETPLACE_CONTRACT_INFO } from '../Constants';
+import { connectToWallet, toParamContractAddress } from '../models/ConcordiumContractClient';
+import { add, AddParams } from '../models/MarketplaceClient';
+import TransactionProgress from './ui/TransactionProgress';
 
 interface MarketplaceAddProps {
   grpcClient: ConcordiumGRPCClient;
-  provider: WalletApi;
-  account: string;
   marketContractAddress: ContractAddress;
   nftContractAddress: ContractAddress;
   cis2Contract: CIS2Contract;
@@ -55,15 +55,18 @@ function MarketplaceAdd(props: MarketplaceAddProps) {
       token_id: props.tokenId,
     };
 
-    add(
-      props.provider,
-      props.account,
-      props.marketContractAddress,
-      paramJson,
-      MARKETPLACE_CONTRACT_INFO,
-      BigInt(9999),
-      (status, hash) => setTxn({ hash, status }),
-    )
+    connectToWallet()
+      .then((wallet) =>
+        add(
+          wallet.provider,
+          wallet.account,
+          props.marketContractAddress,
+          paramJson,
+          MARKETPLACE_CONTRACT_INFO,
+          BigInt(9999),
+          (status, hash) => setTxn({ hash, status }),
+        ),
+      )
       .then(() => {
         setState({ ...state, error: "", inProgress: false });
         props.onDone();
@@ -120,7 +123,7 @@ function MarketplaceAdd(props: MarketplaceAddProps) {
       )}
       {txn.hash && txn.status && (
         <Container>
-          <TransactionProgress hash={txn.hash} status={txn.status}/>
+          <TransactionProgress hash={txn.hash} status={txn.status} />
         </Container>
       )}
       <Button variant="contained" disabled={state.inProgress} type="submit">

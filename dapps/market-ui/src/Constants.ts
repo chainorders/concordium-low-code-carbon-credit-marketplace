@@ -1,8 +1,8 @@
-import { Buffer } from "buffer/";
+import { Buffer } from 'buffer/';
 
-import { ModuleReference } from "@concordium/web-sdk";
+import { ModuleReference } from '@concordium/web-sdk';
 
-import { Cis2ContractInfo, ContractInfo } from "./models/ConcordiumContractClient";
+import { Cis2ContractInfo, ContractInfo } from './models/ConcordiumContractClient';
 
 /**
  * Contract Address for Marketplace. You should specify your contract's index when you initialized it.
@@ -71,3 +71,5 @@ export const WERT_PRIVATE_KEY =
 export const WERT_PARTNER_ID = "01GW6YMK3WN8QY8E8MTKP6MHXX";
 export const WERT_NETWORK = "testnet";
 export const WERT_ORIGIN = "https://sandbox.wert.io";
+export const BASE_ACCOUNT_ADDRESS = "3h5P1JxepMef2tTowguviFTGoRZsqTRJXzxTfm9mZysuJj2ZTM";
+export const GOOGLE_CLIENT_ID = "431845854526-ckitelhb0pcnrm5hjdj3bc4q1mdtafdc.apps.googleusercontent.com"

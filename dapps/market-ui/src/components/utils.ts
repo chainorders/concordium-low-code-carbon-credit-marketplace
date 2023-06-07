@@ -1,5 +1,6 @@
-import { ContractAddress } from "@concordium/web-sdk";
-import { useParams } from "react-router";
+import { useParams } from 'react-router';
+
+import { ContractAddress } from '@concordium/web-sdk';
 
 export function useParamsContractAddress(): ContractAddress | undefined {
   const { index, subindex } = useParams();

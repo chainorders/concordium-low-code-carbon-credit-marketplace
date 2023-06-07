@@ -1,17 +1,17 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { ConcordiumGRPCClient, ContractAddress } from "@concordium/common-sdk";
-import { CIS2Contract } from "@concordium/web-sdk";
-import { Paper, Step, StepLabel, Stepper, Typography } from "@mui/material";
+import { WalletApi } from '@concordium/browser-wallet-api-helpers';
+import { ConcordiumGRPCClient, ContractAddress } from '@concordium/common-sdk';
+import { CIS2Contract } from '@concordium/web-sdk';
+import { Paper, Step, StepLabel, Stepper, Typography } from '@mui/material';
 
-import MarketplaceAdd from "../../components/MarketplaceAdd";
-import { Cis2ContractInfo } from "../../models/ConcordiumContractClient";
-import Cis2Transfer from "../../components/cis2/Cis2Transfer";
-import { useParamsContractAddress } from "../../components/utils";
-import { MARKET_CONTRACT_ADDRESS } from "../../Constants";
-import MarketplaceOwnedTokensList from "../../components/cis2-market/MarketplaceOwnedTokensList";
+import MarketplaceOwnedTokensList from '../../components/cis2-market/MarketplaceOwnedTokensList';
+import Cis2Transfer from '../../components/cis2/Cis2Transfer';
+import MarketplaceAdd from '../../components/MarketplaceAdd';
+import { useParamsContractAddress } from '../../components/utils';
+import { MARKET_CONTRACT_ADDRESS } from '../../Constants';
+import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
 
 enum Steps {
   TransferToken,
@@ -19,12 +19,7 @@ enum Steps {
 }
 type StepType = { step: Steps; title: string };
 
-function SellPage(props: {
-  grpcClient: ConcordiumGRPCClient;
-  provider: WalletApi;
-  account: string;
-  contractInfo: Cis2ContractInfo;
-}) {
+function SellPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2ContractInfo }) {
   const marketContractAddress = useParamsContractAddress() || MARKET_CONTRACT_ADDRESS;
   const steps = [
     {
@@ -65,15 +60,8 @@ function SellPage(props: {
       case Steps.TransferToken:
         return (
           <>
-            <MarketplaceOwnedTokensList
-              account={props.account}
-              grpcClient={props.grpcClient}
-              onSelected={(item) => onTransferred(item.contract, item.tokenId, item.quantity.toString())}
-            />
             <Cis2Transfer
               grpcClient={props.grpcClient}
-              provider={props.provider}
-              account={props.account}
               to={{
                 address: marketContractAddress,
                 hookName: "recieve_cis2",
@@ -86,8 +74,6 @@ function SellPage(props: {
         return (
           <MarketplaceAdd
             grpcClient={props.grpcClient}
-            provider={props.provider}
-            account={props.account}
             marketContractAddress={marketContractAddress}
             nftContractAddress={state.nftContract!}
             tokenId={state.tokenId!}

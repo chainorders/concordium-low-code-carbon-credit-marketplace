@@ -1,23 +1,21 @@
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useState } from 'react';
 
-import { WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { ContractAddress } from "@concordium/web-sdk";
-import { Alert, Typography } from "@mui/material";
-import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
-import TextField from "@mui/material/TextField";
+import { ContractAddress } from '@concordium/web-sdk';
+import { Alert, Typography } from '@mui/material';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import TextField from '@mui/material/TextField';
 
-import { MARKETPLACE_CONTRACT_INFO } from "../Constants";
-import { TokenListItem, transfer } from "../models/MarketplaceClient";
+import { MARKETPLACE_CONTRACT_INFO } from '../Constants';
+import { connectToWallet } from '../models/ConcordiumContractClient';
+import { TokenListItem, transfer } from '../models/MarketplaceClient';
 
 export default function MarketplaceReturnDialog(props: {
   isOpen: boolean;
   token: TokenListItem;
-  provider: WalletApi;
-  account: string;
   marketContractAddress: ContractAddress;
   onClose: (res: "success" | "cancel") => void;
 }) {
@@ -31,7 +29,7 @@ export default function MarketplaceReturnDialog(props: {
     props.onClose(res);
   };
 
-  const { token: item, provider, account, marketContractAddress } = props;
+  const { token: item, marketContractAddress } = props;
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -51,18 +49,22 @@ export default function MarketplaceReturnDialog(props: {
       error: "",
     });
 
-    transfer(
-      provider,
-      account,
-      marketContractAddress,
-      item.contract,
-      item.tokenId,
-      // When transferring / returning back to the owner. The price is 0.
-      BigInt(0),
-      item.owner,
-      quantity,
-      MARKETPLACE_CONTRACT_INFO,
-    )
+    connectToWallet()
+      .then((wallet) =>
+        transfer(
+          wallet.provider,
+          wallet.account,
+          wallet.account,
+          marketContractAddress,
+          item.contract,
+          item.tokenId,
+          // When transferring / returning back to the owner. The price is 0.
+          BigInt(0),
+          item.owner,
+          quantity,
+          MARKETPLACE_CONTRACT_INFO,
+        ),
+      )
       .then(() => {
         setState({
           ...state,

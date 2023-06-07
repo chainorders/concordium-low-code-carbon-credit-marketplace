@@ -1,17 +1,15 @@
-import React from "react";
+import React from 'react';
 
-import { WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk";
-import { Container, Paper, Stack, Typography } from "@mui/material";
+import { WalletApi } from '@concordium/browser-wallet-api-helpers';
+import { ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
+import { Container, Paper, Stack, Typography } from '@mui/material';
 
-import ContractFindInstance from "../../components/ContractFindInstance";
-import { ContractInfo } from "../../models/ConcordiumContractClient";
-import FractionalizerContractInit from "../../components/cis2-fractionalizer/FractionalizerContractInit";
+import FractionalizerContractInit from '../../components/cis2-fractionalizer/FractionalizerContractInit';
+import ContractFindInstance from '../../components/ContractFindInstance';
+import { ContractInfo } from '../../models/ConcordiumContractClient';
 
 function FractionalizerFindOrInit(props: {
   grpcClient: ConcordiumGRPCClient;
-  provider: WalletApi;
-  account: string;
   contractInfo: ContractInfo;
   onDone: (address: ContractAddress) => void;
 }) {

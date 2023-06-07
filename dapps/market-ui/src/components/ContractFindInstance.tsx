@@ -1,7 +1,7 @@
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useState } from 'react';
 
-import { ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk";
-import { Button, Stack, TextField, Typography } from "@mui/material";
+import { ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
+import { Button, Stack, TextField, Typography } from '@mui/material';
 
 function ContractFindInstance(props: { grpcClient: ConcordiumGRPCClient; onDone: (address: ContractAddress) => void }) {
   const [state, setState] = useState({

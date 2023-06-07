@@ -1,30 +1,20 @@
-import { Buffer } from "buffer/";
-import React, { FormEvent, useState } from "react";
+import { Buffer } from 'buffer/';
+import React, { FormEvent, useState } from 'react';
 
-import { CIS2, sha256 } from "@concordium/web-sdk";
-import { Theme } from "@emotion/react";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import { CIS2, sha256 } from '@concordium/web-sdk';
+import { Theme } from '@emotion/react';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import {
-  Button,
-  Card,
-  CardActions,
-  CardContent,
-  CardMedia,
-  Checkbox,
-  FormControlLabel,
-  Skeleton,
-  Stack,
-  SxProps,
-  TextField,
-  Typography,
-} from "@mui/material";
+    Button, Card, CardActions, CardContent, CardMedia, Checkbox, FormControlLabel, Skeleton, Stack,
+    SxProps, TextField, Typography
+} from '@mui/material';
 
-import { Metadata } from "../../models/Cis2Client";
-import { Cis2ContractInfo } from "../../models/ConcordiumContractClient";
-import DisplayError from "../ui/DisplayError";
-import GetMintCardStep from "./GetMintCardStep";
-import GetTokenIdCardStep from "./GetTokenIdCardStep";
-import LazyCis2Metadata from "./LazyCis2Metadata";
+import { Metadata } from '../../models/Cis2Client';
+import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
+import DisplayError from '../ui/DisplayError';
+import GetMintCardStep from './GetMintCardStep';
+import GetTokenIdCardStep from './GetTokenIdCardStep';
+import LazyCis2Metadata from './LazyCis2Metadata';
 
 const cardMediaSx: SxProps<Theme> = { maxHeight: "200px" };
 

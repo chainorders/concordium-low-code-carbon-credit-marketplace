@@ -1,31 +1,20 @@
-import { Buffer } from "buffer/";
-import React, { FormEvent, useState } from "react";
+import { Buffer } from 'buffer/';
+import React, { FormEvent, useState } from 'react';
 
-import { CIS2, sha256 } from "@concordium/web-sdk";
+import { CIS2, sha256 } from '@concordium/web-sdk';
 import {
-  Button,
-  Card,
-  CardActions,
-  CardContent,
-  CardMedia,
-  Checkbox,
-  FormControlLabel,
-  FormGroup,
-  Link,
-  Stack,
-  SxProps,
-  TextField,
-  Typography,
-} from "@mui/material";
-import { Theme } from "@mui/system";
+    Button, Card, CardActions, CardContent, CardMedia, Checkbox, FormControlLabel, FormGroup, Link,
+    Stack, SxProps, TextField, Typography
+} from '@mui/material';
+import { Theme } from '@mui/system';
 
-import { IPFS_GATEWAY_URL } from "../../Constants";
-import { Metadata } from "../../models/Cis2Client";
-import { PinataClient } from "../../models/PinataClient";
-import { tokenIdToNftImageFileName, tokenIdToNftMetadataFileName } from "../../models/Utils";
-import DisplayError from "../ui/DisplayError";
-import GetMintCardStep from "./GetMintCardStep";
-import GetTokenIdCardStep from "./GetTokenIdCardStep";
+import { IPFS_GATEWAY_URL } from '../../Constants';
+import { Metadata } from '../../models/Cis2Client';
+import { PinataClient } from '../../models/PinataClient';
+import { tokenIdToNftImageFileName, tokenIdToNftMetadataFileName } from '../../models/Utils';
+import DisplayError from '../ui/DisplayError';
+import GetMintCardStep from './GetMintCardStep';
+import GetTokenIdCardStep from './GetTokenIdCardStep';
 
 const cardMediaSx: SxProps<Theme> = { maxHeight: "200px" };
 

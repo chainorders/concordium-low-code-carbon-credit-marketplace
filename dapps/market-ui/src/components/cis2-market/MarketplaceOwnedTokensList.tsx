@@ -1,10 +1,12 @@
-import { CIS2Contract, ConcordiumGRPCClient } from "@concordium/web-sdk";
-import { MARKETPLACE_CONTRACT_INFO, MARKET_CONTRACT_ADDRESS } from "../../Constants";
-import { useParamsContractAddress } from "../utils";
-import { useEffect, useState } from "react";
-import { OwnedTokenListItem, listOwned } from "../../models/MarketplaceClient";
-import { ImageList, Typography } from "@mui/material";
-import MarketplaceOwnedTokensListItem from "../MarketplaceOwnedTokensListItem";
+import { useEffect, useState } from 'react';
+
+import { CIS2Contract, ConcordiumGRPCClient } from '@concordium/web-sdk';
+import { ImageList, Typography } from '@mui/material';
+
+import { MARKET_CONTRACT_ADDRESS, MARKETPLACE_CONTRACT_INFO } from '../../Constants';
+import { listOwned, OwnedTokenListItem } from '../../models/MarketplaceClient';
+import MarketplaceOwnedTokensListItem from '../MarketplaceOwnedTokensListItem';
+import { useParamsContractAddress } from '../utils';
 
 type ListItem = OwnedTokenListItem & { cis2Contract: CIS2Contract };
 

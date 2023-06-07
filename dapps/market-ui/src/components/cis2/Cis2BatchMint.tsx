@@ -1,12 +1,11 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { CIS2, ContractAddress } from "@concordium/web-sdk";
-import { Button, Grid, Stack, Typography } from "@mui/material";
+import { CIS2, ContractAddress } from '@concordium/web-sdk';
+import { Button, Grid, Stack, Typography } from '@mui/material';
 
-import Cis2BatchItemMint from "./Cis2BatchItemMint";
-import { mint } from "../../models/Cis2Client";
-import { ContractInfo } from "../../models/ConcordiumContractClient";
+import { mint } from '../../models/Cis2Client';
+import { connectToWallet, ContractInfo } from '../../models/ConcordiumContractClient';
+import Cis2BatchItemMint from './Cis2BatchItemMint';
 
 interface TokenState {
   tokenInfo: [CIS2.MetadataUrl, string];
@@ -17,8 +16,6 @@ interface TokenState {
 
 function Cis2BatchMint(props: {
   contractInfo: ContractInfo;
-  provider: WalletApi;
-  account: string;
   nftContractAddress: ContractAddress;
   tokenMetadataMap: { [tokenId: string]: [CIS2.MetadataUrl, string] };
   onDone: (data: { [tokenId: string]: [CIS2.MetadataUrl, string] }) => void;
@@ -50,7 +47,10 @@ function Cis2BatchMint(props: {
       tokens,
       mintingCount: state.mintingCount + mintingCount,
     });
-    mint(props.provider, props.account, props.tokenMetadataMap, props.nftContractAddress, props.contractInfo)
+    connectToWallet()
+      .then((wallet) =>
+        mint(wallet.provider, wallet.account, props.tokenMetadataMap, props.nftContractAddress, props.contractInfo),
+      )
       .then(() => {
         setTokensState(tokens, false, true);
         const mintingCount = Object.keys(tokens).length;

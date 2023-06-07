@@ -1,8 +1,8 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from 'react-router-dom';
 
-import { AppBar, Button, Stack, Toolbar, Typography } from "@mui/material";
-import { AddCircleOutline } from "@mui/icons-material";
-import { ContractAddress } from "@concordium/web-sdk";
+import { ContractAddress } from '@concordium/web-sdk';
+import { AddCircleOutline } from '@mui/icons-material';
+import { AppBar, Button, Stack, Toolbar, Typography } from '@mui/material';
 
 export default function FractionalizerPage(props: { fracContract: ContractAddress }) {
   const navigate = useNavigate();

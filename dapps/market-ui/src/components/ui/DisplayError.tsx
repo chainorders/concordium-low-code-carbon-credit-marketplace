@@ -1,6 +1,6 @@
-import React from "react";
+import React from 'react';
 
-import { Typography } from "@mui/material";
+import { Alert, Typography } from '@mui/material';
 
 function DisplayError(props: { error?: string }) {
   const { error } = props;
@@ -9,9 +9,9 @@ function DisplayError(props: { error?: string }) {
   }
 
   return (
-    <Typography variant="body1" color={"error"}>
-      {error}
-    </Typography>
+    <Alert severity="error" closeText='close'>
+      <Typography variant="body1">{error}</Typography>
+    </Alert>
   );
 }
 

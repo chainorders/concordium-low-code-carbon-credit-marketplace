@@ -1,6 +1,7 @@
-import { WalletApi, SmartContractParameters } from "@concordium/browser-wallet-api-helpers";
-import { ContractAddress, TransactionSummary } from "@concordium/web-sdk";
-import { ContractInfo, updateContract } from "./ConcordiumContractClient";
+import { SmartContractParameters, WalletApi } from '@concordium/browser-wallet-api-helpers';
+import { ContractAddress, TransactionSummary } from '@concordium/web-sdk';
+
+import { ContractInfo, updateContract } from './ConcordiumContractClient';
 
 export interface MintParams {
   owner: { Account: [string] };

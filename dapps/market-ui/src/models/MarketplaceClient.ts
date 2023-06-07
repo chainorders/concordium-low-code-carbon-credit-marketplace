@@ -7,12 +7,13 @@ import {
   TransactionStatusEnum,
   TransactionSummary,
 } from "@concordium/web-sdk";
+
 import {
   ContractInfo,
   invokeContract,
-  updateContract,
-  toParamContractAddress,
   ParamContractAddress,
+  toParamContractAddress,
+  updateContract,
 } from "./ConcordiumContractClient";
 
 export const enum MethodNames {
@@ -30,18 +31,10 @@ export const enum MethodNames {
  */
 export async function list(
   grpcClient: ConcordiumGRPCClient,
-  account: string,
   marketContractAddress: ContractAddress,
   contractInfo: ContractInfo,
 ): Promise<TokenList> {
-  const retValue = await invokeContract(
-    grpcClient,
-    contractInfo,
-    marketContractAddress,
-    MethodNames.list,
-    undefined,
-    new AccountAddress(account),
-  );
+  const retValue = await invokeContract(grpcClient, contractInfo, marketContractAddress, MethodNames.list);
   const retValueDe = deserializeReceiveReturnValue(
     retValue,
     contractInfo.schemaBuffer,
@@ -130,9 +123,10 @@ export async function add(
 }
 
 /**
- * Transfers token ownership from the current owner to {@link account}.
+ * Transfers token ownership from the current owner to {@link payerAccount}.
  * @param provider Wallet Provider.
- * @param account Account address buying the token.
+ * @param payerAccount Account address buying the token.
+ * @param to Account address receiving the token.
  * @param marketContractAddress Market contract address.
  * @param nftContractAddress CIS-NFT contract address.
  * @param tokenId Hex encoded Token Id
@@ -142,7 +136,8 @@ export async function add(
  */
 export async function transfer(
   provider: WalletApi,
-  account: string,
+  payerAccount: string,
+  to: string,
   marketContractAddress: ContractAddress,
   nftContractAddress: ContractAddress,
   tokenId: string,
@@ -157,7 +152,7 @@ export async function transfer(
   const paramJson: TransferParams = {
     cis_contract_address: toParamContractAddress(nftContractAddress),
     token_id: tokenId,
-    to: account,
+    to,
     owner,
     quantity: quantity.toString(),
   };
@@ -166,7 +161,7 @@ export async function transfer(
     provider,
     contractInfo,
     paramJson as unknown as SmartContractParameters,
-    account,
+    payerAccount,
     marketContractAddress,
     MethodNames.transfer,
     maxContractExecutionEnergy,

@@ -1,10 +1,10 @@
-import React, { useState } from "react";
-import FileUpload from "react-material-file-upload";
+import React, { useState } from 'react';
+import FileUpload from 'react-material-file-upload';
 
-import { AlertColor, Button, ButtonGroup } from "@mui/material";
-import { Stack } from "@mui/system";
+import { AlertColor, Button, ButtonGroup } from '@mui/material';
+import { Stack } from '@mui/system';
 
-import Alert from "./Alert";
+import Alert from './Alert';
 
 function UploadFiles(props: { files: File[]; onDone: (files: File[]) => void }) {
   const [alertState, setAlertState] = useState<{

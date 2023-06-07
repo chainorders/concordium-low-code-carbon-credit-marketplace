@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
-import { CIS2Contract, ContractAddress } from "@concordium/web-sdk";
-import CheckIcon from "@mui/icons-material/Check";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import { Typography } from "@mui/material";
-import IconButton from "@mui/material/IconButton";
-import ImageListItem from "@mui/material/ImageListItem";
-import ImageListItemBar from "@mui/material/ImageListItemBar";
+import { CIS2Contract, ContractAddress } from '@concordium/web-sdk';
+import CheckIcon from '@mui/icons-material/Check';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import { Typography } from '@mui/material';
+import IconButton from '@mui/material/IconButton';
+import ImageListItem from '@mui/material/ImageListItem';
+import ImageListItemBar from '@mui/material/ImageListItemBar';
 
-import { Metadata } from "../models/Cis2Client";
-import { TokenListItem } from "../models/MarketplaceClient";
-import { fetchJson } from "../models/Utils";
-import Cis2MetadataImageLazy from "./cis2/Cis2MetadataImageLazy";
+import { Metadata } from '../models/Cis2Client';
+import { TokenListItem } from '../models/MarketplaceClient';
+import { fetchJson } from '../models/Utils';
+import Cis2MetadataImageLazy from './cis2/Cis2MetadataImageLazy';
 
 type ListItem = TokenListItem & { cis2Contract: CIS2Contract };
 
@@ -21,7 +21,6 @@ type ListItem = TokenListItem & { cis2Contract: CIS2Contract };
 function MarketplaceTokensListItem(props: {
   onReturnClicked(item: ListItem): void;
   item: ListItem;
-  account: string;
   marketContractAddress: ContractAddress;
   onBuyClicked: (token: ListItem) => void;
 }) {
@@ -53,7 +52,7 @@ function MarketplaceTokensListItem(props: {
       .then((metadata) => {
         setStateMetadata(metadata);
       })
-      .catch((e) => { 
+      .catch((e) => {
         console.error(e);
         setStateMetadata({} as Metadata);
       });
@@ -64,7 +63,7 @@ function MarketplaceTokensListItem(props: {
       sx={{ display: state.isBought ? "none" : "" }}
       key={item.tokenId + item.contract.index + item.contract.subindex}
     >
-      <Cis2MetadataImageLazy account={props.account} cis2Contract={props.item.cis2Contract} tokenId={item.tokenId} />
+      <Cis2MetadataImageLazy cis2Contract={props.item.cis2Contract} tokenId={item.tokenId} />
       <ImageListItemBar
         title={`Price: ${state.price} CCD`}
         position="below"
@@ -88,9 +87,9 @@ function MarketplaceTokensListItem(props: {
           <IconButton
             sx={{ height: "100%" }}
             aria-label={`buy ${item.tokenId}`}
-            onClick={() => (item.owner !== props.account ? props.onBuyClicked(item) : props.onReturnClicked(item))}
+            onClick={() => props.onBuyClicked(item)}
           >
-            {state.isBought || item.owner === props.account ? <CheckIcon /> : <ShoppingCartIcon />}
+            {state.isBought ? <CheckIcon /> : <ShoppingCartIcon />}
           </IconButton>
         }
       />

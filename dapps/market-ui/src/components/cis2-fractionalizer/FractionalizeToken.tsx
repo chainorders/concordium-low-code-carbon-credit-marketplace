@@ -1,13 +1,13 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { ConcordiumGRPCClient, ContractAddress } from "@concordium/common-sdk";
-import { Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography } from "@mui/material";
+import { WalletApi } from '@concordium/browser-wallet-api-helpers';
+import { ConcordiumGRPCClient, ContractAddress } from '@concordium/common-sdk';
+import { ArrowBackRounded } from '@mui/icons-material';
+import { Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography } from '@mui/material';
 
-import { Cis2ContractInfo } from "../../models/ConcordiumContractClient";
-import Cis2Transfer from "../cis2/Cis2Transfer";
-import FractionalizerMint from "./FractionalizerMint";
-import { ArrowBackRounded } from "@mui/icons-material";
+import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
+import Cis2Transfer from '../cis2/Cis2Transfer';
+import FractionalizerMint from './FractionalizerMint';
 
 enum Steps {
   TransferToken,
@@ -17,8 +17,6 @@ type StepType = { step: Steps; title: string };
 
 function FractionalizeToken(props: {
   grpcClient: ConcordiumGRPCClient;
-  provider: WalletApi;
-  account: string;
   fracContractAddress: ContractAddress;
   contractInfo: Cis2ContractInfo;
 }) {
@@ -59,8 +57,6 @@ function FractionalizeToken(props: {
         return (
           <Cis2Transfer
             grpcClient={props.grpcClient}
-            provider={props.provider}
-            account={props.account}
             to={{
               address: props.fracContractAddress,
               hookName: "onReceivingCIS2",
@@ -73,8 +69,6 @@ function FractionalizeToken(props: {
           <FractionalizerMint
             collateralContractAddress={state.collateralContractAddress!}
             collateralTokenId={state.collateralTokenId!}
-            provider={props.provider}
-            account={props.account}
             fracContractAddress={props.fracContractAddress}
             onDone={(tokenId, quantity) => onTokenFractionalized(tokenId, quantity)}
           />

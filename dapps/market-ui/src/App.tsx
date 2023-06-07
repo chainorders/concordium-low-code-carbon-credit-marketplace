@@ -1,31 +1,28 @@
-import "./App.css";
+import './App.css';
 
-import { useEffect, useState } from "react";
-import { detectConcordiumProvider, WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { AppBar, Box, Button, Container, Link, ThemeProvider, Toolbar, Typography, createTheme } from "@mui/material";
-import { Route, Routes, useParams, Navigate, useNavigate } from "react-router-dom";
-import { ConcordiumGRPCClient, createConcordiumClient } from "@concordium/web-sdk";
+import { useState } from 'react';
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 
-import MarketFindOrInit from "./pages/marketplace/MarketFindOrInit";
+import { ConcordiumGRPCClient, createConcordiumClient } from '@concordium/web-sdk';
 import {
-  CIS2_MULTI_CONTRACT_INFO,
-  CONCORDIUM_NODE_PORT,
-  CONNCORDIUM_NODE_ENDPOINT,
-  FRACTIONALIZER_CONTRACT_ADDRESS,
-  FRACTIONALIZER_CONTRACT_INFO,
-  MARKETPLACE_CONTRACT_INFO,
-  MARKET_CONTRACT_ADDRESS,
-} from "./Constants";
-import ConnectWallet from "./components/ConnectWallet";
-import MarketPage from "./pages/marketplace/MarketPage";
-import CIS2Page from "./pages/cis2/CIS2Page";
-import SellPage from "./pages/marketplace/SellPage";
-import FractionalizerPage from "./pages/fractionalizer/FractionalizerPage";
-import MarketplaceTokensList from "./components/MarketplaceTokensList";
-import MintPage from "./pages/cis2/MintPage";
-import FractionalizeToken from "./components/cis2-fractionalizer/FractionalizeToken";
-import FractionalizerFindOrInit from "./pages/fractionalizer/FractionalizerFindOrInit";
-import { useParamsContractAddress } from "./components/utils";
+    AppBar, Box, Button, Container, createTheme, Link, ThemeProvider, Toolbar, Typography
+} from '@mui/material';
+
+import FractionalizeToken from './components/cis2-fractionalizer/FractionalizeToken';
+import MarketplaceTokensList from './components/MarketplaceTokensList';
+import { useParamsContractAddress } from './components/utils';
+import {
+    CIS2_MULTI_CONTRACT_INFO, CONCORDIUM_NODE_PORT, CONNCORDIUM_NODE_ENDPOINT,
+    FRACTIONALIZER_CONTRACT_ADDRESS, FRACTIONALIZER_CONTRACT_INFO, MARKET_CONTRACT_ADDRESS,
+    MARKETPLACE_CONTRACT_INFO
+} from './Constants';
+import CIS2Page from './pages/cis2/CIS2Page';
+import MintPage from './pages/cis2/MintPage';
+import FractionalizerFindOrInit from './pages/fractionalizer/FractionalizerFindOrInit';
+import FractionalizerPage from './pages/fractionalizer/FractionalizerPage';
+import MarketFindOrInit from './pages/marketplace/MarketFindOrInit';
+import MarketPage from './pages/marketplace/MarketPage';
+import SellPage from './pages/marketplace/SellPage';
 
 const theme = createTheme({
   palette: {
@@ -43,60 +40,11 @@ function App() {
   const marketContractAddress = useParamsContractAddress() || MARKET_CONTRACT_ADDRESS;
   const fracContract = useParamsContractAddress() || FRACTIONALIZER_CONTRACT_ADDRESS;
 
-  const [state, setState] = useState<{
+  const [state] = useState<{
     grpcClient: ConcordiumGRPCClient;
-    provider?: WalletApi;
-    account?: string;
   }>({
     grpcClient: createConcordiumClient(CONNCORDIUM_NODE_ENDPOINT, Number(CONCORDIUM_NODE_PORT)),
   });
-
-  function connect() {
-    detectConcordiumProvider()
-      .then((provider) => {
-        provider
-          .getMostRecentlySelectedAccount()
-          .then((account) => (account ? Promise.resolve(account) : provider.connect()))
-          .then((account) => {
-            setState({ ...state, provider, account });
-          })
-          .catch(() => {
-            alert("Please allow wallet connection");
-          });
-        provider.on("accountDisconnected", () => {
-          setState({ ...state, account: undefined });
-        });
-        provider.on("accountChanged", (account) => {
-          setState({ ...state, account });
-        });
-        provider.on("chainChanged", () => {
-          setState({ ...state, account: undefined, provider: undefined });
-        });
-      })
-      .catch(() => {
-        console.error(`could not find provider`);
-        alert("Please download Concordium Wallet");
-      });
-  }
-
-  useEffect(() => {
-    if (state.provider && state.account) {
-      return;
-    }
-
-    connect();
-    return () => {
-      state.provider?.removeAllListeners();
-    };
-  }, [state.account]);
-
-  function isConnected() {
-    return !!state.provider && !!state.account;
-  }
-
-  if (!isConnected()) {
-    return <ConnectWallet connect={connect} />;
-  }
 
   return (
     <>
@@ -125,34 +73,16 @@ function App() {
           <Container maxWidth={"lg"}>
             <Routes>
               <Route path="/market" element={<MarketPage />} key="market">
-                <Route
-                  path="buy/:index/:subindex"
-                  element={
-                    <MarketplaceTokensList
-                      grpcClient={state.grpcClient!}
-                      account={state.account!}
-                      provider={state.provider!}
-                    />
-                  }
-                />
+                <Route path="buy/:index/:subindex" element={<MarketplaceTokensList grpcClient={state.grpcClient!} />} />
                 <Route
                   path="sell"
-                  element={
-                    <SellPage
-                      grpcClient={state.grpcClient!}
-                      provider={state.provider!}
-                      account={state.account!}
-                      contractInfo={CIS2_MULTI_CONTRACT_INFO}
-                    />
-                  }
+                  element={<SellPage grpcClient={state.grpcClient!} contractInfo={CIS2_MULTI_CONTRACT_INFO} />}
                 />
                 <Route
                   path="create"
                   element={
                     <MarketFindOrInit
                       grpcClient={state.grpcClient!}
-                      provider={state.provider!}
-                      account={state.account!}
                       contractInfo={MARKETPLACE_CONTRACT_INFO}
                       onDone={(address) => navigate(`buy/${address.index.toString()}/${address.subindex.toString()}`)}
                     />
@@ -176,8 +106,6 @@ function App() {
                       grpcClient={state.grpcClient!}
                       key={CIS2_MULTI_CONTRACT_INFO.contractName}
                       contractInfo={CIS2_MULTI_CONTRACT_INFO}
-                      provider={state.provider!}
-                      account={state.account!}
                     />
                   }
                 />
@@ -189,8 +117,6 @@ function App() {
                   element={
                     <FractionalizeToken
                       grpcClient={state.grpcClient!}
-                      provider={state.provider!}
-                      account={state.account!}
                       fracContractAddress={fracContract}
                       contractInfo={CIS2_MULTI_CONTRACT_INFO}
                     />
@@ -201,8 +127,6 @@ function App() {
                   element={
                     <FractionalizerFindOrInit
                       grpcClient={state.grpcClient!}
-                      provider={state.provider!}
-                      account={state.account!}
                       contractInfo={FRACTIONALIZER_CONTRACT_INFO}
                       onDone={(address) =>
                         navigate(`fractionalize/${address.index.toString()}/${address.subindex.toString()}`)

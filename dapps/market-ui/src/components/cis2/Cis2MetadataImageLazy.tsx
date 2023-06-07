@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
-import { CIS2Contract } from "@concordium/web-sdk";
-import { Skeleton } from "@mui/material";
-import { Metadata } from "../../models/Cis2Client";
-import { fetchJson } from "../../models/Utils";
+import { CIS2Contract } from '@concordium/web-sdk';
+import { Skeleton } from '@mui/material';
 
-function Cis2MetadataImageLazy(props: { account: string; tokenId: string; cis2Contract: CIS2Contract }) {
+import { Metadata } from '../../models/Cis2Client';
+import { fetchJson } from '../../models/Utils';
+
+function Cis2MetadataImageLazy(props: { tokenId: string; cis2Contract: CIS2Contract }) {
   const [state, setState] = useState<{
     metadata?: Metadata;
     error?: string;
@@ -24,7 +25,7 @@ function Cis2MetadataImageLazy(props: { account: string; tokenId: string; cis2Co
       .then((metadata) => {
         setState({ ...state, loading: false, metadata });
       })
-      .catch((e) => { 
+      .catch((e) => {
         console.error(e);
         setState({ ...state, loading: false, metadata: undefined });
       });

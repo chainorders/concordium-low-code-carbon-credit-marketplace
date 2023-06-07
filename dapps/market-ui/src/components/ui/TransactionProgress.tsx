@@ -1,6 +1,7 @@
-import { TransactionStatusEnum } from "@concordium/web-sdk";
-import { Alert, CircularProgress, Link, Stack, Typography } from "@mui/material";
-import { EXPLORER_URL_TXN_HASH } from "../../Constants";
+import { TransactionStatusEnum } from '@concordium/web-sdk';
+import { Alert, CircularProgress, Link, Stack, Typography } from '@mui/material';
+
+import { EXPLORER_URL_TXN_HASH } from '../../Constants';
 
 export default function TransactionProgress(props: { hash: string; status: TransactionStatusEnum }) {
   const isInProcess = () => {

@@ -1,11 +1,16 @@
-import WertWidget from "@wert-io/widget-initializer";
-import { signSmartContractData } from "@wert-io/widget-sc-signer";
-import { v4 as uuidv4 } from "uuid";
-import { WERT_NETWORK, WERT_PRIVATE_KEY, WERT_PARTNER_ID, WERT_ORIGIN, MARKETPLACE_CONTRACT_INFO } from "../Constants";
-import { MethodNames, TransferParams } from "./MarketplaceClient";
-import { ContractAddress, serializeUpdateContractParameters } from "@concordium/web-sdk";
-import { toParamContractAddress } from "./ConcordiumContractClient";
-import { Buffer } from "buffer/";
+import { Buffer } from 'buffer/';
+import { v4 as uuidv4 } from 'uuid';
+
+import { ContractAddress, serializeUpdateContractParameters } from '@concordium/web-sdk';
+import WertWidget from '@wert-io/widget-initializer';
+import { signSmartContractData } from '@wert-io/widget-sc-signer';
+
+import {
+    MARKETPLACE_CONTRACT_INFO, WERT_NETWORK, WERT_ORIGIN, WERT_PARTNER_ID, WERT_PRIVATE_KEY
+} from '../Constants';
+import { toParamContractAddress } from './ConcordiumContractClient';
+import { MethodNames, TransferParams } from './MarketplaceClient';
+
 //@ts-ignore
 window.Buffer = Buffer;
 

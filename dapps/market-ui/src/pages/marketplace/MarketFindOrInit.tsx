@@ -1,17 +1,15 @@
-import React from "react";
+import React from 'react';
 
-import { WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk";
-import { Container, Paper, Stack, Typography } from "@mui/material";
+import { WalletApi } from '@concordium/browser-wallet-api-helpers';
+import { ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
+import { Container, Paper, Stack, Typography } from '@mui/material';
 
-import ContractFindInstance from "../../components/ContractFindInstance";
-import MarketplaceContractInit from "../../components/MarketplaceContractInit";
-import { ContractInfo } from "../../models/ConcordiumContractClient";
+import ContractFindInstance from '../../components/ContractFindInstance';
+import MarketplaceContractInit from '../../components/MarketplaceContractInit';
+import { ContractInfo } from '../../models/ConcordiumContractClient';
 
 function MarketFindOrInit(props: {
   grpcClient: ConcordiumGRPCClient;
-  provider: WalletApi;
-  account: string;
   contractInfo: ContractInfo;
   onDone: (address: ContractAddress) => void;
 }) {

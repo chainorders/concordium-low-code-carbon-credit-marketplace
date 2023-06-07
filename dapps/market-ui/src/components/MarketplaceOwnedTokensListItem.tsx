@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
-import { CIS2Contract, ContractAddress } from "@concordium/web-sdk";
-import { Button, IconButton, Typography } from "@mui/material";
-import ImageListItem from "@mui/material/ImageListItem";
-import ImageListItemBar from "@mui/material/ImageListItemBar";
+import { CIS2Contract, ContractAddress } from '@concordium/web-sdk';
+import { ArrowCircleRight } from '@mui/icons-material';
+import { IconButton, Typography } from '@mui/material';
+import ImageListItem from '@mui/material/ImageListItem';
+import ImageListItemBar from '@mui/material/ImageListItemBar';
 
-import { Metadata } from "../models/Cis2Client";
-import { OwnedTokenListItem } from "../models/MarketplaceClient";
-import { fetchJson } from "../models/Utils";
-import Cis2MetadataImageLazy from "./cis2/Cis2MetadataImageLazy";
-import { ArrowCircleRight, ArrowRight } from "@mui/icons-material";
+import { Metadata } from '../models/Cis2Client';
+import { OwnedTokenListItem } from '../models/MarketplaceClient';
+import { fetchJson } from '../models/Utils';
+import Cis2MetadataImageLazy from './cis2/Cis2MetadataImageLazy';
 
 type ListItem = OwnedTokenListItem & { cis2Contract: CIS2Contract };
 
@@ -55,7 +55,7 @@ function MarketplaceTokensListItem(props: {
 
   return (
     <ImageListItem key={item.tokenId + item.contract.index + item.contract.subindex}>
-      <Cis2MetadataImageLazy account={props.account} cis2Contract={props.item.cis2Contract} tokenId={item.tokenId} />
+      <Cis2MetadataImageLazy cis2Contract={props.item.cis2Contract} tokenId={item.tokenId} />
       <ImageListItemBar
         position="below"
         subtitle={

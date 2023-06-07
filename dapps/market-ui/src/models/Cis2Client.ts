@@ -1,7 +1,7 @@
-import { SmartContractParameters, WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { CIS2, ContractAddress, TransactionSummary } from "@concordium/web-sdk";
+import { SmartContractParameters, WalletApi } from '@concordium/browser-wallet-api-helpers';
+import { CIS2, ContractAddress, TransactionSummary } from '@concordium/web-sdk';
 
-import * as connClient from "./ConcordiumContractClient";
+import * as connClient from './ConcordiumContractClient';
 
 /**
  * Structure of a JSON-formatted metadata.

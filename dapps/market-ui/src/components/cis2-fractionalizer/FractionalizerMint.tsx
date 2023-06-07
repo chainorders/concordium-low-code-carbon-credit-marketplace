@@ -1,16 +1,17 @@
-import { WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { ContractAddress } from "@concordium/web-sdk";
-import { Alert, Button, Stack, TextField, Typography } from "@mui/material";
-import DisplayError from "../ui/DisplayError";
-import { useState, FormEvent } from "react";
-import { FRACTIONALIZER_CONTRACT_INFO } from "../../Constants";
-import { mint } from "../../models/FractionalizerClient";
+import { FormEvent, useState } from 'react';
+
+import { WalletApi } from '@concordium/browser-wallet-api-helpers';
+import { ContractAddress } from '@concordium/web-sdk';
+import { Alert, Button, Stack, TextField, Typography } from '@mui/material';
+
+import { FRACTIONALIZER_CONTRACT_INFO } from '../../Constants';
+import { connectToWallet } from '../../models/ConcordiumContractClient';
+import { mint } from '../../models/FractionalizerClient';
+import DisplayError from '../ui/DisplayError';
 
 export default function FractionalizerMint(props: {
   collateralContractAddress: ContractAddress;
   collateralTokenId: string;
-  provider: WalletApi;
-  account: string;
   fracContractAddress: ContractAddress;
   onDone: (tokenId: string, quantity: string) => void;
 }) {
@@ -31,32 +32,35 @@ export default function FractionalizerMint(props: {
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setState({ ...state, inProgress: true });
-    mint(
-      props.provider,
-      props.account,
-      props.fracContractAddress,
-      {
-        owner: { Account: [props.account] },
-        tokens: [
-          [
-            form.tokenId,
-            {
-              amount: form.quantity,
-              contract: {
-                index: Number(props.collateralContractAddress.index),
-                subindex: Number(props.collateralContractAddress.subindex),
-              },
-              token_id: props.collateralTokenId,
-              metadata: {
-                url: form.metadataUrl,
-                hash: form.metadataHash,
-              },
-            },
-          ],
-        ],
-      },
-      FRACTIONALIZER_CONTRACT_INFO,
-    )
+    connectToWallet()
+      .then((wallet) =>
+        mint(
+          wallet.provider,
+          wallet.account,
+          props.fracContractAddress,
+          {
+            owner: { Account: [wallet.account] },
+            tokens: [
+              [
+                form.tokenId,
+                {
+                  amount: form.quantity,
+                  contract: {
+                    index: Number(props.collateralContractAddress.index),
+                    subindex: Number(props.collateralContractAddress.subindex),
+                  },
+                  token_id: props.collateralTokenId,
+                  metadata: {
+                    url: form.metadataUrl,
+                    hash: form.metadataHash,
+                  },
+                },
+              ],
+            ],
+          },
+          FRACTIONALIZER_CONTRACT_INFO,
+        ),
+      )
       .then(() => {
         setState({ ...state, inProgress: false });
         props.onDone(form.tokenId, form.quantity);

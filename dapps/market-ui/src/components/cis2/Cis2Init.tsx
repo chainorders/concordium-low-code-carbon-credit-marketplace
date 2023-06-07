@@ -1,15 +1,14 @@
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useState } from 'react';
 
-import { WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk";
-import { Button, Stack, Typography } from "@mui/material";
+import { ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
+import { Button, Stack, Typography } from '@mui/material';
 
-import { Cis2ContractInfo, initContract } from "../../models/ConcordiumContractClient";
+import {
+    Cis2ContractInfo, connectToWallet, initContract
+} from '../../models/ConcordiumContractClient';
 
 function Cis2Init(props: {
-  provider: WalletApi;
   grpcClient: ConcordiumGRPCClient;
-  account: string;
   contractInfo: Cis2ContractInfo;
   onDone: (address: ContractAddress, contractInfo: Cis2ContractInfo) => void;
 }) {
@@ -22,7 +21,8 @@ function Cis2Init(props: {
     event.preventDefault();
     setState({ ...state, processing: true });
 
-    initContract(props.provider, props.contractInfo, props.account)
+    connectToWallet()
+      .then((wallet) => initContract(wallet.provider, props.contractInfo, wallet.account))
       .then((address) => {
         setState({ ...state, processing: false });
         props.onDone(address, props.contractInfo);

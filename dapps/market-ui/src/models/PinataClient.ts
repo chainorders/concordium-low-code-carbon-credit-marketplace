@@ -1,4 +1,4 @@
-import { default as axios } from "axios";
+import { default as axios } from 'axios';
 
 export class PinataClient {
   constructor(private pinataJwt: string) {}

@@ -1,15 +1,12 @@
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useState } from 'react';
 
-import { WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { ContractAddress } from "@concordium/web-sdk";
-import { Button, Stack, Typography } from "@mui/material";
+import { ContractAddress } from '@concordium/web-sdk';
+import { Button, Stack, Typography } from '@mui/material';
 
-import { ContractInfo, initContract } from "../../models/ConcordiumContractClient";
-import DisplayError from "../ui/DisplayError";
+import { connectToWallet, ContractInfo, initContract } from '../../models/ConcordiumContractClient';
+import DisplayError from '../ui/DisplayError';
 
 export default function FractionalizerContractInit(props: {
-  provider: WalletApi;
-  account: string;
   contractInfo: ContractInfo;
   onDone: (address: ContractAddress) => void;
 }) {
@@ -22,7 +19,8 @@ export default function FractionalizerContractInit(props: {
     event.preventDefault();
     setState({ ...state, processing: true });
 
-    initContract(props.provider, props.contractInfo, props.account)
+    connectToWallet()
+      .then((wallet) => initContract(wallet.provider, props.contractInfo, wallet.account))
       .then((address) => {
         setState({ ...state, processing: false });
         props.onDone(address);

@@ -1,12 +1,12 @@
-import "./index.css";
+import './index.css';
 
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { HashRouter } from "react-router-dom";
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { HashRouter } from 'react-router-dom';
 
-import { createTheme, ThemeProvider } from "@mui/material";
+import { createTheme, ThemeProvider } from '@mui/material';
 
-import App from "./App";
+import App from './App';
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 

@@ -1,18 +1,10 @@
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useState } from 'react';
 
 import {
-  Button,
-  Card,
-  CardActions,
-  CardContent,
-  CardMedia,
-  SxProps,
-  TextField,
-  Theme,
-  Typography,
-} from "@mui/material";
+    Button, Card, CardActions, CardContent, CardMedia, SxProps, TextField, Theme, Typography
+} from '@mui/material';
 
-import DisplayError from "../ui/DisplayError";
+import DisplayError from '../ui/DisplayError';
 
 const cardMediaSx: SxProps<Theme> = { maxHeight: "200px" };
 

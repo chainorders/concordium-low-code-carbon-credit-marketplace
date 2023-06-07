@@ -1,9 +1,10 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from 'react-router-dom';
 
-import { AppBar, Button, Stack, Toolbar, Typography } from "@mui/material";
-import { AddCircleOutline } from "@mui/icons-material";
-import { useParamsContractAddress } from "../../components/utils";
-import { MARKET_CONTRACT_ADDRESS } from "../../Constants";
+import { AddCircleOutline } from '@mui/icons-material';
+import { AppBar, Button, Stack, Toolbar, Typography } from '@mui/material';
+
+import { useParamsContractAddress } from '../../components/utils';
+import { MARKET_CONTRACT_ADDRESS } from '../../Constants';
 
 export default function MarketPage() {
   const navigate = useNavigate();
