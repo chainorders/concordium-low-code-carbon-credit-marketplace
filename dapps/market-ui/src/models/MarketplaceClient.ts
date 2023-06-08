@@ -1,20 +1,12 @@
-import { SmartContractParameters, WalletApi } from "@concordium/browser-wallet-api-helpers";
+import { SmartContractParameters, WalletApi } from '@concordium/browser-wallet-api-helpers';
 import {
-  AccountAddress,
-  ConcordiumGRPCClient,
-  ContractAddress,
-  deserializeReceiveReturnValue,
-  TransactionStatusEnum,
-  TransactionSummary,
-} from "@concordium/web-sdk";
+    AccountAddress, ConcordiumGRPCClient, ContractAddress, deserializeReceiveReturnValue,
+    TransactionStatusEnum, TransactionSummary
+} from '@concordium/web-sdk';
 
 import {
-  ContractInfo,
-  invokeContract,
-  ParamContractAddress,
-  toParamContractAddress,
-  updateContract,
-} from "./ConcordiumContractClient";
+    ContractInfo, invokeContract, ParamContractAddress, toParamContractAddress, updateContract
+} from './ConcordiumContractClient';
 
 export const enum MethodNames {
   add = "add",

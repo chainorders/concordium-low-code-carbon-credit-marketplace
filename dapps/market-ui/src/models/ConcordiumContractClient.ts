@@ -21,7 +21,11 @@ export interface Cis2ContractInfo extends ContractInfo {
 
 export async function connectToWallet(): Promise<{ provider: WalletApi; account: string }> {
   const provider = await detectConcordiumProvider();
-  const account = await provider.connect();
+  let account = await provider.getMostRecentlySelectedAccount();
+  if (!account) {
+    account = await provider.connect();
+  }
+
   if (!account) {
     throw new Error("Could not connect to the Wallet Account");
   }

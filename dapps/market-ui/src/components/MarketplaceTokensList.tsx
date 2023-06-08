@@ -6,6 +6,7 @@ import ImageList from '@mui/material/ImageList';
 
 import { MARKET_CONTRACT_ADDRESS, MARKETPLACE_CONTRACT_INFO } from '../Constants';
 import { list, TokenListItem } from '../models/MarketplaceClient';
+import { User } from '../types/user';
 import MarketplaceReturnDialog from './MarketplaceReturnDialog';
 import MarketplaceTokensListItem from './MarketplaceTokensListItem';
 import MarketplaceTransferDialog from './MarketplaceTransferDialog';
@@ -17,7 +18,8 @@ type ListItem = TokenListItem & { cis2Contract: CIS2Contract };
 /**
  * Gets the List of buyable tokens from Marketplace contract and displays them.
  */
-function MarketplaceTokensList(props: { grpcClient: ConcordiumGRPCClient }) {
+function MarketplaceTokensList(props: { grpcClient: ConcordiumGRPCClient, user: User }) {
+  const { grpcClient, user } = props;
   const [selectedToken, setSelectedToken] = useState<ListItem>();
   const [returnToken, setReturnToken] = useState<ListItem>();
   const [tokens, setTokens] = useState<Array<ListItem>>([]);
@@ -29,12 +31,12 @@ function MarketplaceTokensList(props: { grpcClient: ConcordiumGRPCClient }) {
   });
   useEffect(() => {
     (async () => {
-      const tokens = await list(props.grpcClient, marketContractAddress, MARKETPLACE_CONTRACT_INFO);
+      const tokens = await list(grpcClient, marketContractAddress, MARKETPLACE_CONTRACT_INFO);
       return Promise.all(
         tokens.map(async (t) => {
           return {
             ...t,
-            cis2Contract: await CIS2Contract.create(props.grpcClient, t.contract),
+            cis2Contract: await CIS2Contract.create(grpcClient, t.contract),
           };
         }),
       );
@@ -69,6 +71,7 @@ function MarketplaceTokensList(props: { grpcClient: ConcordiumGRPCClient }) {
             key={t.tokenId + t.contract.index + t.contract.subindex + t.owner}
             onBuyClicked={setSelectedToken}
             onReturnClicked={setReturnToken}
+            user={user}
           />
         ))}
       </ImageList>
@@ -78,6 +81,7 @@ function MarketplaceTokensList(props: { grpcClient: ConcordiumGRPCClient }) {
           isOpen={!!selectedToken}
           token={selectedToken}
           onClose={() => setSelectedToken(undefined)}
+          user={user}
         />
       )}
       {returnToken && (

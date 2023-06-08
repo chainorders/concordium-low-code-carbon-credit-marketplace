@@ -3,11 +3,12 @@ import './App.css';
 import { useState } from 'react';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 
-import { ConcordiumGRPCClient, createConcordiumClient } from '@concordium/web-sdk';
+import { createConcordiumClient } from '@concordium/web-sdk';
 import {
-    AppBar, Box, Button, Container, createTheme, Link, ThemeProvider, Toolbar, Typography
+    AppBar, Box, Button, Container, createTheme, Link, styled, ThemeProvider, Toolbar, Typography
 } from '@mui/material';
 
+import UserAuth from './components/auth/UserAuth';
 import FractionalizeToken from './components/cis2-fractionalizer/FractionalizeToken';
 import MarketplaceTokensList from './components/MarketplaceTokensList';
 import { useParamsContractAddress } from './components/utils';
@@ -23,6 +24,7 @@ import FractionalizerPage from './pages/fractionalizer/FractionalizerPage';
 import MarketFindOrInit from './pages/marketplace/MarketFindOrInit';
 import MarketPage from './pages/marketplace/MarketPage';
 import SellPage from './pages/marketplace/SellPage';
+import { User } from './types/user';
 
 const theme = createTheme({
   palette: {
@@ -35,16 +37,27 @@ const theme = createTheme({
   },
 });
 
+const HeaderButton = styled(Button)({
+  "&&[disabled]": {
+    color: "grey",
+  },
+});
+
+const loggedOutUser: User = { account: "", accountType: "", email: "" };
+
 function App() {
   const navigate = useNavigate();
   const marketContractAddress = useParamsContractAddress() || MARKET_CONTRACT_ADDRESS;
   const fracContract = useParamsContractAddress() || FRACTIONALIZER_CONTRACT_ADDRESS;
 
-  const [state] = useState<{
-    grpcClient: ConcordiumGRPCClient;
-  }>({
+  const [user, setUser] = useState<User>(loggedOutUser);
+  const [state] = useState({
     grpcClient: createConcordiumClient(CONNCORDIUM_NODE_ENDPOINT, Number(CONCORDIUM_NODE_PORT)),
   });
+
+  const isWalletUser = () => {
+    return user && user.accountType === "wallet" && user.account;
+  };
 
   return (
     <>
@@ -57,23 +70,24 @@ function App() {
                   Concordium
                 </Typography>
               </Box>
-              <Button color="inherit" onClick={() => navigate("/market")}>
+              <HeaderButton color="inherit" onClick={() => navigate("/market")}>
                 Market
-              </Button>
-              <Button color="inherit" onClick={() => navigate("/fractionalizer")}>
+              </HeaderButton>
+              <HeaderButton color="inherit" onClick={() => navigate("/fractionalizer")} disabled={!isWalletUser()}>
                 Fractionalizer
-              </Button>
-              <Button color="inherit" onClick={() => navigate("/cis2")}>
+              </HeaderButton>
+              <HeaderButton color="inherit" onClick={() => navigate("/cis2")} disabled={!isWalletUser()}>
                 CIS2 Token Tools
-              </Button>
+              </HeaderButton>
+              <UserAuth user={user} onLogin={setUser} onLogout={() => setUser(loggedOutUser)} />
             </Toolbar>
           </Container>
         </AppBar>
         <Box className="App">
           <Container maxWidth={"lg"}>
             <Routes>
-              <Route path="/market" element={<MarketPage />} key="market">
-                <Route path="buy/:index/:subindex" element={<MarketplaceTokensList grpcClient={state.grpcClient!} />} />
+              <Route path="/market" element={<MarketPage user={user} />} key="market">
+                <Route path="buy/:index/:subindex" element={<MarketplaceTokensList grpcClient={state.grpcClient!} user={user} />} />
                 <Route
                   path="sell"
                   element={<SellPage grpcClient={state.grpcClient!} contractInfo={CIS2_MULTI_CONTRACT_INFO} />}
@@ -150,7 +164,6 @@ function App() {
         </Box>
         <footer className="footer">
           <Typography textAlign={"center"} sx={{ color: "white" }}>
-            {/* <Link sx={{color: "white"}} href="https://developer.concordium.software/en/mainnet/index.html" target={"_blank"}>Concordium Developer Documentation</Link> */}
             <Link
               sx={{ color: "white" }}
               href="https://developer.concordium.software/en/mainnet/net/guides/low-code-nft-marketplace/introduction.html"
