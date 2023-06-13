@@ -1,6 +1,6 @@
 import { TransactionStatusEnum } from '@concordium/web-sdk';
 import { Check } from '@mui/icons-material';
-import { Alert, CircularProgress, Fab, Link, Stack, Typography } from '@mui/material';
+import { Alert, CircularProgress, Container, Fab, Link, Stack, Typography } from '@mui/material';
 
 import { EXPLORER_URL_TXN_HASH } from '../../Constants';
 
@@ -17,10 +17,10 @@ export default function TransactionProgress(props: { hash: string; status: Trans
   };
 
   return (
-    <>
+    <Container>
       {isInProcess() ? <CircularProgress /> : <Fab color="success"><Check /></Fab>}
       {props.hash && (
-        <Stack>
+        <Stack spacing={1}>
           <Typography variant="body1">Transaction hash: {props.hash}</Typography>
           <Link href={`${EXPLORER_URL_TXN_HASH}${props.hash}`} sx={{ display: "block" }} target="_blank">
             <Typography>
@@ -36,6 +36,6 @@ export default function TransactionProgress(props: { hash: string; status: Trans
           </Alert>
         </Stack>
       )}
-    </>
+    </Container>
   );
 }

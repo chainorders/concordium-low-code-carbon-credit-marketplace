@@ -39,7 +39,7 @@ function Cis2MetadataImageLazy(props: { tokenId: string; cis2Contract: CIS2Contr
       srcSet={state.metadata?.display?.url}
       alt={state.metadata?.name}
       loading="lazy"
-      style={{ width: "100%", height: "200px", objectFit: "contain" }}
+      style={{ width: "100%", height: "200px", objectFit: "cover" }}
     />
   );
 }

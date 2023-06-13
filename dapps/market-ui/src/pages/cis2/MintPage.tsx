@@ -2,16 +2,13 @@ import React, { useState } from 'react';
 
 import { CIS2, ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
 import { ArrowBackRounded } from '@mui/icons-material';
-import {
-    AlertColor, Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography
-} from '@mui/material';
+import { Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography } from '@mui/material';
 import { Container } from '@mui/system';
 
 import Cis2BatchMetadataPrepareOrAdd from '../../components/cis2/Cis2BatchMetadataPrepareOrAdd';
 import Cis2BatchMint from '../../components/cis2/Cis2BatchMint';
 import Cis2FindInstanceOrInit from '../../components/cis2/Cis2FindInstanceOrInit';
 import ConnectPinata from '../../components/ConnectPinata';
-import Alert from '../../components/ui/Alert';
 import UploadFiles from '../../components/ui/UploadFiles';
 import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
 
@@ -46,12 +43,6 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
     { step: Steps.Mint, title: "Mint" },
   ];
 
-  const [alertState, setAlertState] = useState<{
-    open: boolean;
-    message: string;
-    severity?: AlertColor;
-  }>({ open: false, message: "" });
-  
   const [state, setState] = useState<{
     activeStep: StepType;
     nftContract?: ContractAddress;
@@ -106,10 +97,6 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
     });
   }
 
-  function onTokensMinted() {
-    setAlertState({ open: true, message: "Minted", severity: "success" });
-  }
-
   function StepContent() {
     switch (state.activeStep.step) {
       case Steps.GetOrInitCis2:
@@ -138,9 +125,9 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
         return (
           <Cis2BatchMint
             contractInfo={props.contractInfo}
-            nftContractAddress={state.nftContract!}
+            tokenContractAddress={state.nftContract!}
             tokenMetadataMap={state.tokenMetadataMap!}
-            onDone={() => onTokensMinted()}
+            onDone={(tokens) => console.info("tokens minted:", tokens)}
           />
         );
       default:
@@ -178,12 +165,6 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
           </Grid>
         </Grid>
         <StepContent />
-        <Alert
-          open={alertState.open}
-          message={alertState.message}
-          onClose={() => setAlertState({ open: false, message: "" })}
-          severity={alertState.severity}
-        />
       </Paper>
     </Container>
   );

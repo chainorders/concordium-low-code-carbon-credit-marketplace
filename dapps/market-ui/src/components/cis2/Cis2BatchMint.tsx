@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 
-import { CIS2, ContractAddress } from '@concordium/web-sdk';
-import { Button, Grid, Stack, Typography } from '@mui/material';
+import { CIS2, ContractAddress, TransactionStatusEnum } from '@concordium/web-sdk';
+import { Alert, AlertColor, Button, Grid, Stack, Typography } from '@mui/material';
 
 import { mint } from '../../models/Cis2Client';
 import { connectToWallet, ContractInfo } from '../../models/ConcordiumContractClient';
+import { default as SnackbarAlert } from '../ui/Alert';
+import TransactionProgress from '../ui/TransactionProgress';
 import Cis2BatchItemMint from './Cis2BatchItemMint';
 
 interface TokenState {
@@ -16,10 +18,16 @@ interface TokenState {
 
 function Cis2BatchMint(props: {
   contractInfo: ContractInfo;
-  nftContractAddress: ContractAddress;
+  tokenContractAddress: ContractAddress;
   tokenMetadataMap: { [tokenId: string]: [CIS2.MetadataUrl, string] };
   onDone: (data: { [tokenId: string]: [CIS2.MetadataUrl, string] }) => void;
 }) {
+  const [alertState, setAlertState] = useState<{
+    open: boolean;
+    message: string;
+    severity?: AlertColor;
+  }>({ open: false, message: "" });
+
   const tokens: { [tokenId: string]: TokenState } = {};
 
   Object.keys(props.tokenMetadataMap).forEach(
@@ -37,6 +45,7 @@ function Cis2BatchMint(props: {
     mintingCount: 0,
     minted: false,
   });
+  const [txn, setTxn] = useState<{ hash: string; status: TransactionStatusEnum }>();
 
   function onMintClicked() {
     const tokens = state.tokens;
@@ -49,7 +58,15 @@ function Cis2BatchMint(props: {
     });
     connectToWallet()
       .then((wallet) =>
-        mint(wallet.provider, wallet.account, props.tokenMetadataMap, props.nftContractAddress, props.contractInfo),
+        mint(
+          wallet.provider,
+          wallet.account,
+          props.tokenMetadataMap,
+          props.tokenContractAddress,
+          props.contractInfo,
+          BigInt(9999),
+          (status, hash) => setTxn({ status, hash }),
+        ),
       )
       .then(() => {
         setTokensState(tokens, false, true);
@@ -60,6 +77,7 @@ function Cis2BatchMint(props: {
           mintingCount: state.mintingCount + mintingCount,
           minted: true,
         });
+        setAlertState({ open: true, message: "Minted", severity: "success" });
         props.onDone(props.tokenMetadataMap);
       })
       .catch((e: Error) => {
@@ -71,17 +89,20 @@ function Cis2BatchMint(props: {
           mintingCount: state.mintingCount - mintingCount,
           minted: false,
         });
+        setAlertState({ open: true, message: "Error Minting", severity: "error" });
       });
   }
 
   return (
-    <Stack>
-      <Typography variant="button" color={"InfoText"}>
-        <>
-          Contract : {props.nftContractAddress.index.toString()}/{props.nftContractAddress.subindex.toString()} (
-          {props.contractInfo.contractName})
-        </>
-      </Typography>
+    <Stack spacing={2}>
+      <Alert severity="info">
+        <Typography variant="button" color={"InfoText"}>
+          <>
+            Contract : {props.tokenContractAddress.index.toString()}/{props.tokenContractAddress.subindex.toString()} (
+            {props.contractInfo.contractName})
+          </>
+        </Typography>
+      </Alert>
       <Grid container spacing={2}>
         {Object.keys(state.tokens).map((tokenId) => (
           <Grid item xs={4} key={tokenId}>
@@ -97,10 +118,16 @@ function Cis2BatchMint(props: {
           </Grid>
         ))}
       </Grid>
-      <br />
       <Button variant="contained" disabled={state.mintingCount > 0 || state.minted} onClick={() => onMintClicked()}>
         Mint
       </Button>
+      {txn && <TransactionProgress hash={txn.hash} status={txn.status} />}
+      <SnackbarAlert
+        open={alertState.open}
+        message={alertState.message}
+        onClose={() => setAlertState({ open: false, message: "" })}
+        severity={alertState.severity}
+      />
     </Stack>
   );
 

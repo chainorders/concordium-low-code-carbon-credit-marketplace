@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { CIS2Contract, ConcordiumGRPCClient } from '@concordium/web-sdk';
-import { AlertColor } from '@mui/material';
-import ImageList from '@mui/material/ImageList';
+import { AlertColor, Grid } from '@mui/material';
 
 import { MARKET_CONTRACT_ADDRESS, MARKETPLACE_CONTRACT_INFO } from '../Constants';
 import { list, TokenListItem } from '../models/MarketplaceClient';
@@ -63,7 +62,7 @@ function MarketplaceTokensList(props: { grpcClient: ConcordiumGRPCClient, user: 
 
   return (
     <>
-      <ImageList key="nft-image-list" cols={3}>
+      <Grid key="nft-image-list" container spacing={1}>
         {tokens.map((t) => (
           <MarketplaceTokensListItem
             marketContractAddress={marketContractAddress}
@@ -74,7 +73,7 @@ function MarketplaceTokensList(props: { grpcClient: ConcordiumGRPCClient, user: 
             user={user}
           />
         ))}
-      </ImageList>
+      </Grid>
       {selectedToken && (
         <MarketplaceTransferDialog
           marketContractAddress={marketContractAddress}

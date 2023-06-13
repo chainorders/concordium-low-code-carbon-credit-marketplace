@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { WalletApi } from '@concordium/browser-wallet-api-helpers';
 import { ConcordiumGRPCClient, ContractAddress } from '@concordium/common-sdk';
 import { CIS2Contract } from '@concordium/web-sdk';
 import { Paper, Step, StepLabel, Stepper, Typography } from '@mui/material';
 
-import MarketplaceOwnedTokensList from '../../components/cis2-market/MarketplaceOwnedTokensList';
 import Cis2Transfer from '../../components/cis2/Cis2Transfer';
 import MarketplaceAdd from '../../components/MarketplaceAdd';
 import { useParamsContractAddress } from '../../components/utils';

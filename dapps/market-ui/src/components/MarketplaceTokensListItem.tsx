@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 
 import { CIS2Contract, ContractAddress } from '@concordium/web-sdk';
-import { Info, ShoppingCartCheckout } from '@mui/icons-material';
+import { Expand, Info, ShoppingCartCheckout } from '@mui/icons-material';
 import CheckIcon from '@mui/icons-material/Check';
-import { Tooltip, Typography } from '@mui/material';
+import {
+    Accordion, AccordionDetails, AccordionSummary, Card, CardActions, CardContent, CardMedia, Chip,
+    Grid, Tooltip, Typography
+} from '@mui/material';
 import IconButton from '@mui/material/IconButton';
-import ImageListItem from '@mui/material/ImageListItem';
-import ImageListItemBar from '@mui/material/ImageListItemBar';
 
 import { Metadata } from '../models/Cis2Client';
 import { TokenListItem } from '../models/MarketplaceClient';
@@ -19,7 +20,6 @@ type ListItem = TokenListItem & { cis2Contract: CIS2Contract };
 const ActionButton = (props: {
   onBuyClicked: (token: ListItem) => void;
   onReturnClicked: (token: ListItem) => void;
-  isBought: boolean;
   item: ListItem;
   user: User;
 }) => {
@@ -68,7 +68,7 @@ const ActionButton = (props: {
   };
 
   return (
-    <IconButton sx={{ height: "100%" }} onClick={onClicked}>
+    <IconButton onClick={onClicked} sx={{ textAlign: "right" }}>
       <Icon />
     </IconButton>
   );
@@ -85,75 +85,83 @@ function MarketplaceTokensListItem(props: {
   user: User;
 }) {
   const { item, user } = props;
-
-  const [state, setState] = useState({
-    isLoading: true,
-    url: "",
-    name: "",
-    desc: "",
-    price: item.price,
-    isBought: false,
-  });
+  const [metadata, setMetadata] = useState<Metadata>();
 
   useEffect(() => {
-    const setStateMetadata = (metadata: Metadata) =>
-      setState({
-        ...state,
-        isLoading: false,
-        url: metadata.display?.url || "",
-        name: metadata.name || "",
-        desc: metadata.description || "",
-        price: item.price,
-      });
-
     props.item.cis2Contract
       .tokenMetadata(props.item.tokenId)
       .then((m) => fetchJson<Metadata>(m.url))
-      .then((metadata) => {
-        setStateMetadata(metadata);
-      })
+      .then(setMetadata)
       .catch((e) => {
         console.error(e);
-        setStateMetadata({} as Metadata);
+        setMetadata(undefined);
       });
   }, [props.item.cis2Contract, props.item.tokenId]);
 
   return (
-    <ImageListItem
-      sx={{ display: state.isBought ? "none" : "" }}
-      key={item.tokenId + item.contract.index + item.contract.subindex}
-    >
-      <Cis2MetadataImageLazy cis2Contract={props.item.cis2Contract} tokenId={item.tokenId} />
-      <ImageListItemBar
-        title={`Price: ${state.price} CCD`}
-        position="below"
-        subtitle={
-          <>
-            <Typography variant="caption" component={"div"}>
-              {state.name}
-            </Typography>
-            <Typography variant="caption" component={"div"}>
-              {state.desc}
-            </Typography>
-            <Typography variant="caption" component={"div"}>
-              Index : {item.contract.index.toString()} / {item.contract.subindex.toString()}
-            </Typography>
-            <Typography variant="caption" component={"div"} title={item.owner}>
-              Owner : {item.owner.slice(0, 5)}...
-            </Typography>
-          </>
-        }
-        actionIcon={
-          <ActionButton
-            user={user}
-            isBought={state.isBought}
-            item={props.item}
-            onBuyClicked={props.onBuyClicked}
-            onReturnClicked={props.onReturnClicked}
-          />
-        }
-      />
-    </ImageListItem>
+    <Grid item xs={3} key={item.tokenId + item.contract.index + item.contract.subindex}>
+      <Card variant="elevation">
+        <CardMedia>
+          <Cis2MetadataImageLazy cis2Contract={props.item.cis2Contract} tokenId={item.tokenId} />
+        </CardMedia>
+        <CardContent>
+          <Grid container justifyContent={"space-between"}>
+            <Grid item xs={6}>
+              <Typography variant="body1" textAlign={"left"} fontSize={"2em"} fontWeight={"bold"}>
+                {item.price.toString()}{" "}
+                <Typography component={"span"} padding={0} margin={0}>
+                  CCD
+                </Typography>
+              </Typography>
+              <Typography textAlign={"left"}>{metadata?.name}</Typography>
+              <Typography variant="body2" textAlign={"left"}>
+                {metadata?.description}
+              </Typography>
+            </Grid>
+            <Grid item xs={6} textAlign={"right"}>
+              <Tooltip title={"Token Id"}>
+                <Typography variant="caption" component={"div"} textAlign={"right"}>
+                  {item.tokenId.toString()}
+                </Typography>
+              </Tooltip>
+              <Tooltip title={"Contract"}>
+                <Typography variant="caption" component={"div"} textAlign={"right"}>
+                  {item.contract.index.toString()} / {item.contract.subindex.toString()}
+                </Typography>
+              </Tooltip>
+              <Tooltip title={`Owner: ${item.owner}`}>
+                <Typography variant="caption" component={"div"} textAlign={"right"}>
+                  {item.owner.slice(0, 5)}...
+                </Typography>
+              </Tooltip>
+              <ActionButton
+                user={user}
+                item={props.item}
+                onBuyClicked={props.onBuyClicked}
+                onReturnClicked={props.onReturnClicked}
+              />
+            </Grid>
+            <Grid item xs={12} mt={"1em"}>
+              <Accordion variant="outlined">
+                <AccordionSummary expandIcon={<Expand />}>
+                  <Typography>Attributes</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Grid container>
+                    {metadata?.attributes?.map((a) => (
+                      <Grid item>
+                        <Chip label={`${a.name}: ${a.value}`} />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </AccordionDetails>
+              </Accordion>
+            </Grid>
+          </Grid>
+        </CardContent>
+        <CardActions></CardActions>
+      </Card>
+    </Grid>
   );
 }
 
