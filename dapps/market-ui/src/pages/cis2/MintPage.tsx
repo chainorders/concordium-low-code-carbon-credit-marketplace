@@ -25,10 +25,7 @@ enum Steps {
 
 type StepType = { step: Steps; title: string };
 
-function MintPage(props: {
-  grpcClient: ConcordiumGRPCClient;
-  contractInfo: Cis2ContractInfo;
-}) {
+function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2ContractInfo }) {
   const steps: StepType[] = [
     {
       step: Steps.GetOrInitCis2,
@@ -49,6 +46,12 @@ function MintPage(props: {
     { step: Steps.Mint, title: "Mint" },
   ];
 
+  const [alertState, setAlertState] = useState<{
+    open: boolean;
+    message: string;
+    severity?: AlertColor;
+  }>({ open: false, message: "" });
+  
   const [state, setState] = useState<{
     activeStep: StepType;
     nftContract?: ContractAddress;
@@ -77,11 +80,6 @@ function MintPage(props: {
       pinataJwt,
       activeStep: steps[2],
     });
-    setAlertState({
-      open: true,
-      message: "Connected to Pinata",
-      severity: "success",
-    });
   }
 
   function onPinataSkipped() {
@@ -107,12 +105,6 @@ function MintPage(props: {
       tokenMetadataMap,
     });
   }
-
-  const [alertState, setAlertState] = useState<{
-    open: boolean;
-    message: string;
-    severity?: AlertColor;
-  }>({ open: false, message: "" });
 
   function onNftsMinted() {
     setAlertState({ open: true, message: "Minted", severity: "success" });

@@ -4,7 +4,12 @@ import { Button, ButtonGroup, Stack, TextField, Typography } from '@mui/material
 
 import { PinataClient } from '../models/PinataClient';
 
-function ConnectPinata(props: { jwt: string; onDone: (jwt: string) => void; onSkip: () => void }) {
+export default function ConnectPinata(props: {
+  jwt: string;
+  onDone: (jwt: string) => void;
+  onSkip?: () => void;
+  disableSkip?: boolean;
+}) {
   const [state, setState] = useState({
     error: "",
     processing: false,
@@ -46,12 +51,12 @@ function ConnectPinata(props: { jwt: string; onDone: (jwt: string) => void; onSk
         <Button variant="contained" onClick={() => onOkClicked()}>
           Connect
         </Button>
-        <Button variant="outlined" onClick={() => props.onSkip()}>
-          Skip
-        </Button>
+        {!props.disableSkip && (
+          <Button variant="outlined" onClick={() => props.onSkip && props.onSkip()}>
+            Skip
+          </Button>
+        )}
       </ButtonGroup>
     </Stack>
   );
 }
-
-export default ConnectPinata;

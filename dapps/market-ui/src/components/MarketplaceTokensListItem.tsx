@@ -52,7 +52,11 @@ const ActionButton = (props: {
       );
     }
 
-    return <ShoppingCartCheckout />;
+    if (user.account) {
+      return <ShoppingCartCheckout />;
+    }
+
+    return <></>;
   };
 
   const onClicked = () => {

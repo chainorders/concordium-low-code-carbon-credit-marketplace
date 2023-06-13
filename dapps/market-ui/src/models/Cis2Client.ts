@@ -20,6 +20,8 @@ export interface Attribute {
   name: string;
   type: string;
   value: string;
+  required?: boolean;
+  force?: boolean
 }
 
 /**

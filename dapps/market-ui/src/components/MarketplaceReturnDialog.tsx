@@ -51,19 +51,19 @@ export default function MarketplaceReturnDialog(props: {
 
     connectToWallet()
       .then((wallet) =>
-        transfer(
-          wallet.provider,
-          wallet.account,
-          wallet.account,
+        transfer({
+          provider: wallet.provider,
+          payerAccount: wallet.account,
+          to: wallet.account,
           marketContractAddress,
-          item.contract,
-          item.tokenId,
+          nftContractAddress: item.contract,
+          tokenId: item.tokenId,
           // When transferring / returning back to the owner. The price is 0.
-          BigInt(0),
-          item.owner,
+          priceCcd: BigInt(0),
+          owner: item.owner,
           quantity,
-          MARKETPLACE_CONTRACT_INFO,
-        ),
+          contractInfo: MARKETPLACE_CONTRACT_INFO,
+        }),
       )
       .then(() => {
         setState({

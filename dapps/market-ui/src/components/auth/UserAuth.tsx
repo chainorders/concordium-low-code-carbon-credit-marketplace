@@ -15,6 +15,10 @@ export default function UserAuth(props: { user?: User; onLogin: (user: User) => 
   const [user, setUser] = useState(props.user);
   const [loginOpen, setLoginOpen] = useState(false);
   const logout = () => {
+    if (user && user.accountType === "wallet" && user.account) {
+      alert("Also disconnect the website from the wallet");
+    }
+    
     setUser(undefined);
     onLogout();
   };
@@ -34,6 +38,14 @@ export default function UserAuth(props: { user?: User; onLogin: (user: User) => 
         provider.on(EventType.AccountChanged, (account) => login({ account, accountType: "wallet", email: "" }));
         provider.on(EventType.AccountDisconnected, logout);
         provider.on(EventType.ChainChanged, logout);
+
+        return { provider };
+      })
+      .then(({ provider }) => provider.getMostRecentlySelectedAccount())
+      .then((account) => {
+        if (account) {
+          login({ account, accountType: "wallet", email: "" });
+        }
       })
       .catch((error) => {
         setHasWalletInstalled(false);
@@ -41,7 +53,7 @@ export default function UserAuth(props: { user?: User; onLogin: (user: User) => 
       });
   });
 
-  if (!user) {
+  if (!user || !user.account) {
     return (
       <>
         <Tooltip title="login">

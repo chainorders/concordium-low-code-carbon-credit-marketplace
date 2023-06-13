@@ -12,7 +12,9 @@ import DisplayError from '../ui/DisplayError';
 import TransactionProgress from '../ui/TransactionProgress';
 
 export default function Cis2Transfer(props: {
-  onDone: (address: ContractAddress, tokenId: string, quantity: string) => void;
+  defaultQuantity?: string;
+  quantityDisabled?: boolean;
+  onDone: (address: ContractAddress, tokenId: string, contractName: string, quantity: string) => void;
   grpcClient: ConcordiumGRPCClient;
   to: CIS2.Receiver;
 }) {
@@ -24,11 +26,12 @@ export default function Cis2Transfer(props: {
     index: "",
     subindex: "0",
     tokenId: "01",
-    quantity: "1",
+    quantity: props.defaultQuantity || "1",
   });
   const [txn, setTxn] = useState<{ hash?: string; status?: TransactionStatusEnum }>({});
 
   function setFormValue(key: string, value: string) {
+    setState({ ...state, error: "" });
     setForm({ ...form, [key]: value });
   }
 
@@ -38,21 +41,27 @@ export default function Cis2Transfer(props: {
     const address = { index: BigInt(form.index), subindex: BigInt(form.subindex) };
     setState({ ...state, error: "", inProgress: true });
     props.grpcClient
+      // Get Instance Information
       .getInstanceInfo(address)
+      // Check CIS-2 support, and get contract name
       .then(async (instanceInfo) => {
         const supports = await cis0Supports(props.grpcClient, address, "CIS-2");
         validateSupportsCis2(supports);
         const contractName = instanceInfo.name.replace("init_", "");
-        return new CIS2Contract(props.grpcClient, address, contractName);
+
+        return { contractName };
       })
-      .then(async (cis2Contract) => {
+      .then(async ({ contractName }) => {
+        const cis2Contract = new CIS2Contract(props.grpcClient, address, contractName);
         const wallet = await connectToWallet();
         const txnHash = await transfer(wallet.provider, wallet.account, cis2Contract);
-        await waitAndThrowError(wallet.provider, txnHash, (status, hash) => setTxn({ hash, status }));
+        const res = await waitAndThrowError(wallet.provider, txnHash, (status, hash) => setTxn({ hash, status }));
+
+        return { contractName, res };
       })
-      .then(() => {
+      .then(({ contractName }) => {
         setState({ ...state, error: "", inProgress: false });
-        props.onDone(address, form.tokenId, form.quantity);
+        props.onDone(address, form.tokenId, contractName, form.quantity);
       })
       .catch((e: Error) => {
         console.error(e);
@@ -98,7 +107,7 @@ export default function Cis2Transfer(props: {
         label="Token Quantity"
         variant="standard"
         type={"number"}
-        disabled={state.inProgress}
+        disabled={props.quantityDisabled || state.inProgress}
         value={form.quantity.toString()}
         onChange={(e) => setFormValue("quantity", e.target.value)}
       />

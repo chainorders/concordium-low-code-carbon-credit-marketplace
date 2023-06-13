@@ -141,6 +141,11 @@ function UploadMetadataIpfsCardStep(props: {
       name: "Longitude",
       value: "",
     },
+    {
+      type: "string",
+      name: "Token Type",
+      value: "Register",
+    }
   ];
 
   function uploadMetadataClicked(event: FormEvent<HTMLFormElement>) {
@@ -219,18 +224,22 @@ function UploadMetadataIpfsCardStep(props: {
                 />
               </FormGroup>
               <FormGroup>
-                {attributes.map((attribute) => (
-                  <TextField
-                    key={attribute.name}
-                    type={attribute.type}
-                    name={attribute.name}
-                    label={attribute.name}
-                    variant="outlined"
-                    size="small"
-                    fullWidth={true}
-                    defaultValue={attribute.value}
-                  />
-                ))}
+                <Stack spacing={1}>
+                  {attributes.map((a) => (
+                    <TextField
+                      key={a.name}
+                      name={a.name}
+                      id={a.name}
+                      label={a.name}
+                      variant="outlined"
+                      size="small"
+                      fullWidth={true}
+                      required={true}
+                      defaultValue={a.value}
+                      disabled={!!a.value}
+                    />
+                  ))}
+                </Stack>
               </FormGroup>
               <FormGroup>
                 <FormControlLabel

@@ -46,18 +46,18 @@ export default function MarketplaceTransferDialog(props: {
     switch (user.accountType) {
       case "wallet":
         return connectToWallet().then((wallet) =>
-          transferWallet(
-            wallet.provider,
-            user.account,
-            user.account,
+          transferWallet({
+            provider: wallet.provider,
+            payerAccount: user.account,
+            to: user.account,
             marketContractAddress,
-            item.contract,
-            item.tokenId,
-            item.price,
-            item.owner,
+            nftContractAddress: item.contract,
+            tokenId: item.tokenId,
+            priceCcd: item.price,
+            owner: item.owner,
             quantity,
-            MARKETPLACE_CONTRACT_INFO,
-          ),
+            contractInfo: MARKETPLACE_CONTRACT_INFO,
+          }),
         );
       case "email":
         return transferWert(

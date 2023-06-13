@@ -205,35 +205,27 @@ function ensureValidOutcome(outcomes?: Record<string, TransactionSummary>): Reco
       case "reject":
         switch (result.rejectReason.tag) {
           case "InvalidReceiveMethod":
-            throw Error(`Invalid Receive Method: ${result.rejectReason.contents.join(",")}`);
+            throw Error(`Invalid Receive Method: ${result.rejectReason.contents.join(",")}`, { cause: result.rejectReason });
           case "InvalidInitMethod":
-            throw Error(`Invalid Init Method: ${result.rejectReason.contents.join(",")}`);
+            throw Error(`Invalid Init Method: ${result.rejectReason.contents.join(",")}`, { cause: result.rejectReason });
           case "AmountTooLarge":
-            throw Error(`Amount Too Large: ${result.rejectReason.contents.join(",")}`);
-          case "InvalidContractAddress":
+            throw Error(`Amount Too Large: ${result.rejectReason.contents.join(",")}`, { cause: result.rejectReason });
+          case "InvalidContractAddress": {
+            const contractAddress = result.rejectReason.contents;
             throw Error(
-              `Invalid Contract Address: ${result.rejectReason.contents.index.toString()}, ${result.rejectReason.contents.subindex.toString()}`,
+              `Invalid Contract Address: ${contractAddress.index.toString()}, ${contractAddress.subindex.toString()}`,
+              { cause: result.rejectReason },
             );
+          }
           case "RejectedReceive":
-            throw Error(`Rejected Receive: ${result.rejectReason.rejectReason}`);
+            throw Error(`Rejected Receive: ${result.rejectReason.rejectReason}`, {
+              cause: result.rejectReason,
+            });
           default:
-            throw Error(`Unknown Reject Reason: ${result.rejectReason.tag}`);
+            throw Error(`Unknown Reject Reason: ${result.rejectReason.tag}`, { cause: result.rejectReason });
         }
     }
   });
-
-  // const successTxnSummary = Object.keys(outcomes)
-  //   .map((k) => outcomes[k])
-  //   .find((s) => s.result.outcome === "success");
-
-  // if (!successTxnSummary) {
-  //   const failures = Object.keys(outcomes)
-  //     .map((k) => outcomes[k])
-  //     .filter((s) => s.result.outcome === "reject")
-  //     .map((s) => (s.result as any).rejectReason.tag)
-  //     .join(",");
-  //   throw Error(`Transaction failed, reasons: ${failures}`);
-  // }
 
   return outcomes;
 }

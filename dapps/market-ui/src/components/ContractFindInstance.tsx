@@ -3,7 +3,11 @@ import React, { FormEvent, useState } from 'react';
 import { ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
 import { Button, Stack, TextField, Typography } from '@mui/material';
 
-function ContractFindInstance(props: { grpcClient: ConcordiumGRPCClient; onDone: (address: ContractAddress) => void }) {
+function ContractFindInstance(props: {
+  grpcClient: ConcordiumGRPCClient;
+  defaultContractAddress: ContractAddress;
+  onDone: (address: ContractAddress) => void
+}) {
   const [state, setState] = useState({
     error: "",
     checking: false,
@@ -48,6 +52,7 @@ function ContractFindInstance(props: { grpcClient: ConcordiumGRPCClient; onDone:
         variant="standard"
         type={"number"}
         disabled={state.checking}
+        value={props.defaultContractAddress.index.toString()}
       />
       <TextField
         id="contract-subindex"
@@ -56,7 +61,7 @@ function ContractFindInstance(props: { grpcClient: ConcordiumGRPCClient; onDone:
         variant="standard"
         type={"number"}
         disabled={state.checking}
-        value={0}
+        value={props.defaultContractAddress.subindex.toString()}
       />
       {state.error && (
         <Typography component="div" color="error">

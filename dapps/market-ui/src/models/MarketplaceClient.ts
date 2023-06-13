@@ -126,21 +126,33 @@ export async function add(
  * @param maxContractExecutionEnergy Max Energy allowed for the transaction.
  * @returns Transaction outcomes.
  */
-export async function transfer(
-  provider: WalletApi,
-  payerAccount: string,
-  to: string,
-  marketContractAddress: ContractAddress,
-  nftContractAddress: ContractAddress,
-  tokenId: string,
-  priceCcd: bigint,
-  owner: string,
-  quantity: bigint,
-  contractInfo: ContractInfo,
+export async function transfer({
+  provider,
+  payerAccount,
+  to,
+  marketContractAddress,
+  nftContractAddress,
+  tokenId,
+  priceCcd,
+  owner,
+  quantity,
+  contractInfo,
   maxContractExecutionEnergy = BigInt(9999),
-  onStatusUpdate: (status: TransactionStatusEnum, txnHash: string) => void = (status, txnHash) =>
-    console.log(`txn #${txnHash}, status:${status}`),
-): Promise<Record<string, TransactionSummary>> {
+  onStatusUpdate = (status, txnHash) => console.log(`txn #${txnHash}, status:${status}`),
+}: {
+  provider: WalletApi;
+  payerAccount: string;
+  to: string;
+  marketContractAddress: ContractAddress;
+  nftContractAddress: ContractAddress;
+  tokenId: string;
+  priceCcd: bigint;
+  owner: string;
+  quantity: bigint;
+  contractInfo: ContractInfo;
+  maxContractExecutionEnergy?: bigint;
+  onStatusUpdate?: (status: TransactionStatusEnum, txnHash: string) => void;
+}): Promise<Record<string, TransactionSummary>> {
   const paramJson: TransferParams = {
     cis_contract_address: toParamContractAddress(nftContractAddress),
     token_id: tokenId,

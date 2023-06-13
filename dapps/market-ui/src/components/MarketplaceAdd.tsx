@@ -1,6 +1,5 @@
 import React, { FormEvent, useState } from 'react';
 
-import { WalletApi } from '@concordium/browser-wallet-api-helpers';
 import {
     CIS2Contract, ConcordiumGRPCClient, ContractAddress, TransactionStatusEnum
 } from '@concordium/web-sdk';
