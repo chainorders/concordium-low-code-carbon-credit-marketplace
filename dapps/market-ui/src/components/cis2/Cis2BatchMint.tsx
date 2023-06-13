@@ -118,7 +118,6 @@ function Cis2BatchMint(props: {
         tokens[tokenId].minted = false;
       } else {
         tokens[tokenId].minted = isMinted;
-        // onTokenListed()
       }
     });
   }

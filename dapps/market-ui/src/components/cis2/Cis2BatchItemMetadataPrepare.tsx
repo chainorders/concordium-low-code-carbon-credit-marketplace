@@ -14,6 +14,7 @@ import { PinataClient } from '../../models/PinataClient';
 import { tokenIdToNftImageFileName, tokenIdToNftMetadataFileName } from '../../models/Utils';
 import DisplayError from '../ui/DisplayError';
 import GetMintCardStep from './GetMintCardStep';
+import GetQuantityCardStep from './GetQuantityCardStep';
 import GetTokenIdCardStep from './GetTokenIdCardStep';
 
 const cardMediaSx: SxProps<Theme> = { maxHeight: "200px" };
@@ -82,7 +83,7 @@ function UploadMetadataIpfsCardStep(props: {
   imageUrl: string;
   pinata: PinataClient;
   imageIpfsUrl: string;
-  onDone: (data: { tokenId: string; metadataUrl: CIS2.MetadataUrl }) => void;
+  onDone: (data: { tokenId: string; metadataUrl: CIS2.MetadataUrl; metadata: Metadata }) => void;
 }) {
   const [state, setState] = useState({
     isUploadingMetadata: false,
@@ -145,7 +146,7 @@ function UploadMetadataIpfsCardStep(props: {
       type: "string",
       name: "Token Type",
       value: "Register",
-    }
+    },
   ];
 
   function uploadMetadataClicked(event: FormEvent<HTMLFormElement>) {
@@ -181,7 +182,7 @@ function UploadMetadataIpfsCardStep(props: {
           isUploadingMetadata: false,
           error: "",
         });
-        props.onDone({ tokenId: props.tokenId, metadataUrl });
+        props.onDone({ tokenId: props.tokenId, metadataUrl, metadata });
       })
       .catch((error: Error) => setState({ ...state, error: error.message, isUploadingMetadata: false }));
   }
@@ -286,8 +287,17 @@ function Cis2BatchItemMetadataPrepare(props: {
     setState({ ...state, tokenId, step: Steps.CreateMetadata, imageIpfsUrl });
   }
 
-  function metadataUploaded(tokenId: string, metadataUrl: CIS2.MetadataUrl) {
-    setState({ ...state, tokenId, step: Steps.GetQuantity, metadataUrl });
+  function metadataUploaded(tokenId: string, metadataUrl: CIS2.MetadataUrl, metadata: Metadata) {
+    if (metadata.unique) {
+      // Since Unique is marked in metadata.
+      // Quantity step can be skipped.
+      const quantity = "1";
+      setState({ ...state, step: Steps.Mint, tokenId, quantity, metadataUrl });
+      props.onDone({ tokenId, tokenInfo: [metadataUrl, quantity] });
+    } else {
+      // Let the user enter quantity.
+      setState({ ...state, tokenId, step: Steps.GetQuantity, metadataUrl });
+    }
   }
 
   function quantityUpdated(tokenId: string, quantity: string) {
@@ -324,7 +334,16 @@ function Cis2BatchItemMetadataPrepare(props: {
           imageUrl={state.imageDisplayUrl}
           imageIpfsUrl={state.imageIpfsUrl}
           key={state.tokenId}
-          onDone={(data) => metadataUploaded(data.tokenId, data.metadataUrl)}
+          onDone={({ tokenId, metadataUrl, metadata }) => metadataUploaded(tokenId, metadataUrl, metadata)}
+        />
+      );
+    case Steps.GetQuantity:
+      return (
+        <GetQuantityCardStep
+          imageUrl={state.imageDisplayUrl}
+          tokenId={state.tokenId}
+          key={state.tokenId}
+          onDone={(data) => quantityUpdated(data.tokenId, data.quantity)}
         />
       );
     case Steps.Mint:

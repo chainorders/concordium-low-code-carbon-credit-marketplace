@@ -106,7 +106,7 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
     });
   }
 
-  function onNftsMinted() {
+  function onTokensMinted() {
     setAlertState({ open: true, message: "Minted", severity: "success" });
   }
 
@@ -138,9 +138,9 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
         return (
           <Cis2BatchMint
             contractInfo={props.contractInfo}
-            nftContractAddress={state.nftContract as ContractAddress}
+            nftContractAddress={state.nftContract!}
             tokenMetadataMap={state.tokenMetadataMap!}
-            onDone={() => onNftsMinted()}
+            onDone={() => onTokensMinted()}
           />
         );
       default:
