@@ -2,27 +2,15 @@ import React, { ChangeEvent, FormEvent, useState } from 'react';
 
 import { Button, FormLabel, Stack, TextField } from '@mui/material';
 
-import { Attribute } from '../../models/Cis2Client';
-
-interface Display {
-  url: string;
-}
-
-interface TokenMetadata {
-  name?: string;
-  description?: string;
-  display?: Display;
-  unique?: boolean;
-  attributes?: Attribute[];
-}
+import { Metadata } from '../../models/Cis2Client';
 
 interface TokenMetadataFormProps {
-  defaultFormData: TokenMetadata;
-  onSubmit: (formData: TokenMetadata) => void;
+  defaultFormData: Metadata;
+  onSubmit: (formData: Metadata) => void;
 }
 
 const Cis2TokenMetadataForm: React.FC<TokenMetadataFormProps> = ({ defaultFormData, onSubmit }) => {
-  const [formData, setFormData] = useState<TokenMetadata>(defaultFormData);
+  const [formData, setFormData] = useState<Metadata>(defaultFormData);
 
   const handleAttributeChange = (index: number, value: string) => {
     const updatedAttributes = [...(formData.attributes || [])];
@@ -39,7 +27,7 @@ const Cis2TokenMetadataForm: React.FC<TokenMetadataFormProps> = ({ defaultFormDa
     onSubmit(formData);
   };
 
-  const handleFieldChange = (field: keyof TokenMetadata) => (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFieldChange = (field: keyof Metadata) => (event: ChangeEvent<HTMLInputElement>) => {
     setFormData((prevFormData) => ({
       ...prevFormData,
       [field]: event.target.value,
@@ -49,7 +37,6 @@ const Cis2TokenMetadataForm: React.FC<TokenMetadataFormProps> = ({ defaultFormDa
   return (
     <Stack spacing={2} component={"form"} onSubmit={handleSubmit}>
       <TextField fullWidth variant="standard" label="Name" value={formData.name} onChange={handleFieldChange("name")} />
-      <br />
       <TextField
         variant="standard"
         label="Description"
@@ -57,7 +44,6 @@ const Cis2TokenMetadataForm: React.FC<TokenMetadataFormProps> = ({ defaultFormDa
         value={formData.description}
         onChange={handleFieldChange("description")}
       />
-      <br />
       <TextField
         label="Display URL"
         value={formData.display?.url}
@@ -67,6 +53,18 @@ const Cis2TokenMetadataForm: React.FC<TokenMetadataFormProps> = ({ defaultFormDa
           setFormData((prevFormData) => ({
             ...prevFormData,
             display: { ...prevFormData.display, url: event.target.value },
+          }))
+        }
+      />
+      <TextField
+        label="Artifact URL"
+        value={formData.artifact?.url}
+        variant="standard"
+        fullWidth
+        onChange={(event) =>
+          setFormData((prevFormData) => ({
+            ...prevFormData,
+            artifact: { ...prevFormData.artifact, url: event.target.value },
           }))
         }
       />

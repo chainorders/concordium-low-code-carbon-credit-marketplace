@@ -1,11 +1,12 @@
 import { FormEvent, useState } from 'react';
 
 import { ContractAddress, TransactionStatusEnum } from '@concordium/web-sdk';
-import { Alert, Button, Container, Stack, TextField, Typography } from '@mui/material';
+import { Alert, AlertColor, Button, Container, Stack, TextField, Typography } from '@mui/material';
 
 import { FRACTIONALIZER_CONTRACT_INFO } from '../../Constants';
 import { connectToWallet } from '../../models/ConcordiumContractClient';
 import { mint, MintParams } from '../../models/FractionalizerClient';
+import { default as SnackbarAlert } from '../ui/Alert';
 import DisplayError from '../ui/DisplayError';
 import TransactionProgress from '../ui/TransactionProgress';
 
@@ -33,7 +34,11 @@ export default function FractionalizerMint(props: {
     metadataUrl: props.defaultMetadataUrl,
     metadataHash: props.defaultMetadataHash,
   });
-
+  const [alertState, setAlertState] = useState<{
+    open: boolean;
+    message: string;
+    severity?: AlertColor;
+  }>({ open: false, message: "" });
   function setFormValue(key: string, value: string) {
     setForm({ ...form, [key]: value });
     setState({ ...state, error: "" });
@@ -77,6 +82,11 @@ export default function FractionalizerMint(props: {
       })
       .then(() => {
         setState({ ...state, inProgress: false });
+        setAlertState({
+          open: true,
+          message: `Minted token: ${form.tokenId}, quantity: ${form.quantity}`,
+          severity: "success",
+        });
         props.onDone(form.tokenId, form.quantity);
       })
       .catch((e: Error) => {
@@ -142,6 +152,12 @@ export default function FractionalizerMint(props: {
       <Button type="submit" variant="contained" disabled={state.inProgress}>
         Mint
       </Button>
+      <SnackbarAlert
+        open={alertState.open}
+        message={alertState.message}
+        onClose={() => setAlertState({ open: false, message: "" })}
+        severity={alertState.severity}
+      />
     </Stack>
   );
 }

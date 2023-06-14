@@ -12,9 +12,9 @@ import {
 import { Metadata } from '../../models/Cis2Client';
 import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
 import DisplayError from '../ui/DisplayError';
-import GetMintCardStep from './GetMintCardStep';
-import GetTokenIdCardStep from './GetTokenIdCardStep';
 import LazyCis2Metadata from './LazyCis2Metadata';
+import GetMintCardStep from './metadata-prepare-steps/GetMintCardStep';
+import GetTokenIdCardStep from './metadata-prepare-steps/GetTokenIdCardStep';
 
 const cardMediaSx: SxProps<Theme> = { maxHeight: "200px" };
 

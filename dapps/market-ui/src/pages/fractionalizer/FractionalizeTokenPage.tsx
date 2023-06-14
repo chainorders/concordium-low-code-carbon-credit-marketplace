@@ -3,16 +3,13 @@ import React, { useState } from 'react';
 
 import { CIS2Contract, ConcordiumGRPCClient, ContractAddress, sha256 } from '@concordium/web-sdk';
 import { ArrowBackRounded } from '@mui/icons-material';
-import {
-    AlertColor, Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography
-} from '@mui/material';
+import { Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography } from '@mui/material';
 import { Container } from '@mui/system';
 
 import FractionalizerMint from '../../components/cis2-fractionalizer/FractionalizerMint';
 import PrepareMetadata from '../../components/cis2-fractionalizer/PrepareMetadata';
 import UploadMetadata from '../../components/cis2-fractionalizer/UploadMetadata';
 import Cis2Transfer from '../../components/cis2/Cis2Transfer';
-import Alert from '../../components/ui/Alert';
 import { Metadata } from '../../models/Cis2Client';
 import { ContractInfo } from '../../models/ConcordiumContractClient';
 import { getCarbonCreditQuantityAttribute } from '../../models/FractionalizerClient';
@@ -52,12 +49,6 @@ function FractionalizeTokenPage(props: {
     },
     { step: Steps.Mint, title: "Mint" },
   ];
-
-  const [alertState, setAlertState] = useState<{
-    open: boolean;
-    message: string;
-    severity?: AlertColor;
-  }>({ open: false, message: "" });
 
   const [step, setStep] = useState<StepType>(steps[0]);
   const [contract, setContract] = useState<ContractAddress>(props.defaultContractAddress);
@@ -118,11 +109,7 @@ function FractionalizeTokenPage(props: {
   }
 
   function onMinted(tokenId: string, quantity: string) {
-    setAlertState({
-      open: true,
-      message: `Minted token: ${tokenId}, quantity: ${quantity}`,
-      severity: "success",
-    });
+    console.log(`Minted token: ${tokenId} with quantity: ${quantity}`);
   }
 
   function StepContent() {
@@ -211,12 +198,6 @@ function FractionalizeTokenPage(props: {
           </Grid>
         </Grid>
         <StepContent />
-        <Alert
-          open={alertState.open}
-          message={alertState.message}
-          onClose={() => setAlertState({ open: false, message: "" })}
-          severity={alertState.severity}
-        />
       </Paper>
     </Container>
   );

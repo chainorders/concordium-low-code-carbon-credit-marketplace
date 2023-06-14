@@ -30,6 +30,7 @@ export default function PrepareMetadata(props: {
       description: metadata.description || defaultMetadata.description,
       display: metadata.display || defaultMetadata.display,
       unique: false,
+      artifact: metadata.artifact || defaultMetadata.artifact,
     };
   };
 

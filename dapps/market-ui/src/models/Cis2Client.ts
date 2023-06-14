@@ -14,6 +14,9 @@ export interface Metadata {
   display?: {
     url: string;
   };
+  artifact?: {
+    url: string;
+  };
   unique?: boolean;
   attributes?: Attribute[];
 }
