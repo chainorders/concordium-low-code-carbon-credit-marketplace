@@ -43,9 +43,16 @@ type ContractTokenId = TokenIdU64;
 /// Contract token amount type.
 type ContractTokenAmount = TokenAmountU64;
 
+#[derive(Debug, Clone, Copy, Deserial, SchemaType, Serial)]
+pub enum TokenFutureExistState {
+    FUTURECC,
+    EXISTINGCC,
+}
+
 #[derive(Serial, Deserial, SchemaType)]
 struct MintParam {
     token_amount: ContractTokenAmount,
+    project_token_status: TokenFutureExistState,
     metadata_url: MetadataUrl,
 }
 
@@ -151,6 +158,9 @@ struct State<S> {
     /// if its verified then transfer & retire will be available for the token owner.
     /// all register tokens are not verified initially (if they are not fractions)
     is_token_verified: StateMap<ContractTokenId, bool, S>,
+    ///
+    ///
+    token_future_status: StateMap<ContractTokenId, TokenFutureExistState, S>,
     /// Retired Carbon Map
     total_credit: StateMap<ContractTokenId, ContractTokenAmount, S>,
     /// Roles
@@ -236,6 +246,7 @@ impl<S: HasStateApi> State<S> {
             token_ids: TokenIdU64(0),
             tokens: state_builder.new_map(),
             is_token_verified: state_builder.new_map(),
+            token_future_status: state_builder.new_map(),
             total_credit: state_builder.new_map(),
             implementors: state_builder.new_map(),
             roles: state_builder.new_map(),
@@ -259,6 +270,10 @@ impl<S: HasStateApi> State<S> {
 
         // registered but not verified
         self.is_token_verified.insert(token_id, false);
+
+        // registered but future/existing carbon credits is unknown
+        self.token_future_status
+            .insert(token_id, mint_param.project_token_status);
 
         /// when its minted, 0 tokens are retired.
         // self.retired_token_amount.insert(token_id, 0.into());
@@ -1202,6 +1217,7 @@ mod tests {
                     url: format!("https://some.example/token/{TOKEN_0}").to_owned(),
                     hash: None,
                 },
+                project_token_status: TokenFutureExistState::EXISTINGCC,
             },
             &ADDRESS_0,
             state_builder,
@@ -1214,6 +1230,7 @@ mod tests {
                     url: format!("https://some.example/token/{TOKEN_1}").to_owned(),
                     hash: None,
                 },
+                project_token_status: TokenFutureExistState::EXISTINGCC,
             },
             &ADDRESS_0,
             state_builder,
@@ -1261,6 +1278,7 @@ mod tests {
                     url: "https://some.example/token/02".to_string(),
                     hash: None,
                 },
+                project_token_status: TokenFutureExistState::EXISTINGCC,
             },
         );
         tokens.push(
@@ -1271,6 +1289,7 @@ mod tests {
                     url: "https://some.example/token/2A".to_string(),
                     hash: None,
                 },
+                project_token_status: TokenFutureExistState::EXISTINGCC,
             },
         );
         let parameter = MintParams {
