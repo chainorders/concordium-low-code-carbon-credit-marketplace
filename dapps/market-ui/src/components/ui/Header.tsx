@@ -1,10 +1,12 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router";
-import { useLocation } from "react-router-dom";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router';
+import { useLocation } from 'react-router-dom';
 
-import MenuIcon from "@mui/icons-material/Menu";
-import { AppBar, Box, Button, Container, IconButton, Menu, MenuItem, Toolbar, Typography } from "@mui/material";
-import { styled } from "@mui/system";
+import MenuIcon from '@mui/icons-material/Menu';
+import {
+    AppBar, Box, Button, Container, IconButton, Menu, MenuItem, Toolbar, Typography
+} from '@mui/material';
+import { styled } from '@mui/system';
 
 interface IPage {
   href?: string;

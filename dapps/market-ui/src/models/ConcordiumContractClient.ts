@@ -1,18 +1,13 @@
-import { Buffer } from "buffer/";
+import { Buffer } from 'buffer/';
 
-import { SmartContractParameters, WalletApi } from "@concordium/browser-wallet-api-helpers";
 import {
-  AccountAddress,
-  AccountTransactionType,
-  CcdAmount,
-  ConcordiumGRPCClient,
-  ContractAddress,
-  ModuleReference,
-  serializeUpdateContractParameters,
-  TransactionStatusEnum,
-  TransactionSummary,
-  UpdateContractPayload,
-} from "@concordium/web-sdk";
+    detectConcordiumProvider, SmartContractParameters, WalletApi
+} from '@concordium/browser-wallet-api-helpers';
+import {
+    AccountAddress, AccountTransactionType, CcdAmount, ConcordiumGRPCClient, ContractAddress,
+    ModuleReference, serializeUpdateContractParameters, TransactionStatusEnum, TransactionSummary,
+    UpdateContractPayload
+} from '@concordium/web-sdk';
 
 export interface ContractInfo {
   schemaBuffer: Buffer;
@@ -22,6 +17,20 @@ export interface ContractInfo {
 
 export interface Cis2ContractInfo extends ContractInfo {
   tokenIdByteSize: number;
+}
+
+export async function connectToWallet(): Promise<{ provider: WalletApi; account: string }> {
+  const provider = await detectConcordiumProvider();
+  let account = await provider.getMostRecentlySelectedAccount();
+  if (!account) {
+    account = await provider.connect();
+  }
+
+  if (!account) {
+    throw new Error("Could not connect to the Wallet Account");
+  }
+
+  return { provider, account };
 }
 
 /**
@@ -42,6 +51,8 @@ export async function initContract(
   params?: SmartContractParameters,
   maxContractExecutionEnergy = BigInt(9999),
   ccdAmount = BigInt(0),
+  statusUpdate: (status: TransactionStatusEnum, txnHash: string) => void = (status, hash) =>
+    console.log(`txn #${hash}, status:${status}`),
 ): Promise<ContractAddress> {
   const { moduleRef, schemaBuffer, contractName } = contractInfo;
   if (!moduleRef) {
@@ -61,7 +72,7 @@ export async function initContract(
     schemaBuffer.toString("base64"),
   );
 
-  let outcomes = await waitForTransaction(provider, txnHash);
+  let outcomes = await waitForTransaction(provider, txnHash, (status, hash) => statusUpdate(status, hash));
   outcomes = ensureValidOutcome(outcomes);
   return parseContractAddress(outcomes);
 }
@@ -99,6 +110,7 @@ export async function invokeContract<T>(
       `failed invoking contract ` +
       `method:${methodName}, ` +
       `contract:(index: ${contract.index.toString()}, subindex: ${contract.subindex.toString()})`;
+    console.error(res);
     return Promise.reject(new Error(msg, { cause: res }));
   }
 
@@ -135,6 +147,8 @@ export async function updateContract(
   methodName: string,
   maxContractExecutionEnergy = BigInt(9999),
   amount = BigInt(0),
+  onStatusUpdate: (status: TransactionStatusEnum, txnHash: string) => void = (status, txnHash) =>
+    console.log(`txn #${txnHash}, status:${status}`),
 ): Promise<Record<string, TransactionSummary>> {
   const { schemaBuffer, contractName } = contractInfo;
   const txnHash = await provider.sendTransaction(
@@ -150,11 +164,15 @@ export async function updateContract(
     schemaBuffer.toString("base64"),
   );
 
-  return await waitAndThrowError(provider, txnHash);
+  return await waitAndThrowError(provider, txnHash, onStatusUpdate);
 }
 
-export async function waitAndThrowError(provider: WalletApi, txnHash: string) {
-  const outcomes = await waitForTransaction(provider, txnHash);
+export async function waitAndThrowError(
+  provider: WalletApi,
+  txnHash: string,
+  onStatusUpdate: (status: TransactionStatusEnum, txnHash: string) => void,
+) {
+  const outcomes = await waitForTransaction(provider, txnHash, onStatusUpdate);
   return ensureValidOutcome(outcomes);
 }
 
@@ -167,9 +185,10 @@ export async function waitAndThrowError(provider: WalletApi, txnHash: string) {
 function waitForTransaction(
   provider: WalletApi,
   txnHash: string,
+  onStatusUpdate: (status: TransactionStatusEnum, txnHash: string) => void,
 ): Promise<Record<string, TransactionSummary> | undefined> {
   return new Promise((res, rej) => {
-    _wait(provider, txnHash, res, rej);
+    _wait(provider, txnHash, res, rej, (status, hash) => onStatusUpdate(status, hash));
   });
 }
 
@@ -178,18 +197,35 @@ function ensureValidOutcome(outcomes?: Record<string, TransactionSummary>): Reco
     throw Error("Null Outcome");
   }
 
-  const successTxnSummary = Object.keys(outcomes)
-    .map((k) => outcomes[k])
-    .find((s) => s.result.outcome === "success");
-
-  if (!successTxnSummary) {
-    const failures = Object.keys(outcomes)
-      .map((k) => outcomes[k])
-      .filter((s) => s.result.outcome === "reject")
-      .map((s) => (s.result as any).rejectReason.tag)
-      .join(",");
-    throw Error(`Transaction failed, reasons: ${failures}`);
-  }
+  Object.keys(outcomes).map((o) => {
+    const result = outcomes[o].result;
+    switch (result.outcome) {
+      case "success":
+        return result;
+      case "reject":
+        switch (result.rejectReason.tag) {
+          case "InvalidReceiveMethod":
+            throw Error(`Invalid Receive Method: ${result.rejectReason.contents.join(",")}`, { cause: result.rejectReason });
+          case "InvalidInitMethod":
+            throw Error(`Invalid Init Method: ${result.rejectReason.contents.join(",")}`, { cause: result.rejectReason });
+          case "AmountTooLarge":
+            throw Error(`Amount Too Large: ${result.rejectReason.contents.join(",")}`, { cause: result.rejectReason });
+          case "InvalidContractAddress": {
+            const contractAddress = result.rejectReason.contents;
+            throw Error(
+              `Invalid Contract Address: ${contractAddress.index.toString()}, ${contractAddress.subindex.toString()}`,
+              { cause: result.rejectReason },
+            );
+          }
+          case "RejectedReceive":
+            throw Error(`Rejected Receive: ${result.rejectReason.rejectReason}`, {
+              cause: result.rejectReason,
+            });
+          default:
+            throw Error(`Unknown Reject Reason: ${result.rejectReason.tag}`, { cause: result.rejectReason });
+        }
+    }
+  });
 
   return outcomes;
 }
@@ -211,6 +247,7 @@ function _wait(
   txnHash: string,
   res: (p: Record<string, TransactionSummary> | undefined) => void,
   rej: (reason: any) => void,
+  onStatusUpdate: (status: TransactionStatusEnum, txnHash: string) => void,
 ) {
   setTimeout(() => {
     provider
@@ -221,12 +258,13 @@ function _wait(
           return rej("Transaction Status is null");
         }
 
-        console.info(`txn : ${txnHash}, status: ${txnStatus?.status}`);
+        // console.info(`txn : ${txnHash}, status: ${txnStatus?.status}`);
+        onStatusUpdate(txnStatus.status, txnHash);
         if (txnStatus?.status === TransactionStatusEnum.Finalized) {
           return res(txnStatus.outcomes);
         }
 
-        _wait(provider, txnHash, res, rej);
+        _wait(provider, txnHash, res, rej, onStatusUpdate);
       })
       .catch((err) => rej(err));
   }, 1000);

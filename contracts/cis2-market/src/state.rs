@@ -15,15 +15,6 @@ pub struct TokenInfo {
     pub address: ContractAddress,
 }
 
-// impl From<&TokenOwnerInfo> for TokenInfo {
-//     fn from(token_owner_info: &TokenOwnerInfo) -> Self {
-//         TokenInfo {
-//             id: token_owner_info.id,
-//             address: token_owner_info.address,
-//         }
-//     }
-// }
-
 #[derive(Clone, Serialize, PartialEq, Eq, Debug)]
 pub struct TokenOwnerInfo {
     pub id: ContractTokenId,
@@ -31,18 +22,21 @@ pub struct TokenOwnerInfo {
     pub owner: AccountAddress,
 }
 
-impl Into<TokenInfo> for &TokenOwnerInfo {
-    fn into(self) -> TokenInfo {
+impl From<&TokenOwnerInfo> for TokenInfo {
+    fn from(val: &TokenOwnerInfo) -> Self {
         TokenInfo {
-            id: self.id,
-            address: self.address,
+            id: val.id,
+            address: val.address,
         }
     }
 }
 
-impl Into<TokenInfo> for TokenOwnerInfo {
-    fn into(self) -> TokenInfo {
-        Into::<TokenInfo>::into(&self)
+impl From<TokenOwnerInfo> for TokenInfo {
+    fn from(val: TokenOwnerInfo) -> Self {
+        TokenInfo {
+            id: val.id,
+            address: val.address,
+        }
     }
 }
 
@@ -193,23 +187,17 @@ where
         token_owner_info: &TokenOwnerInfo,
         delta: ContractTokenAmount,
     ) {
-        match self.tokens_owned.get(token_owner_info) {
-            Some(quantity) => {
-                let new_quantity = quantity.sub(delta);
-                if new_quantity.eq(&ContractTokenAmount::from(0)) {
-                    self.tokens_owned.remove(token_owner_info);
-                    match self.tokens_listed.get_mut(&token_owner_info.into()) {
-                        Some(mut token) => {
-                            token.token_prices.remove(&token_owner_info.owner);
-                        }
-                        None => {}
-                    };
-                } else {
-                    self.tokens_owned
-                        .insert(token_owner_info.clone(), new_quantity);
-                }
+        if let Some(quantity) = self.tokens_owned.get(token_owner_info) {
+            let new_quantity = quantity.sub(delta);
+            if new_quantity.eq(&ContractTokenAmount::from(0)) {
+                self.tokens_owned.remove(token_owner_info);
+                if let Some(mut token) = self.tokens_listed.get_mut(&token_owner_info.into()) {
+                    token.token_prices.remove(&token_owner_info.owner);
+                };
+            } else {
+                self.tokens_owned
+                    .insert(token_owner_info.clone(), new_quantity);
             }
-            None => {}
         }
     }
 
@@ -220,7 +208,7 @@ where
     ) -> Result<ContractTokenAmount, MarketplaceError> {
         self.tokens_owned
             .get(&TokenOwnerInfo::from(token_info, owner))
-            .map(|q| q.clone())
+            .map(|q| *q)
             .ok_or(MarketplaceError::TokenNotInCustody)
     }
 
@@ -243,20 +231,28 @@ where
     pub fn get_listed_tokens(&self) -> Vec<TokenListItem> {
         self.tokens_owned
             .iter()
-            .map(|t| match self.tokens_listed.get(&t.0.to_owned().into()) {
-                Some(l) => Some(TokenListItem {
-                    token_id: t.0.id,
-                    contract: t.0.address,
-                    price: *l.token_prices.get(&t.0.owner).unwrap(),
-                    owner: t.0.owner,
-                    royalty: l.token_royalty.royalty,
-                    primary_owner: l.token_royalty.primary_owner,
-                    quantity: t.1.to_owned(),
-                }),
-                None => None,
+            .filter_map(|owned_token| {
+                match self.tokens_listed.get(&owned_token.0.to_owned().into()) {
+                    Some(listed_token) => {
+                        match listed_token
+                            .token_prices
+                            .get(&owned_token.0.owner.to_owned())
+                        {
+                            Some(price) => Some(TokenListItem {
+                                token_id: owned_token.0.id,
+                                contract: owned_token.0.address,
+                                price: *price,
+                                owner: owned_token.0.owner,
+                                royalty: listed_token.token_royalty.royalty,
+                                primary_owner: listed_token.token_royalty.primary_owner,
+                                quantity: *owned_token.1,
+                            }),
+                            None => None,
+                        }
+                    }
+                    None => None,
+                }
             })
-            .filter(|t| t.is_some())
-            .map(|t| t.unwrap())
             .collect()
     }
 }

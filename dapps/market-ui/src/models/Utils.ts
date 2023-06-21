@@ -1,6 +1,11 @@
 export async function fetchJson<T>(metadataUrl: string): Promise<T> {
   const jsonStr = await fetchJsonString(metadataUrl);
-  return JSON.parse(jsonStr);
+
+  try {
+    return JSON.parse(jsonStr);
+  } catch (e) {
+    return Promise.reject(new Error("Could not parse Metadata"));
+  }
 }
 
 export async function fetchJsonString(metadataUrl: string): Promise<string> {
@@ -13,12 +18,18 @@ export async function fetchJsonString(metadataUrl: string): Promise<string> {
   return res.text();
 }
 
-export const tokenIdToNftImageFileName = (originalFileName: string, tokenId: string) => {
+export const tokenIdToTokenImageFileName = (originalFileName: string, tokenId: string) => {
   const ext = originalFileName.substring(originalFileName.lastIndexOf("."));
 
-  return `nft_${tokenId}.${ext}`;
+  return `token_${tokenId}.${ext}`;
 };
 
-export const tokenIdToNftMetadataFileName = (tokenId: string) => {
-  return `nft_${tokenId}_metadata.json`;
+export const tokenIdToArtifactFileName = (originalFileName: string, tokenId: string) => {
+  const ext = originalFileName.substring(originalFileName.lastIndexOf("."));
+
+  return `token_artifact_${tokenId}.${ext}`;
+};
+
+export const tokenIdToTokenMetadataFileName = (tokenId: string) => {
+  return `token_${tokenId}_metadata.json`;
 };

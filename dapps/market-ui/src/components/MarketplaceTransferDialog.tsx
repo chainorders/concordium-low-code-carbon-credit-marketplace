@@ -1,162 +1,157 @@
-import React, { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from 'react';
 
-import { WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { ContractAddress } from "@concordium/web-sdk";
-import { AlertColor, Paper, Typography } from "@mui/material";
-import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
-import TextField from "@mui/material/TextField";
-import { Container } from "@mui/system";
+import { ContractAddress } from '@concordium/web-sdk';
+import { Container } from '@mui/material';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import TextField from '@mui/material/TextField';
 
-import Alert from "../components/ui/Alert";
-import { MARKETPLACE_CONTRACT_INFO } from "../Constants";
-import { TokenListItem, transfer } from "../models/MarketplaceClient";
+import { MARKETPLACE_CONTRACT_INFO } from '../Constants';
+import { connectToWallet } from '../models/ConcordiumContractClient';
+import { TokenListItem, transfer as transferWallet } from '../models/MarketplaceClient';
+import { transfer as transferWert } from '../models/WertClient';
+import { User } from '../types/user';
+import DisplayError from './ui/DisplayError';
 
 export default function MarketplaceTransferDialog(props: {
   isOpen: boolean;
   token: TokenListItem;
-  provider: WalletApi;
-  account: string;
   marketContractAddress: ContractAddress;
   onClose: () => void;
+  user: User;
 }) {
+  const { user } = props;
   const [open, setOpen] = useState(props.isOpen);
+  const [form, setForm] = useState({
+    quantity: props.token.quantity.toString(),
+  });
+  const [totalAmount, setTotalAmount] = useState<bigint>(props.token.quantity * props.token.price);
+
   const [state, setState] = useState<{
     isBought?: boolean;
-    isBeingBought?: boolean;
+    isProcessing?: boolean;
     error?: string;
-    totalAmount?: bigint;
-  }>({
-    totalAmount: props.token.quantity * props.token.price,
-  });
+  }>({});
 
   const handleClose = () => {
     setOpen(false);
     props.onClose();
   };
 
-  const { token: item, provider, account, marketContractAddress } = props;
+  const { token: item, marketContractAddress } = props;
+  const transfer = (quantity: bigint) => {
+    switch (user.accountType) {
+      case "wallet":
+        return connectToWallet().then((wallet) =>
+          transferWallet({
+            provider: wallet.provider,
+            payerAccount: user.account,
+            to: user.account,
+            marketContractAddress,
+            nftContractAddress: item.contract,
+            tokenId: item.tokenId,
+            priceCcd: item.price,
+            owner: item.owner,
+            quantity,
+            contractInfo: MARKETPLACE_CONTRACT_INFO,
+          }),
+        );
+      case "email":
+        return transferWert(
+          user.account,
+          marketContractAddress,
+          item.contract,
+          item.tokenId,
+          item.owner,
+          quantity,
+          totalAmount,
+          "widget",
+        );
+    }
 
-  const [alertState, setAlertState] = useState<{
-    open: boolean;
-    message: string;
-    severity?: AlertColor;
-  }>({
-    open: false,
-    message: "",
-  });
+    return Promise.reject({ message: "Invalid Payment Type" });
+  };
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const formData = new FormData(event.currentTarget);
-    const quantity = BigInt(formData.get("quantity")?.toString() || "0");
-
-    if (!quantity || quantity > item.quantity || quantity <= 0) {
-      setState({ ...state, error: "Invalid Quantity" });
-      return;
-    }
-
     setState({
       ...state,
       isBought: false,
-      isBeingBought: true,
+      isProcessing: true,
       error: "",
     });
 
-    transfer(
-      provider,
-      account,
-      marketContractAddress,
-      item.contract,
-      item.tokenId,
-      item.price,
-      item.owner,
-      quantity,
-      MARKETPLACE_CONTRACT_INFO,
-    )
+    transfer(BigInt(form.quantity))
       .then(() => {
         setState({
           ...state,
           isBought: true,
-          isBeingBought: false,
+          isProcessing: false,
           error: "",
         });
-        // alert("Bought");
-        setAlertState({
-          open: true,
-          message: "Purchase succesful",
-          severity: "success",
-        });
-        // handleClose();
       })
-      .catch((err: any) => {
+      .catch((err) => {
         setState({
           ...state,
           isBought: false,
-          isBeingBought: false,
+          isProcessing: false,
           error: err.message,
-        });
-        setAlertState({
-          open: true,
-          message: "Purchasing failed",
-          severity: "error",
         });
       });
   }
 
-  const handleQuantityChanged = (value: bigint) => {
-    if (value && value > 0 && value <= props.token.quantity) {
-      setState({ ...state, totalAmount: value * item.price });
-    } else {
-      setState({ ...state, totalAmount: BigInt(0) });
+  useEffect(() => setTotalAmount(BigInt(form.quantity) * props.token.price), [form.quantity]);
+
+  function isValid() {
+    if (!form.quantity || BigInt(form.quantity) <= 0 || BigInt(form.quantity) > props.token.quantity) {
+      return false;
     }
-  };
+
+    if (totalAmount <= 0) {
+      return false;
+    }
+
+    if (state.isBought) {
+      return false;
+    }
+
+    return true;
+  }
 
   return (
-    <Container>
-      <Paper>
-        <Alert
-          open={alertState.open}
-          message={alertState.message}
-          onClose={() => handleClose}
-          severity={alertState.severity}
-          // anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        />
-      </Paper>
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>Buy Token: {props.token.tokenId}</DialogTitle>
-        <form onSubmit={(e) => submit(e)}>
-          <DialogContent>
-            <TextField
-              autoFocus
-              margin="dense"
-              id="quantity"
-              label={`Quantity (Max ${props.token.quantity})`}
-              type="number"
-              name="quantity"
-              fullWidth
-              variant="standard"
-              defaultValue={props.token.quantity.toString()}
-              onChange={(e) => handleQuantityChanged(BigInt(e.target.value))}
-            />
-            {state.error && (
-              <Typography component="div" color="error">
-                {state.error}
-              </Typography>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleClose}>{state.isBought ? "Ok" : "Cancel"}</Button>
-            <Button type="submit" disabled={state.isBought || state.isBeingBought}>
-              Buy {state.totalAmount ? `(${state.totalAmount?.toString()} CCD)` : ""}
-            </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
-    </Container>
+    <Dialog open={open} onClose={handleClose} maxWidth={"md"}>
+      <DialogTitle width={"500px"}>Buy Token: {props.token.tokenId}</DialogTitle>
+      <form onSubmit={(e) => submit(e)}>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="quantity"
+            label={`Quantity (Max ${props.token.quantity})`}
+            type="number"
+            name="quantity"
+            fullWidth
+            variant="standard"
+            onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+            disabled={state.isBought || state.isProcessing}
+            value={form.quantity}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>{state.isBought ? "Ok" : "Cancel"}</Button>
+          <Button type="submit" disabled={state.isBought || state.isProcessing || !isValid()}>
+            Buy ({totalAmount.toString()} CCD)
+          </Button>
+        </DialogActions>
+      </form>
+      <DisplayError error={state.error} />
+      <Container>
+        <div id="widget" style={{ textAlign: "center" }}></div>
+      </Container>
+    </Dialog>
   );
 }

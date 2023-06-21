@@ -1,11 +1,18 @@
-import React from "react";
+import React from 'react';
 
-import { Typography } from "@mui/material";
+import { Alert, Typography } from '@mui/material';
 
 function DisplayError(props: { error?: string }) {
   const { error } = props;
+  if (!error) {
+    return <></>;
+  }
 
-  return error ? <Typography fontSize={10}>{error}</Typography> : <></>;
+  return (
+    <Alert severity="error" closeText='close'>
+      <Typography variant="body1">{error}</Typography>
+    </Alert>
+  );
 }
 
 export default DisplayError;

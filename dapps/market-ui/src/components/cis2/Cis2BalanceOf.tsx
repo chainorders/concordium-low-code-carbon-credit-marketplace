@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { CIS2Contract, InvokeContractFailedResult, RejectReasonTag } from "@concordium/web-sdk";
-import { Button, ButtonGroup, Stack, TextField, Typography } from "@mui/material";
+import { CIS2Contract, InvokeContractFailedResult, RejectReasonTag } from '@concordium/web-sdk';
+import { Button, ButtonGroup, Stack, TextField, Typography } from '@mui/material';
 
 function Cis2BalanceOf(props: {
   account: string;

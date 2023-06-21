@@ -138,9 +138,7 @@ fn transfer<S: HasStateApi>(
         address: params.cis_contract_address,
     };
 
-    let quantity_owned = host
-        .state()
-        .get_quantity_owned(&token_info, &params.owner)?;
+    let quantity_owned = host.state().get_quantity_owned(token_info, &params.owner)?;
 
     ensure!(
         quantity_owned.cmp(&params.quantity).is_ge(),
@@ -175,7 +173,7 @@ fn transfer<S: HasStateApi>(
         params.token_id,
         params.cis_contract_address,
         params.quantity,
-        Address::Account(params.owner),
+        concordium_std::Address::Contract(ctx.self_address()),
         concordium_cis2::Receiver::Account(params.to),
     )?;
 
@@ -225,11 +223,20 @@ fn list_owned<S: HasStateApi>(
         .tokens_owned
         .iter()
         .filter(|f| sender.matches_account(&f.0.owner))
+        .filter(|f| {
+            match host.state().tokens_listed.get(&TokenInfo {
+                address: f.0.address,
+                id: f.0.id,
+            }) {
+                Some(token) => token.token_prices.get(&f.0.owner).is_none(),
+                None => true,
+            }
+        })
         .map(|f| TokenOwnedListItem {
             contract: f.0.address,
             token_id: f.0.id,
             owner: f.0.owner,
-            quantity: f.1.clone(),
+            quantity: *f.1,
         })
         .collect();
 

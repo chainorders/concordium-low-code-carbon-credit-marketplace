@@ -1,17 +1,16 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { CIS2, ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk";
-import { ArrowBackRounded } from "@mui/icons-material";
-import { AlertColor, Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography } from "@mui/material";
-import { Container } from "@mui/system";
-import ConnectPinata from "../../components/ConnectPinata";
-import Cis2BatchMetadataPrepareOrAdd from "../../components/cis2/Cis2BatchMetadataPrepareOrAdd";
-import Cis2BatchMint from "../../components/cis2/Cis2BatchMint";
-import Cis2FindInstanceOrInit from "../../components/cis2/Cis2FindInstanceOrInit";
-import UploadFiles from "../../components/ui/UploadFiles";
-import { Cis2ContractInfo } from "../../models/ConcordiumContractClient";
-import Alert from "../../components/ui/Alert";
+import { CIS2, ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
+import { ArrowBackRounded } from '@mui/icons-material';
+import { Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography } from '@mui/material';
+import { Container } from '@mui/system';
+
+import Cis2BatchMetadataPrepareOrAdd from '../../components/cis2/Cis2BatchMetadataPrepareOrAdd';
+import Cis2BatchMint from '../../components/cis2/Cis2BatchMint';
+import Cis2FindInstanceOrInit from '../../components/cis2/Cis2FindInstanceOrInit';
+import ConnectPinata from '../../components/ConnectPinata';
+import UploadFiles from '../../components/ui/UploadFiles';
+import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
 
 enum Steps {
   GetOrInitCis2,
@@ -23,12 +22,7 @@ enum Steps {
 
 type StepType = { step: Steps; title: string };
 
-function MintPage(props: {
-  grpcClient: ConcordiumGRPCClient;
-  provider: WalletApi;
-  account: string;
-  contractInfo: Cis2ContractInfo;
-}) {
+function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2ContractInfo }) {
   const steps: StepType[] = [
     {
       step: Steps.GetOrInitCis2,
@@ -77,11 +71,6 @@ function MintPage(props: {
       pinataJwt,
       activeStep: steps[2],
     });
-    setAlertState({
-      open: true,
-      message: "Connected to Pinata",
-      severity: "success",
-    });
   }
 
   function onPinataSkipped() {
@@ -108,24 +97,12 @@ function MintPage(props: {
     });
   }
 
-  const [alertState, setAlertState] = useState<{
-    open: boolean;
-    message: string;
-    severity?: AlertColor;
-  }>({ open: false, message: "" });
-
-  function onNftsMinted() {
-    setAlertState({ open: true, message: "Minted", severity: "success" });
-  }
-
   function StepContent() {
     switch (state.activeStep.step) {
       case Steps.GetOrInitCis2:
         return (
           <Cis2FindInstanceOrInit
-            provider={props.provider}
             grpcClient={props.grpcClient}
-            account={props.account}
             contractInfo={props.contractInfo}
             address={state.nftContract}
             onDone={(address) => onGetCollectionAddress(address)}
@@ -148,11 +125,9 @@ function MintPage(props: {
         return (
           <Cis2BatchMint
             contractInfo={props.contractInfo}
-            provider={props.provider}
-            account={props.account}
-            nftContractAddress={state.nftContract as ContractAddress}
+            tokenContractAddress={state.nftContract!}
             tokenMetadataMap={state.tokenMetadataMap!}
-            onDone={() => onNftsMinted()}
+            onDone={(tokens) => console.info("tokens minted:", tokens)}
           />
         );
       default:
@@ -190,12 +165,6 @@ function MintPage(props: {
           </Grid>
         </Grid>
         <StepContent />
-        <Alert
-          open={alertState.open}
-          message={alertState.message}
-          onClose={() => setAlertState({ open: false, message: "" })}
-          severity={alertState.severity}
-        />
       </Paper>
     </Container>
   );

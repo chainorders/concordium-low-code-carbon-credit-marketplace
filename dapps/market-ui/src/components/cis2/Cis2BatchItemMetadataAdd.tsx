@@ -1,39 +1,28 @@
-import { Buffer } from "buffer/";
-import React, { FormEvent, useState } from "react";
+import { Buffer } from 'buffer/';
+import React, { FormEvent, useState } from 'react';
 
-import { CIS2, sha256 } from "@concordium/web-sdk";
-import { Theme } from "@emotion/react";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import { CIS2, sha256 } from '@concordium/web-sdk';
+import { Theme } from '@emotion/react';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import {
-  Button,
-  Card,
-  CardActions,
-  CardContent,
-  CardMedia,
-  Checkbox,
-  FormControlLabel,
-  Skeleton,
-  Stack,
-  SxProps,
-  TextField,
-  Typography,
-} from "@mui/material";
+    Button, Card, CardActions, CardContent, CardMedia, Checkbox, FormControlLabel, Skeleton, Stack,
+    SxProps, TextField, Typography
+} from '@mui/material';
 
-import { Metadata } from "../../models/Cis2Client";
-import { Cis2ContractInfo } from "../../models/ConcordiumContractClient";
-import DisplayError from "../ui/DisplayError";
-import GetMintCardStep from "./GetMintCardStep";
-import GetQuantityCardStep from "./GetQuantityCardStep";
-import GetTokenIdCardStep from "./GetTokenIdCardStep";
-import LazyCis2Metadata from "./LazyCis2Metadata";
+import { Metadata } from '../../models/Cis2Client';
+import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
+import DisplayError from '../ui/DisplayError';
+import LazyCis2Metadata from './LazyCis2Metadata';
+import GetMintCardStep from './metadata-prepare-steps/GetMintCardStep';
+import GetTokenIdCardStep from './metadata-prepare-steps/GetTokenIdCardStep';
 
 const cardMediaSx: SxProps<Theme> = { maxHeight: "200px" };
 
 enum Steps {
-  GetMetadataUrl,
-  GetTokenId,
-  GetQuantity,
-  Mint,
+  GetMetadataUrl = 0,
+  GetTokenId = 1,
+  GetQuantity = 2,
+  Mint = 3,
 }
 
 function TokenImage(props: { metadataUrl?: CIS2.MetadataUrl; onMetadataLoaded?: (metadata: string) => void }) {
@@ -159,10 +148,7 @@ function Cis2BatchItemMetadataAdd(props: {
   }
 
   function tokenIdUpdated(tokenId: string) {
-    setState({ ...state, tokenId, step: Steps.GetQuantity });
-  }
-
-  function quantityUpdated(tokenId: string, quantity: string) {
+    const quantity = "1";
     setState({ ...state, step: Steps.Mint, tokenId, quantity });
     props.onDone({ tokenId, tokenInfo: [state.metadataUrl!, quantity] });
   }
@@ -183,15 +169,6 @@ function Cis2BatchItemMetadataAdd(props: {
           key={props.index}
           imageUrl={state.metadata?.display?.url}
           onDone={(data) => tokenIdUpdated(data.tokenId)}
-        />
-      );
-    case Steps.GetQuantity:
-      return (
-        <GetQuantityCardStep
-          imageUrl={state.metadata?.display?.url}
-          tokenId={state.tokenId}
-          key={state.tokenId}
-          onDone={(data) => quantityUpdated(data.tokenId, data.quantity)}
         />
       );
     case Steps.Mint:

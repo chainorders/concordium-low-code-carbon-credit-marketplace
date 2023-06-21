@@ -1,14 +1,15 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { ConcordiumGRPCClient, ContractAddress } from "@concordium/common-sdk";
-import { CIS2Contract } from "@concordium/web-sdk";
-import { Paper, Step, StepLabel, Stepper, Typography } from "@mui/material";
+import { ConcordiumGRPCClient, ContractAddress } from '@concordium/common-sdk';
+import { CIS2Contract } from '@concordium/web-sdk';
+import { Paper, Step, StepLabel, Stepper, Typography } from '@mui/material';
 
-import MarketplaceAdd from "../../components/MarketplaceAdd";
-import { Cis2ContractInfo } from "../../models/ConcordiumContractClient";
-import Cis2Transfer from "../../components/cis2/Cis2Transfer";
+import Cis2Transfer from '../../components/cis2/Cis2Transfer';
+import MarketplaceAdd from '../../components/MarketplaceAdd';
+import { useParamsContractAddress } from '../../components/utils';
+import { MARKET_CONTRACT_ADDRESS } from '../../Constants';
+import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
 
 enum Steps {
   TransferToken,
@@ -16,13 +17,8 @@ enum Steps {
 }
 type StepType = { step: Steps; title: string };
 
-function SellPage(props: {
-  grpcClient: ConcordiumGRPCClient;
-  provider: WalletApi;
-  account: string;
-  marketContractAddress: ContractAddress;
-  contractInfo: Cis2ContractInfo;
-}) {
+function SellPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2ContractInfo }) {
+  const marketContractAddress = useParamsContractAddress() || MARKET_CONTRACT_ADDRESS;
   const steps = [
     {
       title: "Transfer Token",
@@ -61,24 +57,22 @@ function SellPage(props: {
     switch (state.activeStep.step) {
       case Steps.TransferToken:
         return (
-          <Cis2Transfer
-            grpcClient={props.grpcClient}
-            provider={props.provider}
-            account={props.account}
-            to={{
-              address: props.marketContractAddress,
-              hookName: "recieve_cis2",
-            }}
-            onDone={(address, tokenId, quantity) => onTransferred(address, tokenId, quantity)}
-          />
+          <>
+            <Cis2Transfer
+              grpcClient={props.grpcClient}
+              to={{
+                address: marketContractAddress,
+                hookName: "recieve_cis2",
+              }}
+              onDone={(address, tokenId, quantity) => onTransferred(address, tokenId, quantity)}
+            />
+          </>
         );
       case Steps.AddToken:
         return (
           <MarketplaceAdd
             grpcClient={props.grpcClient}
-            provider={props.provider}
-            account={props.account}
-            marketContractAddress={props.marketContractAddress}
+            marketContractAddress={marketContractAddress}
             nftContractAddress={state.nftContract!}
             tokenId={state.tokenId!}
             cis2Contract={state.cis2Contract!}

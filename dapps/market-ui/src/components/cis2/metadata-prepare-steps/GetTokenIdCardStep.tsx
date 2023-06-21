@@ -1,45 +1,36 @@
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useState } from 'react';
 
 import {
-  Button,
-  Card,
-  CardActions,
-  CardContent,
-  CardMedia,
-  SxProps,
-  TextField,
-  Theme,
-  Typography,
-} from "@mui/material";
+    Button, Card, CardActions, CardContent, CardMedia, SxProps, TextField, Theme, Typography
+} from '@mui/material';
 
-import DisplayError from "../ui/DisplayError";
+import DisplayError from '../../ui/DisplayError';
 
 const cardMediaSx: SxProps<Theme> = { maxHeight: "200px" };
 
-export default function GetQuantityCardStep(props: {
+function GetTokenIdCardStep(props: {
   imageUrl?: string;
   tokenId: string;
-  onDone: (data: { tokenId: string; quantity: string }) => void;
+  onDone: (data: { tokenId: string }) => void;
 }) {
   const [state, setState] = useState({
     tokenId: props.tokenId.toString(),
     error: "",
     imageUrl: props.imageUrl,
-    quantity: "",
   });
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const quantity = formData.get("quantity")?.toString() || "";
+    const tokenId = formData.get("tokenId")?.toString() || "";
 
-    if (!quantity || !parseInt(quantity)) {
-      setState({ ...state, error: "Invalid Quantity" });
+    if (!tokenId) {
+      setState({ ...state, error: "Invalid Token Id" });
       return;
     }
 
-    setState({ ...state, quantity, error: "" });
-    props.onDone({ tokenId: props.tokenId, quantity });
+    setState({ ...state, tokenId, error: "" });
+    props.onDone({ tokenId });
   }
 
   return (
@@ -48,13 +39,13 @@ export default function GetQuantityCardStep(props: {
       <form noValidate autoComplete="off" onSubmit={(e) => submit(e)}>
         <CardContent>
           <Typography gutterBottom component="div">
-            Set Quantity
+            Set Token Id
           </Typography>
           <TextField
-            defaultValue={0}
-            name="quantity"
-            id="quantity"
-            label="Token Quantity"
+            defaultValue={props.tokenId}
+            name="tokenId"
+            id="token-id"
+            label="Token Id"
             variant="outlined"
             size="small"
             fullWidth={true}
@@ -64,10 +55,12 @@ export default function GetQuantityCardStep(props: {
         </CardContent>
         <CardActions>
           <Button size="small" color="primary" type="submit">
-            Set Quantity
+            Set Token Id
           </Button>
         </CardActions>
       </form>
     </Card>
   );
 }
+
+export default GetTokenIdCardStep;

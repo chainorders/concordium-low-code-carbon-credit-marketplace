@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
-import { CIS2Contract } from "@concordium/web-sdk";
-import { Skeleton } from "@mui/material";
-import { Metadata } from "../../models/Cis2Client";
-import { fetchJson } from "../../models/Utils";
+import { CIS2Contract } from '@concordium/web-sdk';
+import { Skeleton } from '@mui/material';
 
-function Cis2MetadataImageLazy(props: { account: string; tokenId: string; cis2Contract: CIS2Contract }) {
+import { Metadata } from '../../models/Cis2Client';
+import { fetchJson } from '../../models/Utils';
+
+function Cis2MetadataImageLazy(props: { tokenId: string; cis2Contract: CIS2Contract }) {
   const [state, setState] = useState<{
     metadata?: Metadata;
     error?: string;
@@ -23,6 +24,10 @@ function Cis2MetadataImageLazy(props: { account: string; tokenId: string; cis2Co
       .then((m) => fetchJson<Metadata>(m.url))
       .then((metadata) => {
         setState({ ...state, loading: false, metadata });
+      })
+      .catch((e) => {
+        console.error(e);
+        setState({ ...state, loading: false, metadata: undefined });
       });
   }, [props.tokenId, props.cis2Contract]);
 
@@ -34,7 +39,7 @@ function Cis2MetadataImageLazy(props: { account: string; tokenId: string; cis2Co
       srcSet={state.metadata?.display?.url}
       alt={state.metadata?.name}
       loading="lazy"
-      width="100%"
+      style={{ width: "100%", height: "200px", objectFit: "cover" }}
     />
   );
 }

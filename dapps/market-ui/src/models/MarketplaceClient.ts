@@ -1,21 +1,17 @@
-import { SmartContractParameters, WalletApi } from "@concordium/browser-wallet-api-helpers";
+import { SmartContractParameters, WalletApi } from '@concordium/browser-wallet-api-helpers';
 import {
-  ConcordiumGRPCClient,
-  ContractAddress,
-  deserializeReceiveReturnValue,
-  TransactionSummary,
-} from "@concordium/web-sdk";
-import {
-  ContractInfo,
-  invokeContract,
-  updateContract,
-  toParamContractAddress,
-  ParamContractAddress,
-} from "./ConcordiumContractClient";
+    AccountAddress, ConcordiumGRPCClient, ContractAddress, deserializeReceiveReturnValue,
+    TransactionStatusEnum, TransactionSummary
+} from '@concordium/web-sdk';
 
-const enum MethodNames {
+import {
+    ContractInfo, invokeContract, ParamContractAddress, toParamContractAddress, updateContract
+} from './ConcordiumContractClient';
+
+export const enum MethodNames {
   add = "add",
   transfer = "transfer",
+  listOwned = "list_owned",
   list = "list",
 }
 
@@ -49,6 +45,40 @@ export async function list(
         tokenId: t.token_id,
       } as TokenListItem),
   );
+
+  return tokens;
+}
+
+export async function listOwned(
+  grpcClient: ConcordiumGRPCClient,
+  marketContractAddress: ContractAddress,
+  contractInfo: ContractInfo,
+  account: string,
+): Promise<TokenList> {
+  const retValue = await invokeContract(
+    grpcClient,
+    contractInfo,
+    marketContractAddress,
+    MethodNames.listOwned,
+    undefined,
+    new AccountAddress(account),
+  );
+  const retValueDe = deserializeReceiveReturnValue(
+    retValue,
+    contractInfo.schemaBuffer,
+    contractInfo.contractName,
+    MethodNames.listOwned,
+  );
+  const tokens = retValueDe.map(
+    (t: any) =>
+      ({
+        tokenId: t.token_id,
+        contract: t.contract,
+        owner: t.owner,
+        quantity: BigInt(t.quantity),
+      } as OwnedTokenListItem),
+  );
+
   return tokens;
 }
 
@@ -68,6 +98,8 @@ export async function add(
   paramJson: AddParams,
   contractInfo: ContractInfo,
   maxContractExecutionEnergy = BigInt(9999),
+  onStatusUpdate: (status: TransactionStatusEnum, txnHash: string) => void = (status, txnHash) =>
+    console.log(`txn #${txnHash}, status:${status}`),
 ): Promise<Record<string, TransactionSummary>> {
   return updateContract(
     provider,
@@ -77,13 +109,16 @@ export async function add(
     marketContractAddress,
     MethodNames.add,
     maxContractExecutionEnergy,
+    BigInt(0),
+    onStatusUpdate,
   );
 }
 
 /**
- * Transfers token ownership from the current owner to {@link account}.
+ * Transfers token ownership from the current owner to {@link payerAccount}.
  * @param provider Wallet Provider.
- * @param account Account address buying the token.
+ * @param payerAccount Account address buying the token.
+ * @param to Account address receiving the token.
  * @param marketContractAddress Market contract address.
  * @param nftContractAddress CIS-NFT contract address.
  * @param tokenId Hex encoded Token Id
@@ -91,22 +126,37 @@ export async function add(
  * @param maxContractExecutionEnergy Max Energy allowed for the transaction.
  * @returns Transaction outcomes.
  */
-export async function transfer(
-  provider: WalletApi,
-  account: string,
-  marketContractAddress: ContractAddress,
-  nftContractAddress: ContractAddress,
-  tokenId: string,
-  priceCcd: bigint,
-  owner: string,
-  quantity: bigint,
-  contractInfo: ContractInfo,
+export async function transfer({
+  provider,
+  payerAccount,
+  to,
+  marketContractAddress,
+  nftContractAddress,
+  tokenId,
+  priceCcd,
+  owner,
+  quantity,
+  contractInfo,
   maxContractExecutionEnergy = BigInt(9999),
-): Promise<Record<string, TransactionSummary>> {
+  onStatusUpdate = (status, txnHash) => console.log(`txn #${txnHash}, status:${status}`),
+}: {
+  provider: WalletApi;
+  payerAccount: string;
+  to: string;
+  marketContractAddress: ContractAddress;
+  nftContractAddress: ContractAddress;
+  tokenId: string;
+  priceCcd: bigint;
+  owner: string;
+  quantity: bigint;
+  contractInfo: ContractInfo;
+  maxContractExecutionEnergy?: bigint;
+  onStatusUpdate?: (status: TransactionStatusEnum, txnHash: string) => void;
+}): Promise<Record<string, TransactionSummary>> {
   const paramJson: TransferParams = {
     cis_contract_address: toParamContractAddress(nftContractAddress),
     token_id: tokenId,
-    to: account,
+    to,
     owner,
     quantity: quantity.toString(),
   };
@@ -115,11 +165,12 @@ export async function transfer(
     provider,
     contractInfo,
     paramJson as unknown as SmartContractParameters,
-    account,
+    payerAccount,
     marketContractAddress,
     MethodNames.transfer,
     maxContractExecutionEnergy,
     priceCcd * quantity,
+    onStatusUpdate,
   );
 }
 
@@ -135,6 +186,14 @@ export interface TokenListItem {
   owner: string;
   royalty: number;
   primaryOwner: string;
+  quantity: bigint;
+}
+
+export type OwnedTokenList = OwnedTokenListItem[];
+export interface OwnedTokenListItem {
+  tokenId: string;
+  contract: ContractAddress;
+  owner: string;
   quantity: bigint;
 }
 

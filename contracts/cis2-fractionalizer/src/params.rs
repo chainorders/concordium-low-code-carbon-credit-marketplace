@@ -37,7 +37,7 @@ pub struct TokenMetadata {
 
 impl TokenMetadata {
     fn get_hash_bytes(&self) -> Option<[u8; 32]> {
-        match hex::decode(self.hash.to_owned()) {
+        match hex::decode(&self.hash) {
             Ok(v) => {
                 let slice = v.as_slice();
                 match slice.try_into() {

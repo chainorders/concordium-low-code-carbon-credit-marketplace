@@ -1,17 +1,11 @@
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useState } from 'react';
 
-import { WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { ContractAddress } from "@concordium/web-sdk";
-import { Button, Stack, TextField, Typography } from "@mui/material";
+import { ContractAddress } from '@concordium/web-sdk';
+import { Button, Stack, TextField, Typography } from '@mui/material';
 
-import { ContractInfo, initContract } from "../models/ConcordiumContractClient";
+import { connectToWallet, ContractInfo, initContract } from '../models/ConcordiumContractClient';
 
-function MarketplaceContractInit(props: {
-  provider: WalletApi;
-  account: string;
-  contractInfo: ContractInfo;
-  onDone: (address: ContractAddress) => void;
-}) {
+function MarketplaceContractInit(props: { contractInfo: ContractInfo; onDone: (address: ContractAddress) => void }) {
   const [state, setState] = useState({
     error: "",
     processing: false,
@@ -21,15 +15,17 @@ function MarketplaceContractInit(props: {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const commission = parseInt(formData.get("commission")?.toString() || "0");
-    setState({ ...state, processing: true });
+    setState({ ...state, processing: true, error: "" });
 
     const params = { commission: commission * 100 };
-    initContract(props.provider, props.contractInfo, props.account, params)
+    connectToWallet()
+      .then((wallet) => initContract(wallet.provider, props.contractInfo, wallet.account, params))
       .then((address) => {
         setState({ ...state, processing: false });
         props.onDone(address);
       })
       .catch((err: Error) => {
+        console.error(err);
         setState({ ...state, processing: false, error: err.message });
       });
   }

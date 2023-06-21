@@ -1,8 +1,8 @@
 {
   "root": true,
   "extends": [
-    "prettier",
-    "plugin:prettier/recommended",
+    // "prettier",
+    // "plugin:prettier/recommended",
     "eslint:recommended",
     // "plugin:react/recommended",
     "plugin:@typescript-eslint/eslint-recommended",

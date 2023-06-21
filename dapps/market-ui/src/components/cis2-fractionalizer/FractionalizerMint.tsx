@@ -1,65 +1,98 @@
-import { WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { ContractAddress } from "@concordium/web-sdk";
-import { Alert, Button, Stack, TextField, Typography } from "@mui/material";
-import DisplayError from "../ui/DisplayError";
-import { useState, FormEvent } from "react";
-import { FRACTIONALIZER_CONTRACT_INFO } from "../../Constants";
-import { mint } from "../../models/FractionalizerClient";
+import { FormEvent, useState } from 'react';
+
+import { ContractAddress, TransactionStatusEnum } from '@concordium/web-sdk';
+import { Alert, AlertColor, Button, Container, Stack, TextField, Typography } from '@mui/material';
+
+import { FRACTIONALIZER_CONTRACT_INFO } from '../../Constants';
+import { connectToWallet } from '../../models/ConcordiumContractClient';
+import { mint, MintParams } from '../../models/FractionalizerClient';
+import { default as SnackbarAlert } from '../ui/Alert';
+import DisplayError from '../ui/DisplayError';
+import TransactionProgress from '../ui/TransactionProgress';
 
 export default function FractionalizerMint(props: {
+  defaultMetadataUrl: string;
+  defaultMetadataHash: string;
+  defaultTokenQuantity: string;
   collateralContractAddress: ContractAddress;
   collateralTokenId: string;
-  provider: WalletApi;
-  account: string;
   fracContractAddress: ContractAddress;
+  defaultTokenId?: string;
+  disableMetadataUrlUpdate?: boolean;
+  disableQuantityUpdate?: boolean;
+  disableMetadataHashUpdate?: boolean;
   onDone: (tokenId: string, quantity: string) => void;
 }) {
+  const [txn, setTxn] = useState<{ hash?: string; status?: TransactionStatusEnum }>({});
   const [state, setState] = useState({
     error: "",
     inProgress: false,
   });
   const [form, setForm] = useState({
-    tokenId: "01",
-    quantity: "1",
-    metadataUrl: "",
-    metadataHash: "",
+    tokenId: props.defaultTokenId || "01",
+    quantity: props.defaultTokenQuantity,
+    metadataUrl: props.defaultMetadataUrl,
+    metadataHash: props.defaultMetadataHash,
   });
-
+  const [alertState, setAlertState] = useState<{
+    open: boolean;
+    message: string;
+    severity?: AlertColor;
+  }>({ open: false, message: "" });
   function setFormValue(key: string, value: string) {
     setForm({ ...form, [key]: value });
+    setState({ ...state, error: "" });
   }
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setState({ ...state, inProgress: true });
-    mint(
-      props.provider,
-      props.account,
-      props.fracContractAddress,
-      {
-        owner: { Account: [props.account] },
-        tokens: [
-          [
-            form.tokenId,
-            {
-              amount: form.quantity,
-              contract: {
-                index: Number(props.collateralContractAddress.index),
-                subindex: Number(props.collateralContractAddress.subindex),
+    setState({ ...state, inProgress: true, error: "" });
+    connectToWallet()
+      .then(async (wallet) => {
+        const paramsJson = {
+          owner: { Account: [wallet.account] },
+          tokens: [
+            [
+              form.tokenId,
+              {
+                amount: form.quantity,
+                contract: {
+                  index: Number(props.collateralContractAddress.index),
+                  subindex: Number(props.collateralContractAddress.subindex),
+                },
+                token_id: props.collateralTokenId,
+                metadata: {
+                  url: form.metadataUrl,
+                  hash: form.metadataHash,
+                },
               },
-              token_id: props.collateralTokenId,
-              metadata: {
-                url: form.metadataUrl,
-                hash: form.metadataHash,
-              },
-            },
+            ],
           ],
-        ],
-      },
-      FRACTIONALIZER_CONTRACT_INFO,
-    ).then(() => {
-      setState({ ...state, inProgress: false });
-      props.onDone(form.tokenId, form.quantity);
-    });
+        } as MintParams;
+
+        return mint(
+          wallet.provider,
+          wallet.account,
+          props.fracContractAddress,
+          paramsJson,
+          FRACTIONALIZER_CONTRACT_INFO,
+          BigInt(9999),
+          (status, hash) => setTxn({ hash, status }),
+        );
+      })
+      .then(() => {
+        setState({ ...state, inProgress: false });
+        setAlertState({
+          open: true,
+          message: `Minted token: ${form.tokenId}, quantity: ${form.quantity}`,
+          severity: "success",
+        });
+        props.onDone(form.tokenId, form.quantity);
+      })
+      .catch((e: Error) => {
+        console.error(e);
+        setState({ ...state, inProgress: false, error: e.message });
+      });
   }
 
   return (
@@ -86,7 +119,7 @@ export default function FractionalizerMint(props: {
         label="Token Quantity"
         variant="standard"
         type={"number"}
-        disabled={state.inProgress}
+        disabled={props.disableQuantityUpdate || state.inProgress}
         value={form.quantity.toString()}
         onChange={(e) => setFormValue("quantity", e.target.value)}
       />
@@ -96,7 +129,7 @@ export default function FractionalizerMint(props: {
         label="Metadata URL"
         variant="standard"
         type={"text"}
-        disabled={state.inProgress}
+        disabled={props.disableMetadataUrlUpdate || state.inProgress}
         value={form.metadataUrl.toString()}
         onChange={(e) => setFormValue("metadataUrl", e.target.value)}
       />
@@ -106,15 +139,25 @@ export default function FractionalizerMint(props: {
         label="Metadata Hash"
         variant="standard"
         type={"text"}
-        disabled={state.inProgress}
+        disabled={props.disableMetadataHashUpdate || state.inProgress}
         value={form.metadataHash.toString()}
         onChange={(e) => setFormValue("metadataHash", e.target.value)}
       />
       <DisplayError error={state.error} />
-      <Typography variant="body2">{state.inProgress ? "In Progress" : ""}</Typography>
+      {txn.hash && txn.status && (
+        <Container>
+          <TransactionProgress hash={txn.hash} status={txn.status} />
+        </Container>
+      )}
       <Button type="submit" variant="contained" disabled={state.inProgress}>
         Mint
       </Button>
+      <SnackbarAlert
+        open={alertState.open}
+        message={alertState.message}
+        onClose={() => setAlertState({ open: false, message: "" })}
+        severity={alertState.severity}
+      />
     </Stack>
   );
 }
