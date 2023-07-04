@@ -1,16 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
-import { CIS2, ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
-import { ArrowBackRounded } from '@mui/icons-material';
-import { Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography } from '@mui/material';
-import { Container } from '@mui/system';
+import { CIS2, ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk";
+import { ArrowBackRounded } from "@mui/icons-material";
+import { Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography } from "@mui/material";
+import { Container } from "@mui/system";
 
-import Cis2BatchMetadataPrepareOrAdd from '../../components/cis2/Cis2BatchMetadataPrepareOrAdd';
-import Cis2BatchMint from '../../components/cis2/Cis2BatchMint';
-import Cis2FindInstanceOrInit from '../../components/cis2/Cis2FindInstanceOrInit';
-import ConnectPinata from '../../components/ConnectPinata';
-import UploadFiles from '../../components/ui/UploadFiles';
-import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
+import Cis2BatchMetadataPrepareOrAdd from "../../components/cis2/Cis2BatchMetadataPrepareOrAdd";
+import Cis2BatchMint from "../../components/cis2/Cis2BatchMint";
+import Cis2FindInstanceOrInit from "../../components/cis2/Cis2FindInstanceOrInit";
+import ConnectPinata from "../../components/ConnectPinata";
+import UploadFiles from "../../components/ui/UploadFiles";
+import { Cis2ContractInfo } from "../../models/ConcordiumContractClient";
+import { TokenInfo } from "../../models/ProjectNFTClient";
+import { Mint } from "../../models/WebClient";
+import Cis2TokensDisplay from "../../components/cis2/Cis2TokensDisplay";
 
 enum Steps {
   GetOrInitCis2,
@@ -18,6 +21,7 @@ enum Steps {
   UploadFiles,
   PrepareMetadata,
   Mint,
+  Minted,
 }
 
 type StepType = { step: Steps; title: string };
@@ -41,21 +45,23 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
       title: "Prepare Metadata",
     },
     { step: Steps.Mint, title: "Mint" },
+    { step: Steps.Minted, title: "Minted" },
   ];
 
   const [state, setState] = useState<{
     activeStep: StepType;
     nftContract?: ContractAddress;
-    tokenMetadataMap?: {
-      [tokenId: string]: [CIS2.MetadataUrl, string];
-    };
+    tokens: TokenInfo[];
     pinataJwt: string;
     files: File[];
   }>({
     activeStep: steps[0],
     pinataJwt: "",
     files: [],
+    tokens: [],
   });
+
+  const [mintedTokens, setMintedTokens] = useState<Mint[]>([]);
 
   function onGetCollectionAddress(address: ContractAddress) {
     setState({
@@ -89,11 +95,20 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
     });
   }
 
-  function onMetadataPrepared(tokenMetadataMap: { [tokenId: string]: [CIS2.MetadataUrl, string] }) {
+  function onMetadataPrepared(tokens: TokenInfo[]) {
+    console.log("MintPage: onMetadataPrepared", tokens);
     setState({
       ...state,
       activeStep: steps[4],
-      tokenMetadataMap,
+      tokens,
+    });
+  }
+
+  function onTokensMinted(mintedTokens: Mint[]) {
+    setMintedTokens(mintedTokens);
+    setState({
+      ...state,
+      activeStep: steps[5],
     });
   }
 
@@ -126,10 +141,12 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
           <Cis2BatchMint
             contractInfo={props.contractInfo}
             tokenContractAddress={state.nftContract!}
-            tokenMetadataMap={state.tokenMetadataMap!}
-            onDone={(tokens) => console.info("tokens minted:", tokens)}
+            tokenMetadataMap={state.tokens}
+            onDone={onTokensMinted}
           />
         );
+      case Steps.Minted:
+        return <Cis2TokensDisplay tokens={mintedTokens} />;
       default:
         return <>Invalid Step</>;
     }

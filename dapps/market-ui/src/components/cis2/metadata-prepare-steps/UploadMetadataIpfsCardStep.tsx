@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 
 import { IPFS_GATEWAY_URL } from '../../../Constants';
-import { Metadata } from '../../../models/Cis2Client';
+import { Metadata } from '../../../models/ProjectNFTClient';
 import { PinataClient } from '../../../models/PinataClient';
 import { tokenIdToTokenMetadataFileName } from '../../../models/Utils';
 import DisplayError from '../../ui/DisplayError';

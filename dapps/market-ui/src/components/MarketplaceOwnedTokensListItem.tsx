@@ -6,8 +6,8 @@ import { IconButton, Typography } from '@mui/material';
 import ImageListItem from '@mui/material/ImageListItem';
 import ImageListItemBar from '@mui/material/ImageListItemBar';
 
-import { Metadata } from '../models/Cis2Client';
-import { OwnedTokenListItem } from '../models/MarketplaceClient';
+import { Metadata } from '../models/ProjectNFTClient';
+import { OwnedTokenListItem } from '../models/CarbonCreditMarketClient';
 import { fetchJson } from '../models/Utils';
 import Cis2MetadataImageLazy from './cis2/Cis2MetadataImageLazy';
 

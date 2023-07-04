@@ -1,30 +1,48 @@
-import './App.css';
+import "./App.css";
 
-import { useState } from 'react';
-import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 
-import { createConcordiumClient } from '@concordium/web-sdk';
+import { createConcordiumClient } from "@concordium/web-sdk";
 import {
-    AppBar, Box, Button, Container, createTheme, Link, styled, ThemeProvider, Toolbar, Typography
-} from '@mui/material';
+  AppBar,
+  Box,
+  Button,
+  Container,
+  createTheme,
+  Link,
+  styled,
+  ThemeProvider,
+  Toolbar,
+  Typography,
+} from "@mui/material";
 
-import GuardedRoute from './components/auth/GuardedRoute';
-import UserAuth from './components/auth/UserAuth';
-import MarketplaceTokensList from './components/MarketplaceTokensList';
-import { useParamsContractAddress } from './components/utils';
+import GuardedRoute from "./components/auth/GuardedRoute";
+import UserAuth from "./components/auth/UserAuth";
+import MarketplaceTokensList from "./components/MarketplaceTokensList";
+import { useParamsContractAddress } from "./components/utils";
 import {
-    CIS2_MULTI_CONTRACT_INFO, CONCORDIUM_NODE_PORT, CONNCORDIUM_NODE_ENDPOINT,
-    FRACTIONALIZER_CONTRACT_ADDRESS, FRACTIONALIZER_CONTRACT_INFO, MARKET_CONTRACT_ADDRESS,
-    MARKETPLACE_CONTRACT_INFO
-} from './Constants';
-import CIS2Page from './pages/cis2/CIS2Page';
-import MintPage from './pages/cis2/MintPage';
-import FractionalizerPage from './pages/fractionalizer/FractionalizerPage';
-import FractionalizeTokenPage from './pages/fractionalizer/FractionalizeTokenPage';
-import MarketFindOrInit from './pages/marketplace/MarketFindOrInit';
-import MarketPage from './pages/marketplace/MarketPage';
-import SellPage from './pages/marketplace/SellPage';
-import { User } from './types/user';
+  CIS2_MULTI_CONTRACT_INFO,
+  CONCORDIUM_NODE_PORT,
+  CONNCORDIUM_NODE_ENDPOINT,
+  FRACTIONALIZER_CONTRACT_ADDRESS,
+  FRACTIONALIZER_CONTRACT_INFO,
+  MARKET_CONTRACT_ADDRESS,
+  MARKETPLACE_CONTRACT_INFO,
+} from "./Constants";
+import CIS2Page from "./pages/cis2/CIS2Page";
+import MintPage from "./pages/cis2/MintPage";
+import FractionalizerPage from "./pages/fractionalizer/FractionalizerPage";
+import FractionalizeTokenPage from "./pages/fractionalizer/FractionalizeTokenPage";
+import MarketFindOrInit from "./pages/marketplace/MarketFindOrInit";
+import MarketPage from "./pages/marketplace/MarketPage";
+import SellPage from "./pages/marketplace/SellPage";
+import { User } from "./types/user";
+import ProjectRetirePage from "./pages/cis2/ProjectRetirePage";
+import FractionalizerRetirePage from "./pages/fractionalizer/FractionalizerRetirePage";
+import ProjectRetirements from "./components/cis2/ProjectRetirements";
+import FractionalizerRetirements from "./components/cis2-fractionalizer/FractionalizerRetirements";
+import Cis2BalanceOf from "./components/cis2/Cis2BalanceOf";
 
 const theme = createTheme({
   palette: {
@@ -130,11 +148,32 @@ function App() {
                       />
                     }
                   />
+                  <Route
+                    path="retire"
+                    element={
+                      <ProjectRetirePage
+                        grpcClient={state.grpcClient}
+                        contractInfo={CIS2_MULTI_CONTRACT_INFO}
+                        onDone={() => alert("tokens retireds")}
+                      />
+                    }
+                  />
+                  <Route path="retirements" element={<ProjectRetirements />} />
+                  <Route
+                    path="balanceOf"
+                    element={
+                      <Cis2BalanceOf
+                        grpcClient={state.grpcClient}
+                        contractName={CIS2_MULTI_CONTRACT_INFO.contractName}
+                        defaultAccount={user?.account}
+                      />
+                    }
+                  />
                   <Route path="" element={<Navigate to={"mint"} replace={true} />} />
                 </Route>
               </Route>
               <Route element={<GuardedRoute isRouteAccessible={!!user?.account} redirectRoute="/market" />}>
-                <Route path="/fractionalizer" element={<FractionalizerPage/>}>
+                <Route path="/fractionalizer" element={<FractionalizerPage />}>
                   <Route
                     path="fractionalize"
                     element={
@@ -146,14 +185,32 @@ function App() {
                     }
                   />
                   <Route
-                    path=""
+                    path="retire"
                     element={
-                      <Navigate
-                        to={`fractionalize`}
-                        replace={true}
+                      <FractionalizerRetirePage
+                        onDone={() => alert("tokens retireds")}
+                        grpcClient={state.grpcClient!}
+                        contractInfo={FRACTIONALIZER_CONTRACT_INFO}
+                        defaultContractAddress={fracContract}
                       />
                     }
                   />
+                  <Route
+                    path="retirements"
+                    element={<FractionalizerRetirements defaultContractAddress={fracContract} />}
+                  />
+                  <Route
+                    path="balanceOf"
+                    element={
+                      <Cis2BalanceOf
+                        grpcClient={state.grpcClient}
+                        contractName={FRACTIONALIZER_CONTRACT_INFO.contractName}
+                        defaultAccount={user?.account}
+                        defaultContractAddress={fracContract}
+                      />
+                    }
+                  />
+                  <Route path="" element={<Navigate to={`fractionalize`} replace={true} />} />
                 </Route>
               </Route>
               <Route path="*" element={<Navigate to={"/market"} replace={true} />} />

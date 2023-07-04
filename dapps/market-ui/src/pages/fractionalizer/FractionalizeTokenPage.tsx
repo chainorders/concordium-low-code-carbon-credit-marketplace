@@ -10,9 +10,9 @@ import FractionalizerMint from '../../components/cis2-fractionalizer/Fractionali
 import PrepareMetadata from '../../components/cis2-fractionalizer/PrepareMetadata';
 import UploadMetadata from '../../components/cis2-fractionalizer/UploadMetadata';
 import Cis2Transfer from '../../components/cis2/Cis2Transfer';
-import { Metadata } from '../../models/Cis2Client';
+import { Metadata } from '../../models/ProjectNFTClient';
 import { ContractInfo } from '../../models/ConcordiumContractClient';
-import { getCarbonCreditQuantityAttribute } from '../../models/FractionalizerClient';
+import { getCarbonCreditQuantityAttribute } from '../../models/ProjectFractionalizerClient';
 import FractionalizerFindOrInit from './FractionalizerFindOrInit';
 
 enum Steps {
@@ -129,7 +129,7 @@ function FractionalizeTokenPage(props: {
             grpcClient={props.grpcClient}
             to={{
               address: contract,
-              hookName: "onReceivingCIS2",
+              hookName: "onCis2Recieved",
             }}
             onDone={(address, tokenId, contractName, quantity) =>
               onTransferred(address, tokenId, contractName, quantity)

@@ -1,26 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
-import { CIS2 } from '@concordium/web-sdk';
-import { Button, ButtonGroup, Grid, Typography } from '@mui/material';
+import { CIS2 } from "@concordium/web-sdk";
+import { Button, ButtonGroup, Grid, Typography } from "@mui/material";
 
-import { toTokenId } from '../../models/Cis2Client';
-import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
-import Cis2BatchItemMetadataAdd from './Cis2BatchItemMetadataAdd';
+import { TokenInfo, toTokenId } from "../../models/ProjectNFTClient";
+import { Cis2ContractInfo } from "../../models/ConcordiumContractClient";
+import Cis2BatchItemMetadataAdd from "./Cis2BatchItemMetadataAdd";
+
+interface Tokens {
+  [tokenId: string]: TokenInfo;
+}
 
 function Cis2BatchMetadataAdd(props: {
   contractInfo: Cis2ContractInfo;
-  onDone: (tokens: { [tokenId: string]: [CIS2.MetadataUrl, string] }) => void;
+  onDone: (tokens: Tokens) => void;
   startingTokenId: number;
 }) {
   const [state, setState] = useState<{
     error: string;
-    tokens: { tokenId: string; tokenInfo?: [CIS2.MetadataUrl, string] }[];
+    tokens: { tokenId: string; tokenInfo?: TokenInfo }[];
   }>({
     error: "",
     tokens: [],
   });
 
-  function onMetadataPrepared(index: number, tokenId: string, tokenInfo: [CIS2.MetadataUrl, string]) {
+  function onMetadataPrepared(index: number, tokenId: string, tokenInfo: TokenInfo) {
     const tokens = [...state.tokens];
     tokens[index] = { tokenId, tokenInfo };
     setState({ ...state, tokens });
@@ -51,7 +55,7 @@ function Cis2BatchMetadataAdd(props: {
       return;
     }
 
-    const ret: { [tokenId: string]: [CIS2.MetadataUrl, string] } = {};
+    const ret: Tokens = {};
     state.tokens.filter((t) => t.tokenInfo).forEach((t) => (ret[t.tokenId] = t.tokenInfo!));
 
     props.onDone(ret);

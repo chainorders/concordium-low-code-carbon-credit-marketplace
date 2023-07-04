@@ -1,30 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
-import { CIS2Contract, InvokeContractFailedResult, RejectReasonTag } from '@concordium/web-sdk';
-import { Button, ButtonGroup, Stack, TextField, Typography } from '@mui/material';
+import {
+  CIS2Contract,
+  ConcordiumGRPCClient,
+  ContractAddress,
+  InvokeContractFailedResult,
+  RejectReasonTag,
+} from "@concordium/web-sdk";
+import { Button, ButtonGroup, Stack, TextField, Typography } from "@mui/material";
+import DisplayError from "../ui/DisplayError";
 
 function Cis2BalanceOf(props: {
-  account: string;
-  cis2Contract: CIS2Contract;
-  onDone: (tokenId: string, balance: bigint) => void;
+  grpcClient: ConcordiumGRPCClient;
+  contractName: string;
+  defaultContractAddress?: ContractAddress;
+  defaultAccount?: string;
 }) {
+  const [form, setForm] = useState({
+    tokenId: "",
+    index: props.defaultContractAddress?.index.toString() || "",
+    subindex: props.defaultContractAddress?.subindex.toString() || "",
+    account: props.defaultAccount || "",
+    contractName: props.contractName,
+  });
+
+  const [balance, setBalance] = useState("");
+
   const [state, setState] = useState({
     checking: false,
     error: "",
-    tokenId: "",
   });
 
   function checkBalance() {
     setState({ ...state, checking: true, error: "" });
-    props.cis2Contract
-      .balanceOf({ tokenId: state.tokenId, address: props.account })
+    setBalance("");
+
+    if (!form.index || !form.subindex || !form.account || !form.tokenId) {
+      setState({ ...state, checking: false, error: "Please fill out all fields" });
+      return;
+    }
+
+    const cis2Contract = new CIS2Contract(
+      props.grpcClient,
+      {
+        index: BigInt(form.index),
+        subindex: BigInt(form.subindex),
+      },
+      form.contractName,
+    );
+
+    cis2Contract
+      .balanceOf({ tokenId: form.tokenId, address: form.account })
       .then((balance) => {
-        if (balance > 0) {
-          setState({ ...state, checking: false, error: "" });
-          props.onDone(state.tokenId, balance);
-        } else {
-          setState({ ...state, checking: false, error: "Not enough balance" });
-        }
+        setState({ ...state, checking: false, error: "" });
+        setBalance(balance.toString());
       })
       .catch((err: Error) => {
         if (err.cause) {
@@ -62,18 +91,49 @@ function Cis2BalanceOf(props: {
   return (
     <Stack component={"form"} spacing={2}>
       <TextField
+        id="contract-index"
+        name="contractIndex"
+        label="Contract Index"
+        variant="standard"
+        type={"number"}
+        disabled={state.checking}
+        value={form.index}
+        onChange={(e) => setForm({ ...form, index: e.target.value })}
+      />
+      <TextField
+        id="contract-subindex"
+        name="contractSubindex"
+        label="Contract Sub Index"
+        variant="standard"
+        type={"number"}
+        disabled={state.checking}
+        value={form.subindex}
+        onChange={(e) => setForm({ ...form, subindex: e.target.value })}
+      />
+      <TextField
+        id="account"
+        name="account"
+        label="Account"
+        variant="standard"
+        type={"string"}
+        disabled={state.checking}
+        value={form.account}
+        onChange={(e) => setForm({ ...form, account: e.target.value })}
+      />
+      <TextField
         id="token-id"
         label="Token Id"
         variant="standard"
-        value={state.tokenId}
-        onChange={(v) => setState({ ...state, tokenId: v.target.value })}
+        value={form.tokenId}
+        onChange={(v) => setForm({ ...form, tokenId: v.target.value })}
         disabled={state.checking}
       />
-      {state.error && (
-        <Typography component="div" color="error" variant="button">
-          {state.error}
+      {balance && (
+        <Typography component="div" variant="body1">
+          Balance: {balance.toString()}
         </Typography>
       )}
+      <DisplayError error={state.error} />
       {state.checking && <Typography component="div">Checking..</Typography>}
       <ButtonGroup fullWidth size="large" disabled={state.checking}>
         <Button variant="contained" onClick={() => onOkClicked()}>

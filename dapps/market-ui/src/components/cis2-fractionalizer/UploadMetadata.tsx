@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import { IPFS_GATEWAY_URL } from '../../Constants';
-import { Metadata } from '../../models/Cis2Client';
+import { Metadata } from '../../models/ProjectNFTClient';
 import { PinataClient } from '../../models/PinataClient';
 import ConnectPinata from '../ConnectPinata';
 

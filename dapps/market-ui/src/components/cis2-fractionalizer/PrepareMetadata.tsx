@@ -3,8 +3,8 @@ import { useEffectOnce } from 'usehooks-ts';
 
 import { CIS2Contract } from '@concordium/web-sdk';
 
-import { Metadata } from '../../models/Cis2Client';
-import { getDefaultAttributes } from '../../models/FractionalizerClient';
+import { Metadata } from '../../models/ProjectNFTClient';
+import { getDefaultAttributes } from '../../models/ProjectFractionalizerClient';
 import { fetchJson } from '../../models/Utils';
 import Cis2TokenMetadataForm from '../cis2/Cis2TokenMetadataForm';
 import Alert from '../ui/Alert';
@@ -40,7 +40,7 @@ export default function PrepareMetadata(props: {
       .tokenMetadata(cis2TokenId)
       .then((m) => fetchJson<Metadata>(m.url))
       .then((metadata) => {
-        const mergedMetadata = mergeMetadata(metadata, { attributes: getDefaultAttributes(metadata.attributes) });
+        const mergedMetadata = mergeMetadata({ attributes: getDefaultAttributes(metadata.attributes) }, metadata);
         setCis2TokenMetadata(mergedMetadata);
         setIsLoadingMetadata(false);
       })

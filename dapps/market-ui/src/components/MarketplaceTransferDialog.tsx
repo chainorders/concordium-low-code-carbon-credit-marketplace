@@ -11,7 +11,7 @@ import TextField from '@mui/material/TextField';
 
 import { MARKETPLACE_CONTRACT_INFO } from '../Constants';
 import { connectToWallet } from '../models/ConcordiumContractClient';
-import { TokenListItem, transfer as transferWallet } from '../models/MarketplaceClient';
+import { TokenListItem, transfer as transferWallet } from '../models/CarbonCreditMarketClient';
 import { transfer as transferWert } from '../models/WertClient';
 import { User } from '../types/user';
 import DisplayError from './ui/DisplayError';

@@ -1,23 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
-import { CIS2 } from '@concordium/web-sdk';
-import { Grid, Typography } from '@mui/material';
+import { Grid, Typography } from "@mui/material";
 
-import { toTokenId } from '../../models/Cis2Client';
-import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
-import Cis2BatchItemMetadataPrepare from './Cis2BatchItemMetadataPrepare';
+import { TokenInfo, toTokenId } from "../../models/ProjectNFTClient";
+import { Cis2ContractInfo } from "../../models/ConcordiumContractClient";
+import Cis2BatchItemMetadataPrepare from "./Cis2BatchItemMetadataPrepare";
+interface Tokens {
+  [tokenId: string]: TokenInfo;
+}
 
 function Cis2BatchMetadataPrepare(props: {
   files: File[];
   pinataJwt: string;
   contractInfo: Cis2ContractInfo;
-  onDone: (tokens: { [tokenId: string]: [CIS2.MetadataUrl, string] }) => void;
+  onDone: (tokens: Tokens) => void;
 }) {
   const filesMap: {
     [filename: string]: {
       file: File;
       tokenId?: string;
-      tokenInfo?: [CIS2.MetadataUrl, string];
+      tokenInfo?: TokenInfo;
     };
   } = {};
   props.files.forEach((file) => (filesMap[file.name] = { file }));
@@ -29,7 +31,7 @@ function Cis2BatchMetadataPrepare(props: {
     preparedFilesCount: 0,
   });
 
-  function onMetadataPrepared(filename: string, tokenId: string, tokenInfo: [CIS2.MetadataUrl, string]) {
+  function onMetadataPrepared(filename: string, tokenId: string, tokenInfo: TokenInfo) {
     const newState = {
       files: {
         ...state.files,
@@ -46,7 +48,7 @@ function Cis2BatchMetadataPrepare(props: {
     setState({ ...state, ...newState, preparedFilesCount });
 
     if (preparedFilesCount === props.files.length) {
-      const ret: { [tokenId: string]: [CIS2.MetadataUrl, string] } = {};
+      const ret: Tokens = {};
       Object.values(newState.files).forEach((f) => (ret[f.tokenId as string] = f.tokenInfo!));
 
       props.onDone(ret);

@@ -7,7 +7,7 @@ import { Button, Container, Stack, TextField, Typography } from '@mui/material';
 
 import { MARKETPLACE_CONTRACT_INFO } from '../Constants';
 import { connectToWallet, toParamContractAddress } from '../models/ConcordiumContractClient';
-import { add, AddParams } from '../models/MarketplaceClient';
+import { add, AddParams } from '../models/CarbonCreditMarketClient';
 import TransactionProgress from './ui/TransactionProgress';
 
 interface MarketplaceAddProps {

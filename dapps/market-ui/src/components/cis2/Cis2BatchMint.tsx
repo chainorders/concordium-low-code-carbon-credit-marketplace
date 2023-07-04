@@ -1,61 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
-import { CIS2, ContractAddress, TransactionStatusEnum } from '@concordium/web-sdk';
-import { Alert, AlertColor, Button, Grid, Stack, Typography } from '@mui/material';
+import { ContractAddress, TransactionStatusEnum } from "@concordium/web-sdk";
+import { Alert, Button, Grid, Stack, Typography } from "@mui/material";
 
-import { mint } from '../../models/Cis2Client';
-import { connectToWallet, ContractInfo } from '../../models/ConcordiumContractClient';
-import { default as SnackbarAlert } from '../ui/Alert';
-import TransactionProgress from '../ui/TransactionProgress';
-import Cis2BatchItemMint from './Cis2BatchItemMint';
-
-interface TokenState {
-  tokenInfo: [CIS2.MetadataUrl, string];
-  minting: boolean;
-  minted: boolean;
-  error: string;
-}
+import { mint, TokenInfo } from "../../models/ProjectNFTClient";
+import { connectToWallet, ContractInfo } from "../../models/ConcordiumContractClient";
+import TransactionProgress from "../ui/TransactionProgress";
+import Cis2BatchItemMint from "./Cis2BatchItemMint";
+import DisplayError from "../ui/DisplayError";
+import { Mint } from "../../models/WebClient";
 
 function Cis2BatchMint(props: {
   contractInfo: ContractInfo;
   tokenContractAddress: ContractAddress;
-  tokenMetadataMap: { [tokenId: string]: [CIS2.MetadataUrl, string] };
-  onDone: (data: { [tokenId: string]: [CIS2.MetadataUrl, string] }) => void;
+  tokenMetadataMap: TokenInfo[];
+  /**
+   * Called by the component on successfull minting with an array of generated token ids.
+   * @param data Token Ids
+   * @returns
+   */
+  onDone: (data: Mint[]) => void;
 }) {
-  const [alertState, setAlertState] = useState<{
-    open: boolean;
-    message: string;
-    severity?: AlertColor;
-  }>({ open: false, message: "" });
-
-  const tokens: { [tokenId: string]: TokenState } = {};
-
-  Object.keys(props.tokenMetadataMap).forEach(
-    (tokenId) =>
-      (tokens[tokenId] = {
-        tokenInfo: props.tokenMetadataMap[tokenId],
-        minting: false,
-        minted: false,
-        error: "",
-      }),
-  );
-
   const [state, setState] = useState({
-    tokens,
-    mintingCount: 0,
     minted: false,
+    minting: false,
+    error: "",
   });
   const [txn, setTxn] = useState<{ hash: string; status: TransactionStatusEnum }>();
 
   function onMintClicked() {
-    const tokens = state.tokens;
-    const mintingCount = Object.keys(tokens).length;
-    setTokensState(tokens, true, false);
-    setState({
-      ...state,
-      tokens,
-      mintingCount: state.mintingCount + mintingCount,
-    });
+    setState({ ...state, minting: true, error: "" });
+    setTxn(undefined);
     connectToWallet()
       .then((wallet) =>
         mint(
@@ -68,28 +43,13 @@ function Cis2BatchMint(props: {
           (status, hash) => setTxn({ status, hash }),
         ),
       )
-      .then(() => {
-        setTokensState(tokens, false, true);
-        const mintingCount = Object.keys(tokens).length;
-        setState({
-          ...state,
-          tokens,
-          mintingCount: state.mintingCount + mintingCount,
-          minted: true,
-        });
-        setAlertState({ open: true, message: "Minted", severity: "success" });
-        props.onDone(props.tokenMetadataMap);
+      .then((tokens) => {
+        setState({ ...state, minting: false, minted: true });
+        props.onDone(tokens);
       })
       .catch((e: Error) => {
-        setTokensState(tokens, false, false, e.message);
-        const mintingCount = Object.keys(tokens).length;
-        setState({
-          ...state,
-          tokens,
-          mintingCount: state.mintingCount - mintingCount,
-          minted: false,
-        });
-        setAlertState({ open: true, message: "Error Minting", severity: "error" });
+        console.error(e);
+        setState({ ...state, minting: false, minted: false, error: e.message });
       });
   }
 
@@ -104,50 +64,25 @@ function Cis2BatchMint(props: {
         </Typography>
       </Alert>
       <Grid container spacing={2}>
-        {Object.keys(state.tokens).map((tokenId) => (
-          <Grid item xs={4} key={tokenId}>
+        {props.tokenMetadataMap.map((token) => (
+          <Grid item xs={4} key={token.metadataUrl.url}>
             <Cis2BatchItemMint
               contractInfo={props.contractInfo}
-              error={state.tokens[tokenId].error}
-              key={tokenId}
-              tokenInfo={state.tokens[tokenId].tokenInfo}
-              minted={state.tokens[tokenId].minted}
-              minting={state.tokens[tokenId].minting}
-              tokenId={tokenId}
+              key={token.metadataUrl.url}
+              token={token}
+              minted={state.minted}
+              minting={state.minting}
             />
           </Grid>
         ))}
       </Grid>
-      <Button variant="contained" disabled={state.mintingCount > 0 || state.minted} onClick={() => onMintClicked()}>
+      <Button variant="contained" onClick={() => onMintClicked()}>
         Mint
       </Button>
       {txn && <TransactionProgress hash={txn.hash} status={txn.status} />}
-      <SnackbarAlert
-        open={alertState.open}
-        message={alertState.message}
-        onClose={() => setAlertState({ open: false, message: "" })}
-        severity={alertState.severity}
-      />
+      <DisplayError error={state.error} />
     </Stack>
   );
-
-  function setTokensState(
-    tokens: { [tokenId: string]: TokenState },
-    isMinting: boolean,
-    isMinted: boolean,
-    error?: string,
-  ) {
-    Object.keys(tokens).forEach((tokenId) => {
-      tokens[tokenId].error = error || "";
-      tokens[tokenId].minting = isMinting;
-
-      if (isMinting) {
-        tokens[tokenId].minted = false;
-      } else {
-        tokens[tokenId].minted = isMinted;
-      }
-    });
-  }
 }
 
 export default Cis2BatchMint;

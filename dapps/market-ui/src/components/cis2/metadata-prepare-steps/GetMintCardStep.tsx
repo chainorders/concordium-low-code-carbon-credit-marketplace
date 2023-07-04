@@ -1,7 +1,7 @@
-import React from 'react';
+import React from "react";
 
-import { CIS2 } from '@concordium/web-sdk';
-import { Card, CardContent, CardMedia, Link, SxProps, Theme, Typography } from '@mui/material';
+import { CIS2 } from "@concordium/web-sdk";
+import { Card, CardContent, CardMedia, Link, SxProps, Theme, Typography } from "@mui/material";
 
 const cardMediaSx: SxProps<Theme> = { maxHeight: "200px" };
 
@@ -10,7 +10,7 @@ function GetMintCardStep(props: {
   tokenId: string;
   imageIpfsUrl?: string;
   metadataUrl: CIS2.MetadataUrl;
-  quantity?: string;
+  maturityTime: Date;
 }) {
   return (
     <Card variant="outlined">
@@ -20,11 +20,9 @@ function GetMintCardStep(props: {
         <Typography variant="caption" component="div">
           Token Id: {props.tokenId}
         </Typography>
-        {props.quantity && (
-          <Typography variant="caption" component="div">
-            Quantity: {props.quantity}
-          </Typography>
-        )}
+        <Typography variant="caption" component="div">
+          Maturity Time: {props.maturityTime.toLocaleString()}
+        </Typography>
         <Link href={props.imageIpfsUrl} variant="caption" component="div">
           Image IPFS Url
         </Link>

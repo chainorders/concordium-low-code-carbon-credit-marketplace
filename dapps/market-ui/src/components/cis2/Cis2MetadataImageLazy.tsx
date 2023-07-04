@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { CIS2Contract } from '@concordium/web-sdk';
 import { Skeleton } from '@mui/material';
 
-import { Metadata } from '../../models/Cis2Client';
+import { Metadata } from '../../models/ProjectNFTClient';
 import { fetchJson } from '../../models/Utils';
 
 function Cis2MetadataImageLazy(props: { tokenId: string; cis2Contract: CIS2Contract }) {
