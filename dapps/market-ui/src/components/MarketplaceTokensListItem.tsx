@@ -9,8 +9,8 @@ import {
 } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 
-import { Metadata } from '../models/ProjectNFTClient';
 import { TokenListItem } from '../models/CarbonCreditMarketClient';
+import { Metadata } from '../models/ProjectNFTClient';
 import { fetchJson } from '../models/Utils';
 import { User } from '../types/user';
 import Cis2MetadataImageLazy from './cis2/Cis2MetadataImageLazy';

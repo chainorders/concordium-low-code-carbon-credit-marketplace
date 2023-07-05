@@ -1,6 +1,6 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from 'react-router-dom';
 
-import { AppBar, Button, Stack, Toolbar, Typography } from "@mui/material";
+import { AppBar, Button, Stack, Toolbar, Typography } from '@mui/material';
 
 export default function CIS2Page() {
   const navigate = useNavigate();
@@ -18,8 +18,8 @@ export default function CIS2Page() {
           <Button color="inherit" onClick={() => navigate(`retire`)}>
             Retire
           </Button>
-          <Button color="inherit" onClick={() => navigate(`retirements`)}>
-            Retirements
+          <Button color="inherit" onClick={() => navigate(`events`)}>
+            Events
           </Button>
           <Button color="inherit" onClick={() => navigate(`balanceOf`)}>
             Balance

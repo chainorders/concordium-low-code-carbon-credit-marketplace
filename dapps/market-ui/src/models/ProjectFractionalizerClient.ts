@@ -1,18 +1,13 @@
-import { SchemaWithContext, SmartContractParameters, WalletApi } from "@concordium/browser-wallet-api-helpers";
 import {
-  AccountTransactionType,
-  CIS2,
-  CIS2Contract,
-  ConcordiumGRPCClient,
-  ContractAddress,
-  RejectReasonTag,
-  TransactionStatusEnum,
-  TransactionSummary,
-} from "@concordium/web-sdk";
+    SchemaWithContext, SmartContractParameters, WalletApi
+} from '@concordium/browser-wallet-api-helpers';
+import {
+    AccountTransactionType, CIS2, CIS2Contract, ConcordiumGRPCClient, ContractAddress,
+    RejectReasonTag, TransactionStatusEnum, TransactionSummary
+} from '@concordium/web-sdk';
 
-import { Attribute } from "./ProjectNFTClient";
-import { ContractInfo, updateContract } from "./ConcordiumContractClient";
-import { waitAndThrowError } from "./ConcordiumContractClient";
+import { ContractInfo, updateContract, waitAndThrowError } from './ConcordiumContractClient';
+import { Attribute } from './ProjectNFTClient';
 
 export interface MintParams {
   owner: { Account: [string] };

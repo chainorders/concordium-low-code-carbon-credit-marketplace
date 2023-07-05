@@ -8,8 +8,8 @@ import { signSmartContractData } from '@wert-io/widget-sc-signer';
 import {
     MARKETPLACE_CONTRACT_INFO, WERT_NETWORK, WERT_ORIGIN, WERT_PARTNER_ID, WERT_PRIVATE_KEY
 } from '../Constants';
-import { toParamContractAddress } from './ConcordiumContractClient';
 import { MethodNames, TransferParams } from './CarbonCreditMarketClient';
+import { toParamContractAddress } from './ConcordiumContractClient';
 
 //@ts-ignore
 window.Buffer = Buffer;

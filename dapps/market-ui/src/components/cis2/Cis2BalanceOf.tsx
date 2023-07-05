@@ -1,14 +1,11 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
 import {
-  CIS2Contract,
-  ConcordiumGRPCClient,
-  ContractAddress,
-  InvokeContractFailedResult,
-  RejectReasonTag,
-} from "@concordium/web-sdk";
-import { Button, ButtonGroup, Stack, TextField, Typography } from "@mui/material";
-import DisplayError from "../ui/DisplayError";
+    CIS2Contract, ConcordiumGRPCClient, ContractAddress, InvokeContractFailedResult, RejectReasonTag
+} from '@concordium/web-sdk';
+import { Button, ButtonGroup, Stack, TextField, Typography } from '@mui/material';
+
+import DisplayError from '../ui/DisplayError';
 
 function Cis2BalanceOf(props: {
   grpcClient: ConcordiumGRPCClient;

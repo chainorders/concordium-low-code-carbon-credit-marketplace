@@ -1,10 +1,12 @@
-import { ConcordiumGRPCClient, ContractAddress, TransactionStatusEnum } from "@concordium/web-sdk";
-import { ContractInfo, connectToWallet } from "../../models/ConcordiumContractClient";
-import { useState } from "react";
-import { Button, Stack, TextField } from "@mui/material";
-import DisplayError from "../ui/DisplayError";
-import { retire } from "../../models/ProjectNFTClient";
-import TransactionProgress from "../ui/TransactionProgress";
+import { useState } from 'react';
+
+import { ConcordiumGRPCClient, ContractAddress, TransactionStatusEnum } from '@concordium/web-sdk';
+import { Button, Stack, TextField } from '@mui/material';
+
+import { connectToWallet, ContractInfo } from '../../models/ConcordiumContractClient';
+import { retire } from '../../models/ProjectNFTClient';
+import DisplayError from '../ui/DisplayError';
+import TransactionProgress from '../ui/TransactionProgress';
 
 export function ProjectRetire(props: {
   grpcClient: ConcordiumGRPCClient;

@@ -1,6 +1,10 @@
-import { Card, CardContent, CardMedia, Grid, Link, Skeleton, SxProps, Theme, Typography } from "@mui/material";
-import { Mint } from "../../models/WebClient";
-import LazyCis2Metadata from "./LazyCis2Metadata";
+import {
+    Card, CardContent, CardMedia, Grid, Link, Skeleton, SxProps, Theme, Typography
+} from '@mui/material';
+
+import { Mint } from '../../models/web/WebClient';
+import LazyCis2Metadata from './LazyCis2Metadata';
+
 const cardMediaSx: SxProps<Theme> = { maxHeight: "200px" };
 
 function Cis2TokenDisplay(props: { token: Mint }) {

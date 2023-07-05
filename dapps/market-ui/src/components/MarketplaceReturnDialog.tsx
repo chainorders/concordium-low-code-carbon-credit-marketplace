@@ -10,8 +10,8 @@ import DialogTitle from '@mui/material/DialogTitle';
 import TextField from '@mui/material/TextField';
 
 import { MARKETPLACE_CONTRACT_INFO } from '../Constants';
-import { connectToWallet } from '../models/ConcordiumContractClient';
 import { TokenListItem, transfer } from '../models/CarbonCreditMarketClient';
+import { connectToWallet } from '../models/ConcordiumContractClient';
 
 export default function MarketplaceReturnDialog(props: {
   isOpen: boolean;

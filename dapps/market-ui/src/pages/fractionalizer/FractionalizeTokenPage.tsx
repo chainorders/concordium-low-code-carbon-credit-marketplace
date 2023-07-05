@@ -10,9 +10,9 @@ import FractionalizerMint from '../../components/cis2-fractionalizer/Fractionali
 import PrepareMetadata from '../../components/cis2-fractionalizer/PrepareMetadata';
 import UploadMetadata from '../../components/cis2-fractionalizer/UploadMetadata';
 import Cis2Transfer from '../../components/cis2/Cis2Transfer';
-import { Metadata } from '../../models/ProjectNFTClient';
 import { ContractInfo } from '../../models/ConcordiumContractClient';
 import { getCarbonCreditQuantityAttribute } from '../../models/ProjectFractionalizerClient';
+import { Metadata } from '../../models/ProjectNFTClient';
 import FractionalizerFindOrInit from './FractionalizerFindOrInit';
 
 enum Steps {

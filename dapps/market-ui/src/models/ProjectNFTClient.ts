@@ -1,8 +1,10 @@
-import { SmartContractParameters, WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { CIS2, ContractAddress, TransactionStatusEnum, TransactionSummary } from "@concordium/web-sdk";
+import { SmartContractParameters, WalletApi } from '@concordium/browser-wallet-api-helpers';
+import {
+    CIS2, ContractAddress, TransactionStatusEnum, TransactionSummary
+} from '@concordium/web-sdk';
 
-import * as connClient from "./ConcordiumContractClient";
-import { projectNftGetTxnContractEvents } from "./WebClient";
+import * as connClient from './ConcordiumContractClient';
+import { projectNftGetTxnContractEvents } from './web/WebClient';
 
 interface MintParams {
   owner: { Account: [string] };

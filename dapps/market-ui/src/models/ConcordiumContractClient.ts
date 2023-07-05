@@ -1,18 +1,13 @@
-import { Buffer } from "buffer/";
+import { Buffer } from 'buffer/';
 
-import { detectConcordiumProvider, SmartContractParameters, WalletApi } from "@concordium/browser-wallet-api-helpers";
 import {
-  AccountAddress,
-  AccountTransactionType,
-  CcdAmount,
-  ConcordiumGRPCClient,
-  ContractAddress,
-  ModuleReference,
-  serializeUpdateContractParameters,
-  TransactionStatusEnum,
-  TransactionSummary,
-  UpdateContractPayload,
-} from "@concordium/web-sdk";
+    detectConcordiumProvider, SmartContractParameters, WalletApi
+} from '@concordium/browser-wallet-api-helpers';
+import {
+    AccountAddress, AccountTransactionType, CcdAmount, ConcordiumGRPCClient, ContractAddress,
+    ModuleReference, serializeUpdateContractParameters, TransactionStatusEnum, TransactionSummary,
+    UpdateContractPayload
+} from '@concordium/web-sdk';
 
 export interface ContractInfo {
   schemaBuffer: Buffer;

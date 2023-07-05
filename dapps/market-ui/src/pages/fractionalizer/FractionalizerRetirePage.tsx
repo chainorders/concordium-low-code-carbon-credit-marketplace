@@ -1,10 +1,14 @@
-import { ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk";
-import { ArrowBackRounded } from "@mui/icons-material";
-import { Container, Grid, IconButton, Paper, Stack, Step, StepLabel, Stepper, Typography } from "@mui/material";
-import { useState } from "react";
-import { ContractInfo } from "../../models/ConcordiumContractClient";
-import ContractFindInstance from "../../components/ContractFindInstance";
-import { FractionalizerRetire } from "../../components/cis2-fractionalizer/FractionalizerRetire";
+import { useState } from 'react';
+
+import { ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
+import { ArrowBackRounded } from '@mui/icons-material';
+import {
+    Container, Grid, IconButton, Paper, Stack, Step, StepLabel, Stepper, Typography
+} from '@mui/material';
+
+import { FractionalizerRetire } from '../../components/cis2-fractionalizer/FractionalizerRetire';
+import ContractFindInstance from '../../components/ContractFindInstance';
+import { ContractInfo } from '../../models/ConcordiumContractClient';
 
 const enum Steps {
   FindCis2Contract,

@@ -1,7 +1,7 @@
-import React from "react";
+import React from 'react';
 
-import { CIS2 } from "@concordium/web-sdk";
-import { Card, CardContent, CardMedia, Link, SxProps, Theme, Typography } from "@mui/material";
+import { CIS2 } from '@concordium/web-sdk';
+import { Card, CardContent, CardMedia, Link, SxProps, Theme, Typography } from '@mui/material';
 
 const cardMediaSx: SxProps<Theme> = { maxHeight: "200px" };
 

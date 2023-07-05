@@ -3,8 +3,8 @@ import { useEffectOnce } from 'usehooks-ts';
 
 import { CIS2Contract } from '@concordium/web-sdk';
 
-import { Metadata } from '../../models/ProjectNFTClient';
 import { getDefaultAttributes } from '../../models/ProjectFractionalizerClient';
+import { Metadata } from '../../models/ProjectNFTClient';
 import { fetchJson } from '../../models/Utils';
 import Cis2TokenMetadataForm from '../cis2/Cis2TokenMetadataForm';
 import Alert from '../ui/Alert';

@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { Stack, Typography } from "@mui/material";
+import { Stack, Typography } from '@mui/material';
 
-import { Cis2ContractInfo } from "../../models/ConcordiumContractClient";
-import Cis2BatchMetadataAdd from "./Cis2BatchMetadataAdd";
-import Cis2BatchMetadataPrepare from "./Cis2BatchMetadataPrepare";
-import { TokenInfo } from "../../models/ProjectNFTClient";
+import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
+import { TokenInfo } from '../../models/ProjectNFTClient';
+import Cis2BatchMetadataAdd from './Cis2BatchMetadataAdd';
+import Cis2BatchMetadataPrepare from './Cis2BatchMetadataPrepare';
 
 interface Tokens {
   [tokenId: string]: TokenInfo;

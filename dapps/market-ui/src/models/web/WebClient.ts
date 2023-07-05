@@ -1,4 +1,5 @@
-import { INDEXER_API_URL } from "../Constants";
+import { INDEXER_API_URL } from '../../Constants';
+import { ModuleEvent } from './Events';
 
 export type ProjectNftContractEvent = ProjectNftContractEventMint | ProjectNftContractEventRetire;
 
@@ -10,13 +11,11 @@ export interface ProjectNftContractEventMint {
   Mint: Mint[];
 }
 
-
 export interface Retire {
   owner: Owner;
   token_id: string;
-  amount?: string
+  amount?: string;
 }
-
 
 export interface Mint {
   maturity_time: string;
@@ -55,7 +54,7 @@ export const projectNftGetTxnContractEvents = async (txnHash: string): Promise<P
   return json as ProjectNftContractEvent[];
 };
 
-export const projectNFTRetirementEvents = async (
+export const getRetirementEvents = async (
   index: string,
   subindex: string,
   owner?: string,
@@ -74,6 +73,42 @@ export const projectNFTRetirementEvents = async (
 
   const json = await res.json();
   return json as ProjectNftContractEventRetire[];
+};
+
+export const getContractEvents = async (
+  index: string,
+  subindex: string,
+  account?: string,
+  eventType?: string,
+  page?: number,
+): Promise<{pageCount: number, events: ModuleEvent[]}> => {
+  const res = await fetch(`${INDEXER_API_URL}/contract-events`, {
+    method: "POST",
+    body: JSON.stringify({ index, subindex, account, eventType, page }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (res.status !== 200) {
+    throw new Error(`Failed to get contract events for index ${index} subindex ${subindex}`);
+  }
+
+  const json = await res.json();
+  return json as {pageCount: number, events: ModuleEvent[]};
+};
+
+export const getAccount = async (credential: string) => {
+  const res = await fetch(`${INDEXER_API_URL}/login`, {
+    method: "POST",
+    body: JSON.stringify({ credential }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const user = await res.json();
+  return user as { account: string; email: string };
 };
 
 const MAX_NB_RETRY = 50;

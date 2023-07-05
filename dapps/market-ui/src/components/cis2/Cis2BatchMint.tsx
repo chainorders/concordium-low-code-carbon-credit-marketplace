@@ -1,14 +1,14 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { ContractAddress, TransactionStatusEnum } from "@concordium/web-sdk";
-import { Alert, Button, Grid, Stack, Typography } from "@mui/material";
+import { ContractAddress, TransactionStatusEnum } from '@concordium/web-sdk';
+import { Alert, Button, Grid, Stack, Typography } from '@mui/material';
 
-import { mint, TokenInfo } from "../../models/ProjectNFTClient";
-import { connectToWallet, ContractInfo } from "../../models/ConcordiumContractClient";
-import TransactionProgress from "../ui/TransactionProgress";
-import Cis2BatchItemMint from "./Cis2BatchItemMint";
-import DisplayError from "../ui/DisplayError";
-import { Mint } from "../../models/WebClient";
+import { connectToWallet, ContractInfo } from '../../models/ConcordiumContractClient';
+import { mint, TokenInfo } from '../../models/ProjectNFTClient';
+import { Mint } from '../../models/web/WebClient';
+import DisplayError from '../ui/DisplayError';
+import TransactionProgress from '../ui/TransactionProgress';
+import Cis2BatchItemMint from './Cis2BatchItemMint';
 
 function Cis2BatchMint(props: {
   contractInfo: ContractInfo;

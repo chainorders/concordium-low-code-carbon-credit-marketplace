@@ -1,6 +1,6 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from 'react-router-dom';
 
-import { AppBar, Button, Stack, Toolbar, Typography } from "@mui/material";
+import { AppBar, Button, Stack, Toolbar, Typography } from '@mui/material';
 
 export default function FractionalizerPage() {
   const navigate = useNavigate();
@@ -18,8 +18,8 @@ export default function FractionalizerPage() {
           <Button color="inherit" onClick={() => navigate(`retire`)}>
             Retire
           </Button>
-          <Button color="inherit" onClick={() => navigate(`retirements`)}>
-            Retirements
+          <Button color="inherit" onClick={() => navigate(`Events`)}>
+            Events
           </Button>
           <Button color="inherit" onClick={() => navigate(`balanceOf`)}>
             Balance

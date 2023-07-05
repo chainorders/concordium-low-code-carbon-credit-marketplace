@@ -1,8 +1,8 @@
-import { Buffer } from "buffer/";
+import { Buffer } from 'buffer/';
 
-import { ModuleReference } from "@concordium/web-sdk";
+import { ModuleReference } from '@concordium/web-sdk';
 
-import { Cis2ContractInfo, ContractInfo } from "./models/ConcordiumContractClient";
+import { Cis2ContractInfo, ContractInfo } from './models/ConcordiumContractClient';
 
 /**
  * Contract Address for Marketplace. You should specify your contract's index when you initialized it.
@@ -62,7 +62,6 @@ export const WERT_NETWORK = process.env.REACT_APP_WERT_NETWORK!;
 export const WERT_ORIGIN = process.env.REACT_APP_WERT_ORIGIN!;
 
 // Login Via Google Config Options
-export const BASE_ACCOUNT_ADDRESS = process.env.REACT_APP_BASE_ACCOUNT_ADDRESS!;
 export const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID!;
 
 // Indexer Config Options

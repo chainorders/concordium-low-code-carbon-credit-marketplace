@@ -1,7 +1,11 @@
-import { Button, Card, CardContent, Grid, Stack, TextField, Tooltip, Typography } from "@mui/material";
-import { useState } from "react";
-import { Retire, projectNFTRetirementEvents } from "../../models/WebClient";
-import DisplayError from "../ui/DisplayError";
+import { useState } from 'react';
+
+import {
+    Button, Card, CardContent, Grid, Stack, TextField, Tooltip, Typography
+} from '@mui/material';
+
+import { getRetirementEvents, Retire } from '../../models/web/WebClient';
+import DisplayError from '../ui/DisplayError';
 
 export default function ProjectRetirements() {
   const [form, setForm] = useState({
@@ -18,7 +22,7 @@ export default function ProjectRetirements() {
 
   function onFormSubmitted(): void {
     setState({ ...state, error: "", checking: true });
-    projectNFTRetirementEvents(form.index, form.subindex, form.account)
+    getRetirementEvents(form.index, form.subindex, form.account)
       .then((res) => {
         console.log(res);
         setState({ ...state, checking: false, error: "" });

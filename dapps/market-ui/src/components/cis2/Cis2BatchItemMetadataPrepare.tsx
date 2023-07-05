@@ -1,16 +1,16 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { CIS2 } from "@concordium/web-sdk";
-import { SxProps } from "@mui/material";
-import { Theme } from "@mui/system";
+import { CIS2 } from '@concordium/web-sdk';
+import { SxProps } from '@mui/material';
+import { Theme } from '@mui/system';
 
-import { TokenInfo } from "../../models/ProjectNFTClient";
-import { PinataClient } from "../../models/PinataClient";
-import GetMintCardStep from "./metadata-prepare-steps/GetMintCardStep";
-import UploadArtifactIpfsCardStep from "./metadata-prepare-steps/UploadArtifactIpfsCardStep";
-import UploadImageIpfsCardStep from "./metadata-prepare-steps/UploadImageIpfsCardStep";
-import UploadMetadataIpfsCardStep from "./metadata-prepare-steps/UploadMetadataIpfsCardStep";
-import GetMaturityTimeCardStep from "./metadata-prepare-steps/GetMaturityTimeCardStep";
+import { PinataClient } from '../../models/PinataClient';
+import { TokenInfo } from '../../models/ProjectNFTClient';
+import GetMaturityTimeCardStep from './metadata-prepare-steps/GetMaturityTimeCardStep';
+import GetMintCardStep from './metadata-prepare-steps/GetMintCardStep';
+import UploadArtifactIpfsCardStep from './metadata-prepare-steps/UploadArtifactIpfsCardStep';
+import UploadImageIpfsCardStep from './metadata-prepare-steps/UploadImageIpfsCardStep';
+import UploadMetadataIpfsCardStep from './metadata-prepare-steps/UploadMetadataIpfsCardStep';
 
 const cardMediaSx: SxProps<Theme> = { maxHeight: "200px" };
 
