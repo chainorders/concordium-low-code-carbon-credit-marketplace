@@ -1,4 +1,4 @@
-use crate::project_nft::{contract_types::*, events::*, state::*, error::*};
+use crate::project_nft::{contract_types::*, error::*, events::*, state::*};
 use concordium_cis2::*;
 use concordium_std::*;
 
@@ -70,9 +70,23 @@ fn mint<S: HasStateApi>(
         logger.log(&ContractEvent::Mint(super::events::MintEvent {
             token_id,
             owner: params.owner,
-            metadata_url: mint_param.metadata_url.clone(),
-            maturity_time: mint_param.maturity_time,
+            amount: 1.into(),
         }))?;
+        // Event for token metadata.
+        logger.log(&ContractEvent::TokenMetadata(
+            super::events::TokenMetadataEvent {
+                token_id,
+                metadata_url: mint_param.metadata_url,
+            },
+        ))?;
+        // Event for maturity time.
+        logger.log(&ContractEvent::MaturityTime(
+            super::events::MaturityTimeEvent {
+                token_id,
+                maturity_time: mint_param.maturity_time,
+            },
+        ))?;
+
         res.push(token_id);
     }
 

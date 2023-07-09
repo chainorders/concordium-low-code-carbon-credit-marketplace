@@ -1,19 +1,29 @@
-import {
-    Card, CardContent, CardMedia, Grid, Link, Skeleton, SxProps, Theme, Typography
-} from '@mui/material';
+import { Card, CardContent, CardMedia, Grid, Skeleton, SxProps, Theme, Typography } from "@mui/material";
 
-import { Mint } from '../../models/web/WebClient';
-import LazyCis2Metadata from './LazyCis2Metadata';
+import LazyCis2Metadata from "./LazyCis2Metadata";
+import {
+  ProjectNftMaturityTimeEvent,
+  ProjectNftMintEvent,
+  ProjectNftTokenMetadataEvent,
+} from "../../models/web/Events";
 
 const cardMediaSx: SxProps<Theme> = { maxHeight: "200px" };
 
-function Cis2TokenDisplay(props: { token: Mint }) {
-  const { token } = props;
+function Cis2TokenDisplay(props: {
+  token: {
+    mint: ProjectNftMintEvent;
+    tokenMetadata: ProjectNftTokenMetadataEvent;
+    maturityTime: ProjectNftMaturityTimeEvent;
+  };
+}) {
+  const {
+    token: { mint, tokenMetadata, maturityTime },
+  } = props;
 
   return (
     <Card variant="outlined">
       <LazyCis2Metadata
-        metadataUrl={{ url: token.metadata_url.url, hash: "" }}
+        metadataUrl={{ url: tokenMetadata.metadata_url.url, hash: "" }}
         loadedTemplate={(metadata) => (
           <CardMedia component="img" image={metadata.display?.url} alt="NFT" sx={cardMediaSx} />
         )}
@@ -23,25 +33,26 @@ function Cis2TokenDisplay(props: { token: Mint }) {
         errorLoadingTemplate={(error) => <Typography>{error}</Typography>}
       />
       <CardContent>
-        <Typography>Token Id: {token.token_id}</Typography>
-        <Typography variant="caption" component="div">
-          Maturity Time: {token.maturity_time}
-        </Typography>
-        <Link href={props.token.metadata_url.url} variant="caption" target="_blank">
-          Metadata Url
-        </Link>
+        <Typography>Token Id: {mint.token_id}</Typography>
+        <Typography>Maturity Time: {maturityTime.maturity_time}</Typography>
       </CardContent>
     </Card>
   );
 }
 
-export default function Cis2TokensDisplay(props: { tokens: Mint[] }) {
+export default function Cis2TokensDisplay(props: {
+  tokens: {
+    mint: ProjectNftMintEvent;
+    tokenMetadata: ProjectNftTokenMetadataEvent;
+    maturityTime: ProjectNftMaturityTimeEvent;
+  }[];
+}) {
   const { tokens } = props;
 
   return (
     <Grid container spacing={2}>
       {tokens.map((token) => (
-        <Grid item xs={4} key={token.token_id}>
+        <Grid item xs={4} key={token.mint.token_id}>
           <Cis2TokenDisplay token={token} />
         </Grid>
       ))}

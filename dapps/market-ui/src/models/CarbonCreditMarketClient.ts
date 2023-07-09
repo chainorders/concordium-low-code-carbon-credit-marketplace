@@ -137,7 +137,7 @@ export async function transfer({
   owner,
   quantity,
   contractInfo,
-  maxContractExecutionEnergy = BigInt(9999),
+  maxContractExecutionEnergy = BigInt(99999),
   onStatusUpdate = (status, txnHash) => console.log(`txn #${txnHash}, status:${status}`),
 }: {
   provider: WalletApi;

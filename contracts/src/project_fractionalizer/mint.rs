@@ -4,8 +4,8 @@ use concordium_std::*;
 use crate::cis2_utils::cis2_types::{ContractTokenAmount, ContractTokenId};
 
 use super::{
-    contract_types::ContractResult, error::CustomContractError, state::*,
-    token_metadata::TokenMetadata, events::*
+    contract_types::ContractResult, error::CustomContractError, events::*, state::*,
+    token_metadata::TokenMetadata,
 };
 
 #[derive(Serial, Deserial, SchemaType)]
@@ -104,8 +104,13 @@ pub fn mint<S: HasStateApi>(
             token_id,
             amount: token_info.amount,
             owner: params.owner,
-            metadata_url: token_info.metadata.to_metadata_url(),
         }))?;
+        logger.log(&ContractEvent::TokenMetadata(
+            super::events::TokenMetadataEvent {
+                token_id,
+                metadata_url: token_info.metadata.to_metadata_url(),
+            },
+        ))?;
     }
     Ok(())
 }

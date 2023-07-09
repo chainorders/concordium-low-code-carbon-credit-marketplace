@@ -1,5 +1,3 @@
-import { CIS2 } from '@concordium/web-sdk';
-
 export type Option<T> =
   | {
       Some: [T];
@@ -13,32 +11,44 @@ export type Address = {
 export type ProjectNftMintEvent = {
   owner: Address;
   token_id: string;
+  amount: string;
+};
+
+export type ProjectNftTokenMetadataEvent = {
+  token_id: string;
   metadata_url: {
     url: string;
     hash: Option<number[]>;
   };
 };
+
+export type ProjectNftMaturityTimeEvent = {
+  token_id: string;
+  maturity_time: string;
+};
+
 export type ProjectNftRetireEvent = {
   owner: Address;
   token_id: string;
 };
-export type ProjectNftTransferEvent = FractionalizerTransferEvent;
-
-export type ProjectNftEvent = {
-  Mint?: [ProjectNftMintEvent];
-  Retire?: [ProjectNftRetireEvent];
-  Transfer?: [ProjectNftTransferEvent];
-};
-
-export type FractionalizerMintEvent = {
-  owner: Address;
+export type ProjectNftTransferEvent = {
   token_id: string;
   amount: string;
-  metadata_url: {
-    url: string;
-    hash: Option<number[]>;
-  };
+  from: Address;
+  to: Address;
 };
+
+export type ProjectNftEvent = {
+  Mint?: ProjectNftMintEvent;
+  Retire?: ProjectNftRetireEvent;
+  Transfer?: ProjectNftTransferEvent;
+  TokenMetadata?: ProjectNftTokenMetadataEvent;
+  MaturityTime?: ProjectNftMaturityTimeEvent;
+};
+
+export type FractionalizerMintEvent = ProjectNftMintEvent;
+export type FractionalizerTokenMetadataEvent = ProjectNftTokenMetadataEvent;
+export type FractionalizerTransferEvent = ProjectNftTransferEvent;
 
 export type FractionalizerRetireEvent = {
   owner: Address;
@@ -66,19 +76,14 @@ export type FractionalizerCollateralRemovedEvent = {
   };
 };
 
-export type FractionalizerTransferEvent = {
-  token_id: string;
-  amount: string;
-  from: Address;
-  to: Address;
-};
 
 export type FractionalizerEvent = {
-  Mint?: [FractionalizerMintEvent];
-  Retire?: [FractionalizerRetireEvent];
-  Transfer?: [FractionalizerTransferEvent];
-  CollateralAdded?: [FractionalizerCollateralAddedEvent];
-  CollateralRemoved?: [FractionalizerCollateralRemovedEvent];
+  Mint?: FractionalizerMintEvent;
+  TokenMetadata?: FractionalizerTokenMetadataEvent;
+  Retire?: FractionalizerRetireEvent;
+  Transfer?: FractionalizerTransferEvent;
+  CollateralAdded?: FractionalizerCollateralAddedEvent;
+  CollateralRemoved?: FractionalizerCollateralRemovedEvent;
 };
 
 export type MarketTokenListedEvent = {
@@ -99,7 +104,7 @@ export type MarketTokenReceivedEvent = {
   };
   amount: string;
   owner: Address;
-}
+};
 export type MarketTokenTransferredEvent = {
   token_id: string;
   token_contract: {
@@ -109,7 +114,7 @@ export type MarketTokenTransferredEvent = {
   amount: string;
   from: Address;
   to: Address;
-}
+};
 export type MarketEvent = {
   TokenListed?: [MarketTokenListedEvent];
   TokenReceived?: [MarketTokenReceivedEvent];

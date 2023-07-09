@@ -1,19 +1,36 @@
-import { useState } from 'react';
+import { useState } from "react";
 
-import { ContractAddress } from '@concordium/web-sdk';
+import { ContractAddress } from "@concordium/web-sdk";
 import {
-    Button, Container, Divider, FormControl, InputLabel, List, ListItem, ListItemText, MenuItem,
-    Pagination, Select, Stack, TextField, Typography
-} from '@mui/material';
+  Button,
+  Container,
+  Divider,
+  FormControl,
+  InputLabel,
+  List,
+  ListItem,
+  ListItemText,
+  MenuItem,
+  Pagination,
+  Select,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 
 import {
-    ModuleEvent, ProjectNftEvent, ProjectNftMintEvent, ProjectNftRetireEvent,
-    ProjectNftTransferEvent
-} from '../../models/web/Events';
-import { getContractEvents } from '../../models/web/WebClient';
-import DisplayError from '../ui/DisplayError';
+  ModuleEvent,
+  ProjectNftEvent,
+  ProjectNftMaturityTimeEvent,
+  ProjectNftMintEvent,
+  ProjectNftRetireEvent,
+  ProjectNftTokenMetadataEvent,
+  ProjectNftTransferEvent,
+} from "../../models/web/Events";
+import { getContractEvents } from "../../models/web/WebClient";
+import DisplayError from "../ui/DisplayError";
 
-const eventTypes = ["Mint", "Transfer", "Retire"];
+const eventTypes = ["Mint", "TokenMetadata", "MaturityTime", "Transfer", "Retire"];
 
 function MintEvent(props: { event: ProjectNftMintEvent }) {
   const { event } = props;
@@ -26,6 +43,42 @@ function MintEvent(props: { event: ProjectNftMintEvent }) {
           <>
             <Typography component="div">Token #{event.token_id}</Typography>
             <Typography component="div">By {event.owner.Account?.[0]}</Typography>
+          </>
+        }
+      />
+    </ListItem>
+  );
+}
+
+function TokenMetadataEvent(props: { event: ProjectNftTokenMetadataEvent }) {
+  const { event } = props;
+
+  return (
+    <ListItem alignItems="flex-start">
+      <ListItemText
+        primary="Token Metadata"
+        secondary={
+          <>
+            <Typography component="div">Token {event.token_id}</Typography>
+            <Typography component="div">Url {event.metadata_url.url}</Typography>
+          </>
+        }
+      />
+    </ListItem>
+  );
+}
+
+function MaturityTimeEvent(props: { event: ProjectNftMaturityTimeEvent }) {
+  const { event } = props;
+
+  return (
+    <ListItem alignItems="flex-start">
+      <ListItemText
+        primary="Maturity Time"
+        secondary={
+          <>
+            <Typography component="div">Token {event.token_id}</Typography>
+            <Typography component="div">Time {event.maturity_time}</Typography>
           </>
         }
       />
@@ -76,11 +129,15 @@ function Event(props: { event: ProjectNftEvent }) {
 
   switch (eventType) {
     case "Mint":
-      return <MintEvent event={event[eventType]![0]} />;
+      return <MintEvent event={event[eventType]!} />;
+    case "TokenMetadata":
+      return <TokenMetadataEvent event={event[eventType]!} />;
+    case "MaturityTime":
+      return <MaturityTimeEvent event={event[eventType]!} />;
     case "Transfer":
-      return <TransferEvent event={event[eventType]![0]} />;
+      return <TransferEvent event={event[eventType]!} />;
     case "Retire":
-      return <RetireEvent event={event[eventType]![0]} />;
+      return <RetireEvent event={event[eventType]!} />;
     default:
       return <div>Unknown event type: {eventType}</div>;
   }

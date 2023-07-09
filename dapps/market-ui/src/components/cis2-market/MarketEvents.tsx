@@ -189,7 +189,7 @@ export default function MarketEvents({ defaultContractAddress }: { defaultContra
         <List sx={{ width: "100%", bgcolor: "background.paper" }}>
           {events.map((contractEvent) => (
             <>
-              <Event event={contractEvent as MarketEvent} />
+              <Event event={contractEvent as MarketEvent} key={Math.random().toString()} />
               <Divider variant="inset" component="li" />
             </>
           ))}

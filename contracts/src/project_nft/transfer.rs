@@ -58,7 +58,7 @@ pub fn transfer<S: HasStateApi>(
         state.transfer(&token_id, &from, &to_address, builder)?;
 
         // Log transfer event
-        logger.log(&ContractEvent::Transfer(TransferEvent {
+        logger.log(&ContractEvent::Transfer(super::events::TransferEvent {
             token_id,
             amount,
             from,

@@ -14,7 +14,6 @@ import FractionalizerEvents from './components/cis2-fractionalizer/Fractionalize
 import MarketEvents from './components/cis2-market/MarketEvents';
 import Cis2BalanceOf from './components/cis2/Cis2BalanceOf';
 import ProjectEvents from './components/cis2/ProjectEvents';
-import ProjectRetirements from './components/cis2/ProjectRetirements';
 import MarketplaceTokensList from './components/MarketplaceTokensList';
 import { useParamsContractAddress } from './components/utils';
 import {

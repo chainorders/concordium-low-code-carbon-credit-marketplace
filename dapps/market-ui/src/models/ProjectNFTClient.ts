@@ -1,10 +1,10 @@
 import { SmartContractParameters, WalletApi } from '@concordium/browser-wallet-api-helpers';
 import {
-    CIS2, ContractAddress, TransactionStatusEnum, TransactionSummary
-} from '@concordium/web-sdk';
+    CIS2, ContractAddress, TransactionStatusEnum} from '@concordium/web-sdk';
 
 import * as connClient from './ConcordiumContractClient';
 import { projectNftGetTxnContractEvents } from './web/WebClient';
+import { ProjectNftEvent } from './web/Events';
 
 interface MintParams {
   owner: { Account: [string] };
@@ -66,7 +66,7 @@ export async function mint(
   contractInfo: connClient.ContractInfo,
   maxContractExecutionEnergy = BigInt(9999),
   onStatusUpdate: (status: TransactionStatusEnum, hash: string) => void = (status, hash) => console.log(status, hash),
-) {
+): Promise<ProjectNftEvent[]> {
   const paramJson = {
     owner: {
       Account: [account],
@@ -96,13 +96,8 @@ export async function mint(
   );
 
   const events = await projectNftGetTxnContractEvents(txnHash);
-  return (
-    events
-      //@ts-ignore
-      .map((e) => e["Mint"])
-      .filter((v) => !!v)
-      .map((e) => e[0])
-  );
+  console.log(events);
+  return events;
 }
 
 export async function retire(

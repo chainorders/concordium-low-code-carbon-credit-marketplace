@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 
-import { CIS2 } from '@concordium/web-sdk';
 import { Button, ButtonGroup, Grid, Typography } from '@mui/material';
 
 import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';

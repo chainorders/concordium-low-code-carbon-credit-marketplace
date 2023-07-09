@@ -106,7 +106,7 @@ function MarketplaceTokensListItem(props: {
         </CardMedia>
         <CardContent>
           <Grid container justifyContent={"space-between"}>
-            <Grid item xs={6}>
+            <Grid item xs={6} key="left">
               <Typography variant="body1" textAlign={"left"} fontSize={"2em"} fontWeight={"bold"}>
                 {item.price.toString()}{" "}
                 <Typography component={"span"} padding={0} margin={0}>
@@ -118,7 +118,7 @@ function MarketplaceTokensListItem(props: {
                 {metadata?.description}
               </Typography>
             </Grid>
-            <Grid item xs={6} textAlign={"right"}>
+            <Grid item xs={6} textAlign={"right"} key="right">
               <Tooltip title={"Token Id"}>
                 <Typography variant="caption" component={"div"} textAlign={"right"}>
                   {item.tokenId.toString()}
@@ -141,7 +141,7 @@ function MarketplaceTokensListItem(props: {
                 onReturnClicked={props.onReturnClicked}
               />
             </Grid>
-            <Grid item xs={12} mt={"1em"}>
+            <Grid item xs={12} mt={"1em"} key="bottom">
               <Accordion variant="outlined">
                 <AccordionSummary expandIcon={<Expand />}>
                   <Typography>Attributes</Typography>
@@ -159,7 +159,6 @@ function MarketplaceTokensListItem(props: {
             </Grid>
           </Grid>
         </CardContent>
-        <CardActions></CardActions>
       </Card>
     </Grid>
   );

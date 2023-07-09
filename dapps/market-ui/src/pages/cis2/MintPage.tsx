@@ -1,19 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
-import { CIS2, ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
-import { ArrowBackRounded } from '@mui/icons-material';
-import { Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography } from '@mui/material';
-import { Container } from '@mui/system';
+import { ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk";
+import { ArrowBackRounded } from "@mui/icons-material";
+import { Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography } from "@mui/material";
+import { Container } from "@mui/system";
 
-import Cis2BatchMetadataPrepareOrAdd from '../../components/cis2/Cis2BatchMetadataPrepareOrAdd';
-import Cis2BatchMint from '../../components/cis2/Cis2BatchMint';
-import Cis2FindInstanceOrInit from '../../components/cis2/Cis2FindInstanceOrInit';
-import Cis2TokensDisplay from '../../components/cis2/Cis2TokensDisplay';
-import ConnectPinata from '../../components/ConnectPinata';
-import UploadFiles from '../../components/ui/UploadFiles';
-import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
-import { TokenInfo } from '../../models/ProjectNFTClient';
-import { Mint } from '../../models/web/WebClient';
+import Cis2BatchMetadataPrepareOrAdd from "../../components/cis2/Cis2BatchMetadataPrepareOrAdd";
+import Cis2BatchMint from "../../components/cis2/Cis2BatchMint";
+import Cis2FindInstanceOrInit from "../../components/cis2/Cis2FindInstanceOrInit";
+import Cis2TokensDisplay from "../../components/cis2/Cis2TokensDisplay";
+import ConnectPinata from "../../components/ConnectPinata";
+import UploadFiles from "../../components/ui/UploadFiles";
+import { Cis2ContractInfo } from "../../models/ConcordiumContractClient";
+import { TokenInfo } from "../../models/ProjectNFTClient";
+import {
+  ProjectNftMintEvent,
+  ProjectNftTokenMetadataEvent,
+  ProjectNftMaturityTimeEvent,
+  ProjectNftEvent,
+} from "../../models/web/Events";
 
 enum Steps {
   GetOrInitCis2,
@@ -25,6 +30,11 @@ enum Steps {
 }
 
 type StepType = { step: Steps; title: string };
+type MintMethodEvents = {
+  mint: ProjectNftMintEvent;
+  tokenMetadata: ProjectNftTokenMetadataEvent;
+  maturityTime: ProjectNftMaturityTimeEvent;
+};
 
 function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2ContractInfo }) {
   const steps: StepType[] = [
@@ -61,7 +71,7 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
     tokens: [],
   });
 
-  const [mintedTokens, setMintedTokens] = useState<Mint[]>([]);
+  const [mintedTokens, setMintedTokens] = useState<MintMethodEvents[]>([]);
 
   function onGetCollectionAddress(address: ContractAddress) {
     setState({
@@ -104,8 +114,25 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
     });
   }
 
-  function onTokensMinted(mintedTokens: Mint[]) {
-    setMintedTokens(mintedTokens);
+  function onTokensMinted(mintedEvents: ProjectNftEvent[]) {
+    const mintedTokens: { [tokenId: string]: MintMethodEvents } = {};
+    mintedEvents.forEach((event) => {
+      if (event.Mint) {
+        const token = mintedTokens[event.Mint.token_id] || {};
+        token.mint = event.Mint;
+        mintedTokens[event.Mint.token_id] = token;
+      } else if (event.TokenMetadata) {
+        const token = mintedTokens[event.TokenMetadata.token_id] || {};
+        token.tokenMetadata = event.TokenMetadata;
+        mintedTokens[event.TokenMetadata.token_id] = token;
+      } else if (event.MaturityTime) {
+        const token = mintedTokens[event.MaturityTime.token_id] || {};
+        token.maturityTime = event.MaturityTime;
+        mintedTokens[event.MaturityTime.token_id] = token;
+      }
+    });
+
+    setMintedTokens(Object.values(mintedTokens));
     setState({
       ...state,
       activeStep: steps[5],

@@ -1,19 +1,37 @@
-import { useState } from 'react';
+import { useState } from "react";
 
-import { ContractAddress } from '@concordium/web-sdk';
+import { ContractAddress } from "@concordium/web-sdk";
 import {
-    Button, Container, Divider, FormControl, InputLabel, List, ListItem, ListItemText, MenuItem,
-    Pagination, Select, Stack, TextField, Typography
-} from '@mui/material';
+  Button,
+  Container,
+  Divider,
+  FormControl,
+  InputLabel,
+  List,
+  ListItem,
+  ListItemText,
+  MenuItem,
+  Pagination,
+  Select,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 
 import {
-    FractionalizerCollateralAddedEvent, FractionalizerCollateralRemovedEvent, FractionalizerEvent,
-    FractionalizerMintEvent, FractionalizerRetireEvent, FractionalizerTransferEvent, ModuleEvent
-} from '../../models/web/Events';
-import { getContractEvents } from '../../models/web/WebClient';
-import DisplayError from '../ui/DisplayError';
+  FractionalizerCollateralAddedEvent,
+  FractionalizerCollateralRemovedEvent,
+  FractionalizerEvent,
+  FractionalizerMintEvent,
+  FractionalizerRetireEvent,
+  FractionalizerTokenMetadataEvent,
+  FractionalizerTransferEvent,
+  ModuleEvent,
+} from "../../models/web/Events";
+import { getContractEvents } from "../../models/web/WebClient";
+import DisplayError from "../ui/DisplayError";
 
-const eventTypes = ["Mint", "Transfer", "Retire", "CollateralAdded", "CollateralRemoved"];
+const eventTypes = ["Mint", "TokenMetadata", "Transfer", "Retire", "CollateralAdded", "CollateralRemoved"];
 
 function MintEvent(props: { event: FractionalizerMintEvent }) {
   const { event } = props;
@@ -27,6 +45,24 @@ function MintEvent(props: { event: FractionalizerMintEvent }) {
             <Typography component="div">Token #{event.token_id}</Typography>
             <Typography component="div">Amount {event.amount}</Typography>
             <Typography component="div">By {event.owner.Account?.[0]}</Typography>
+          </>
+        }
+      />
+    </ListItem>
+  );
+}
+
+function TokenMetadataEvent(props: { event: FractionalizerTokenMetadataEvent }) {
+  const { event } = props;
+
+  return (
+    <ListItem alignItems="flex-start">
+      <ListItemText
+        primary="Token Metadata"
+        secondary={
+          <>
+            <Typography component="div">Token {event.token_id}</Typography>
+            <Typography component="div">Url {event.metadata_url.url}</Typography>
           </>
         }
       />
@@ -121,15 +157,17 @@ function Event(props: { event: FractionalizerEvent }) {
 
   switch (eventType) {
     case "Mint":
-      return <MintEvent event={event[eventType]![0]} />;
+      return <MintEvent event={event[eventType]!} />;
+    case "TokenMetadata":
+      return <TokenMetadataEvent event={event[eventType]!} />;
     case "Transfer":
-      return <TransferEvent event={event[eventType]![0]} />;
+      return <TransferEvent event={event[eventType]!} />;
     case "CollateralAdded":
-      return <CollateralAddedEvent event={event[eventType]![0]} />;
+      return <CollateralAddedEvent event={event[eventType]!} />;
     case "CollateralRemoved":
-      return <CollateralRemovedEvent event={event[eventType]![0]} />;
+      return <CollateralRemovedEvent event={event[eventType]!} />;
     case "Retire":
-      return <RetireEvent event={event[eventType]![0]} />;
+      return <RetireEvent event={event[eventType]!} />;
     default:
       return <div>Unknown event type: {eventType}</div>;
   }

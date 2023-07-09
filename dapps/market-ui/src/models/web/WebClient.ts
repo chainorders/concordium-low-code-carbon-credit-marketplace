@@ -1,43 +1,7 @@
 import { INDEXER_API_URL } from '../../Constants';
-import { ModuleEvent } from './Events';
+import { ModuleEvent, ProjectNftEvent } from './Events';
 
-export type ProjectNftContractEvent = ProjectNftContractEventMint | ProjectNftContractEventRetire;
-
-export interface ProjectNftContractEventRetire {
-  Retire: Retire[];
-}
-
-export interface ProjectNftContractEventMint {
-  Mint: Mint[];
-}
-
-export interface Retire {
-  owner: Owner;
-  token_id: string;
-  amount?: string;
-}
-
-export interface Mint {
-  maturity_time: string;
-  metadata_url: MetadataUrl;
-  owner: Owner;
-  token_id: string;
-}
-
-export interface MetadataUrl {
-  hash: Hash;
-  url: string;
-}
-
-export interface Hash {
-  Some: number[][];
-}
-
-export interface Owner {
-  Account: string[];
-}
-
-export const projectNftGetTxnContractEvents = async (txnHash: string): Promise<ProjectNftContractEvent[]> => {
+export const projectNftGetTxnContractEvents = async (txnHash: string): Promise<ProjectNftEvent[]> => {
   const res = await fetchRetry(`${INDEXER_API_URL}/project-nft/contract-events/${txnHash}`, {
     method: "GET",
   });
@@ -51,28 +15,7 @@ export const projectNftGetTxnContractEvents = async (txnHash: string): Promise<P
   }
 
   const json = await res.json();
-  return json as ProjectNftContractEvent[];
-};
-
-export const getRetirementEvents = async (
-  index: string,
-  subindex: string,
-  owner?: string,
-): Promise<ProjectNftContractEventRetire[]> => {
-  const res = await fetch(`${INDEXER_API_URL}/project-nft/retirements`, {
-    method: "POST",
-    body: JSON.stringify({ index, subindex, owner }),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (res.status !== 200) {
-    throw new Error(`Failed to get retirement events for index ${index} subindex ${subindex}`);
-  }
-
-  const json = await res.json();
-  return json as ProjectNftContractEventRetire[];
+  return json as ProjectNftEvent[];
 };
 
 export const getContractEvents = async (
