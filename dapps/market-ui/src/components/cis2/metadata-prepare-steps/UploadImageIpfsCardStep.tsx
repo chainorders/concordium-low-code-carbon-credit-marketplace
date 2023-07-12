@@ -46,7 +46,6 @@ export default function UploadImageIpfsCardStep(props: {
       <>
         <CardContent>
           <Typography>Upload File</Typography>
-          <Typography variant="caption">Token Id: {props.tokenId}</Typography>
           <DisplayError error={state.error} />
         </CardContent>
         <CardActions>

@@ -8,6 +8,11 @@ function ContractFindInstance(props: {
   defaultContractAddress: ContractAddress;
   onDone: (address: ContractAddress) => void
 }) {
+  const [form, setForm] = useState({
+    index: props.defaultContractAddress.index.toString(),
+    subindex: props.defaultContractAddress.subindex.toString(),
+  });
+
   const [state, setState] = useState({
     error: "",
     checking: false,
@@ -16,10 +21,8 @@ function ContractFindInstance(props: {
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setState({ ...state, error: "", checking: true });
-    const formData = new FormData(event.currentTarget);
-
-    const index = BigInt(formData.get("contractIndex")?.toString() || "0");
-    const subindex = BigInt(formData.get("contractSubindex")?.toString() || "0");
+    const index = BigInt(form.index);
+    const subindex = BigInt(form.subindex);
 
     if (!(index >= 0)) {
       setState({ ...state, error: "Invalid Contract Index" });
@@ -52,7 +55,8 @@ function ContractFindInstance(props: {
         variant="standard"
         type={"number"}
         disabled={state.checking}
-        value={props.defaultContractAddress.index.toString()}
+        value={form.index}
+        onChange={(e) => setForm({ ...form, index: e.target.value })}
       />
       <TextField
         id="contract-subindex"
@@ -61,7 +65,8 @@ function ContractFindInstance(props: {
         variant="standard"
         type={"number"}
         disabled={state.checking}
-        value={props.defaultContractAddress.subindex.toString()}
+        value={form.subindex}
+        onChange={(e) => setForm({ ...form, subindex: e.target.value })}
       />
       {state.error && (
         <Typography component="div" color="error">

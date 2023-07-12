@@ -1,6 +1,5 @@
 import React from 'react';
 
-import { WalletApi } from '@concordium/browser-wallet-api-helpers';
 import { ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
 import { Container, Paper, Stack, Typography } from '@mui/material';
 

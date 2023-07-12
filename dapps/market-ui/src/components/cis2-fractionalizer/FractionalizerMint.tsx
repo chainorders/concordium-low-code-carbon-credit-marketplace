@@ -5,7 +5,7 @@ import { Alert, AlertColor, Button, Container, Stack, TextField, Typography } fr
 
 import { FRACTIONALIZER_CONTRACT_INFO } from '../../Constants';
 import { connectToWallet } from '../../models/ConcordiumContractClient';
-import { mint, MintParams } from '../../models/FractionalizerClient';
+import { mint, MintParams } from '../../models/ProjectFractionalizerClient';
 import { default as SnackbarAlert } from '../ui/Alert';
 import DisplayError from '../ui/DisplayError';
 import TransactionProgress from '../ui/TransactionProgress';

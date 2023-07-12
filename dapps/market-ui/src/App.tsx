@@ -10,6 +10,13 @@ import {
 
 import GuardedRoute from './components/auth/GuardedRoute';
 import UserAuth from './components/auth/UserAuth';
+import FractionalizerEvents from './components/cis2-fractionalizer/FractionalizerEvents';
+import MarketEvents from './components/cis2-market/MarketEvents';
+import Cis2BalanceOf from './components/cis2/Cis2BalanceOf';
+import ProjectEvents from './components/cis2/ProjectEvents';
+import AddVerifier from './components/cis2/verifier/AddVerifier';
+import RemoveVerifier from './components/cis2/verifier/RemoveVerifier';
+import Verify from './components/cis2/verifier/Verify';
 import MarketplaceTokensList from './components/MarketplaceTokensList';
 import { useParamsContractAddress } from './components/utils';
 import {
@@ -19,11 +26,14 @@ import {
 } from './Constants';
 import CIS2Page from './pages/cis2/CIS2Page';
 import MintPage from './pages/cis2/MintPage';
+import ProjectRetirePage from './pages/cis2/ProjectRetirePage';
 import FractionalizerPage from './pages/fractionalizer/FractionalizerPage';
+import FractionalizerRetirePage from './pages/fractionalizer/FractionalizerRetirePage';
 import FractionalizeTokenPage from './pages/fractionalizer/FractionalizeTokenPage';
 import MarketFindOrInit from './pages/marketplace/MarketFindOrInit';
 import MarketPage from './pages/marketplace/MarketPage';
 import SellPage from './pages/marketplace/SellPage';
+import VerifyPage from './pages/verification/VerificationPage';
 import { User } from './types/user';
 
 const theme = createTheme({
@@ -77,7 +87,10 @@ function App() {
                 Fractionalizer
               </HeaderButton>
               <HeaderButton color="inherit" onClick={() => navigate("/cis2")} disabled={!isWalletUser()}>
-                CIS2 Token Tools
+                NFT
+              </HeaderButton>
+              <HeaderButton color="inherit" onClick={() => navigate("/verifier")} disabled={!isWalletUser()}>
+                verifier
               </HeaderButton>
               <UserAuth user={user} onLogin={setUser} onLogout={() => setUser(loggedOutUser)} />
             </Toolbar>
@@ -107,6 +120,7 @@ function App() {
                       />
                     }
                   />
+                  <Route path="events" element={<MarketEvents defaultContractAddress={marketContractAddress} />} />
                 </Route>
                 <Route
                   path=""
@@ -130,11 +144,32 @@ function App() {
                       />
                     }
                   />
+                  <Route
+                    path="retire"
+                    element={
+                      <ProjectRetirePage
+                        grpcClient={state.grpcClient}
+                        contractInfo={CIS2_MULTI_CONTRACT_INFO}
+                        onDone={() => alert("tokens retireds")}
+                      />
+                    }
+                  />
+                  <Route path="events" element={<ProjectEvents />} />
+                  <Route
+                    path="balanceOf"
+                    element={
+                      <Cis2BalanceOf
+                        grpcClient={state.grpcClient}
+                        contractName={CIS2_MULTI_CONTRACT_INFO.contractName}
+                        defaultAccount={user?.account}
+                      />
+                    }
+                  />
                   <Route path="" element={<Navigate to={"mint"} replace={true} />} />
                 </Route>
               </Route>
               <Route element={<GuardedRoute isRouteAccessible={!!user?.account} redirectRoute="/market" />}>
-                <Route path="/fractionalizer" element={<FractionalizerPage/>}>
+                <Route path="/fractionalizer" element={<FractionalizerPage />}>
                   <Route
                     path="fractionalize"
                     element={
@@ -146,14 +181,37 @@ function App() {
                     }
                   />
                   <Route
-                    path=""
+                    path="retire"
                     element={
-                      <Navigate
-                        to={`fractionalize`}
-                        replace={true}
+                      <FractionalizerRetirePage
+                        onDone={() => alert("tokens retireds")}
+                        grpcClient={state.grpcClient!}
+                        contractInfo={FRACTIONALIZER_CONTRACT_INFO}
+                        defaultContractAddress={fracContract}
                       />
                     }
                   />
+                  <Route path="events" element={<FractionalizerEvents defaultContractAddress={fracContract} />} />
+                  <Route
+                    path="balanceOf"
+                    element={
+                      <Cis2BalanceOf
+                        grpcClient={state.grpcClient}
+                        contractName={FRACTIONALIZER_CONTRACT_INFO.contractName}
+                        defaultAccount={user?.account}
+                        defaultContractAddress={fracContract}
+                      />
+                    }
+                  />
+                  <Route path="" element={<Navigate to={`fractionalize`} replace={true} />} />
+                </Route>
+              </Route>
+              <Route element={<GuardedRoute isRouteAccessible={!!user?.account} redirectRoute="/market" />}>
+                <Route path="/verifier" element={<VerifyPage />} key="verifier">
+                  <Route path="verify" element={<Verify contractInfo={CIS2_MULTI_CONTRACT_INFO} />} />
+                  <Route path="add" element={<AddVerifier contractInfo={CIS2_MULTI_CONTRACT_INFO} />} />
+                  <Route path="remove" element={<RemoveVerifier contractInfo={CIS2_MULTI_CONTRACT_INFO} />} />
+                  <Route path="" element={<Navigate to={"verify"} replace={true} />} />
                 </Route>
               </Route>
               <Route path="*" element={<Navigate to={"/market"} replace={true} />} />

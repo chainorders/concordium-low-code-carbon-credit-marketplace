@@ -1,8 +1,9 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 
-import { AppBar, Stack, Toolbar, Typography } from '@mui/material';
+import { AppBar, Button, Stack, Toolbar, Typography } from '@mui/material';
 
 export default function FractionalizerPage() {
+  const navigate = useNavigate();
 
   return (
     <Stack spacing={2} mt={1}>
@@ -11,6 +12,18 @@ export default function FractionalizerPage() {
           <Typography textAlign={"left"} variant="h5" component={"div"} sx={{ flexGrow: 1 }}>
             Fractionalizer
           </Typography>
+          <Button color="inherit" onClick={() => navigate(`fractionalize`)}>
+            Fractionalize
+          </Button>
+          <Button color="inherit" onClick={() => navigate(`retire`)}>
+            Retire
+          </Button>
+          <Button color="inherit" onClick={() => navigate(`Events`)}>
+            Events
+          </Button>
+          <Button color="inherit" onClick={() => navigate(`balanceOf`)}>
+            Balance
+          </Button>
         </Toolbar>
       </AppBar>
       <Outlet />

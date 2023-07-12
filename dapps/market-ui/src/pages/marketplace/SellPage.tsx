@@ -62,7 +62,7 @@ function SellPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
               grpcClient={props.grpcClient}
               to={{
                 address: marketContractAddress,
-                hookName: "recieve_cis2",
+                hookName: "onCis2Recieved",
               }}
               onDone={(address, tokenId, quantity) => onTransferred(address, tokenId, quantity)}
             />

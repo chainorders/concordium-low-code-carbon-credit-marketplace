@@ -1,26 +1,30 @@
 import React, { useState } from 'react';
 
-import { CIS2 } from '@concordium/web-sdk';
 import { Stack, Typography } from '@mui/material';
 
 import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
+import { TokenInfo } from '../../models/ProjectNFTClient';
 import Cis2BatchMetadataAdd from './Cis2BatchMetadataAdd';
 import Cis2BatchMetadataPrepare from './Cis2BatchMetadataPrepare';
+
+interface Tokens {
+  [tokenId: string]: TokenInfo;
+}
 
 function Cis2BatchMetadataPrepareOrAdd(props: {
   contractInfo: Cis2ContractInfo;
   files?: File[];
   pinataJwt?: string;
-  onDone: (tokens: { [tokenId: string]: [CIS2.MetadataUrl, string] }) => void;
+  onDone: (tokens: TokenInfo[]) => void;
 }) {
   const [state, setState] = useState({
     isPrepDone: props.files && props.files.length ? false : true,
     isAddDone: false,
-    tokens: {},
+    tokens: [] as TokenInfo[],
   });
 
-  function onPrepDone(tokens: { [tokenId: string]: [CIS2.MetadataUrl, string] }) {
-    const tokensCombined = { ...state.tokens, ...tokens };
+  function onPrepDone(tokens: Tokens) {
+    const tokensCombined = [ ...state.tokens, ...Object.values(tokens) ];
 
     setState({
       ...state,
@@ -33,8 +37,8 @@ function Cis2BatchMetadataPrepareOrAdd(props: {
     }
   }
 
-  function onAddDone(tokens: { [tokenId: string]: [CIS2.MetadataUrl, string] }) {
-    const tokensCombined = { ...state.tokens, ...tokens };
+  function onAddDone(tokens: Tokens) {
+    const tokensCombined = [ ...state.tokens, ...Object.values(tokens) ];
     setState({
       ...state,
       isAddDone: true,
@@ -57,7 +61,7 @@ function Cis2BatchMetadataPrepareOrAdd(props: {
         />
       ) : (
         <Typography variant="body1" component="div" gutterBottom>
-          {/* No uploaded Files */}
+          No uploaded Files
         </Typography>
       )}
 

@@ -7,8 +7,8 @@ import {
 } from '@mui/material';
 
 import { IPFS_GATEWAY_URL } from '../../../Constants';
-import { Metadata } from '../../../models/Cis2Client';
 import { PinataClient } from '../../../models/PinataClient';
+import { Metadata } from '../../../models/ProjectNFTClient';
 import { tokenIdToTokenMetadataFileName } from '../../../models/Utils';
 import DisplayError from '../../ui/DisplayError';
 
@@ -129,9 +129,6 @@ export default function UploadMetadataIpfsCardStep(props: {
         <form onSubmit={(e) => uploadMetadataClicked(e)}>
           <CardContent>
             <Typography>Create Metadata</Typography>
-            <Typography variant="caption" component="div">
-              Token Id: {props.tokenId}
-            </Typography>
             <Link href={props.imageIpfsUrl} variant="caption">
               Image IPFS Url
             </Link>

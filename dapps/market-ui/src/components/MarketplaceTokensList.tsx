@@ -4,7 +4,7 @@ import { CIS2Contract, ConcordiumGRPCClient } from '@concordium/web-sdk';
 import { AlertColor, Grid } from '@mui/material';
 
 import { MARKET_CONTRACT_ADDRESS, MARKETPLACE_CONTRACT_INFO } from '../Constants';
-import { list, TokenListItem } from '../models/MarketplaceClient';
+import { list, TokenListItem } from '../models/CarbonCreditMarketClient';
 import { User } from '../types/user';
 import MarketplaceReturnDialog from './MarketplaceReturnDialog';
 import MarketplaceTokensListItem from './MarketplaceTokensListItem';

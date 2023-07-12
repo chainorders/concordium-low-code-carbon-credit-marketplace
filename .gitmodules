@@ -1,0 +1,3 @@
+[submodule "concordium-carbon-credit-indexer"]
+	path = concordium-carbon-credit-indexer
+	url = git@github.com:parv0888/concordium-carbon-credit-indexer.git

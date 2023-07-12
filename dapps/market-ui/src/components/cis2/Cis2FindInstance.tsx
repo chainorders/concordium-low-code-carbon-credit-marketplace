@@ -71,7 +71,7 @@ function Cis2FindInstance(props: {
     <Stack component={"form"} spacing={2} onSubmit={submit} autoComplete={"true"}>
       <TextField
         id="contract-index"
-        name="contractIndex"
+        name="index"
         label="Contract Index"
         variant="standard"
         type={"number"}
@@ -81,7 +81,7 @@ function Cis2FindInstance(props: {
       />
       <TextField
         id="contract-subindex"
-        name="contractSubindex"
+        name="subindex"
         label="Contract Sub Index"
         variant="standard"
         type={"number"}

@@ -2,7 +2,7 @@ import React, { ChangeEvent, FormEvent, useState } from 'react';
 
 import { Button, FormLabel, Stack, TextField } from '@mui/material';
 
-import { Metadata } from '../../models/Cis2Client';
+import { Metadata } from '../../models/ProjectNFTClient';
 
 interface TokenMetadataFormProps {
   defaultFormData: Metadata;

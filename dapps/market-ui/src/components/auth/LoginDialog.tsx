@@ -1,4 +1,3 @@
-import jwtDecode from 'jwt-decode';
 import { useState } from 'react';
 
 import {
@@ -8,8 +7,8 @@ import {
 import { CredentialResponse, GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 
 import { GOOGLE_CLIENT_ID } from '../../Constants';
-import { getUserCurrent } from '../../models/AuthClient';
 import { connectToWallet } from '../../models/ConcordiumContractClient';
+import { getAccount } from '../../models/web/WebClient';
 import { AccountType, User } from '../../types/user';
 import DisplayError from '../ui/DisplayError';
 
@@ -58,10 +57,18 @@ export default function LoginDialog(
   }
 
   async function onGooleLoginSuccess(credentialResponse: CredentialResponse) {
-    const res = jwtDecode(credentialResponse.credential!) as any;
-    const email = res.email;
-    const user = await getUserCurrent(email);
-    login({ ...form, email: res.email, account: user.account });
+    if (!credentialResponse.credential) {
+      setState({ ...state, error: "Login Failed" });
+      return;
+    }
+
+    const user = await getAccount(credentialResponse.credential);
+    if (!user || !user.email || !user.account) {
+      setState({ ...state, error: "Login Failed" });
+      return;
+    }
+
+    login({ ...form, email: user.email, account: user.account });
   }
 
   return (

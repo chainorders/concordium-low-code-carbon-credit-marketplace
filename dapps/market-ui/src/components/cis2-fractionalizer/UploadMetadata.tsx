@@ -1,8 +1,8 @@
 import { useState } from 'react';
 
 import { IPFS_GATEWAY_URL } from '../../Constants';
-import { Metadata } from '../../models/Cis2Client';
 import { PinataClient } from '../../models/PinataClient';
+import { Metadata } from '../../models/ProjectNFTClient';
 import ConnectPinata from '../ConnectPinata';
 
 export default function UploadMetadata(props: {

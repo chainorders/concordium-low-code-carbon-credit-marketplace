@@ -10,8 +10,8 @@ import DialogTitle from '@mui/material/DialogTitle';
 import TextField from '@mui/material/TextField';
 
 import { MARKETPLACE_CONTRACT_INFO } from '../Constants';
+import { TokenListItem, transfer } from '../models/CarbonCreditMarketClient';
 import { connectToWallet } from '../models/ConcordiumContractClient';
-import { TokenListItem, transfer } from '../models/MarketplaceClient';
 
 export default function MarketplaceReturnDialog(props: {
   isOpen: boolean;
@@ -113,7 +113,7 @@ export default function MarketplaceReturnDialog(props: {
           <Button type="submit" disabled={state.isProcessing}>
             Return
           </Button>
-          <Button onClick={(_) => handleClose("cancel")} disabled={state.isProcessing}>
+          <Button onClick={() => handleClose("cancel")} disabled={state.isProcessing}>
             Cancel
           </Button>
         </DialogActions>
