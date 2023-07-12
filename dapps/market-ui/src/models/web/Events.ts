@@ -38,12 +38,28 @@ export type ProjectNftTransferEvent = {
   to: Address;
 };
 
+export type ProjectNftVerifierAddedEvent = {
+  verifier: Address;
+};
+
+export type ProjectNftVerifierRemovedEvent = {
+  verifier: Address;
+};
+
+export type ProjectNftVerificationEvent = {
+  token_id: string;
+  verifier: Address;
+};
+
 export type ProjectNftEvent = {
   Mint?: ProjectNftMintEvent;
   Retire?: ProjectNftRetireEvent;
   Transfer?: ProjectNftTransferEvent;
   TokenMetadata?: ProjectNftTokenMetadataEvent;
   MaturityTime?: ProjectNftMaturityTimeEvent;
+  VerifierAdded?: ProjectNftVerifierAddedEvent;
+  VerifierRemoved?: ProjectNftVerifierRemovedEvent;
+  Verification?: ProjectNftVerificationEvent;
 };
 
 export type FractionalizerMintEvent = ProjectNftMintEvent;

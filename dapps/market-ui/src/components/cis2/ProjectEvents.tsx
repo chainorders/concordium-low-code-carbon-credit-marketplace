@@ -1,19 +1,48 @@
-import { useState } from 'react';
+import { useState } from "react";
 
-import { ContractAddress } from '@concordium/web-sdk';
+import { ContractAddress } from "@concordium/web-sdk";
 import {
-    Button, Container, Divider, FormControl, InputLabel, List, ListItem, ListItemText, MenuItem,
-    Pagination, Select, Stack, TextField, Typography
-} from '@mui/material';
+  Button,
+  Container,
+  Divider,
+  FormControl,
+  InputLabel,
+  List,
+  ListItem,
+  ListItemText,
+  MenuItem,
+  Pagination,
+  Select,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 
 import {
-    ModuleEvent, ProjectNftEvent, ProjectNftMaturityTimeEvent, ProjectNftMintEvent,
-    ProjectNftRetireEvent, ProjectNftTokenMetadataEvent, ProjectNftTransferEvent
-} from '../../models/web/Events';
-import { getContractEvents } from '../../models/web/WebClient';
-import DisplayError from '../ui/DisplayError';
+  ModuleEvent,
+  ProjectNftEvent,
+  ProjectNftMaturityTimeEvent,
+  ProjectNftMintEvent,
+  ProjectNftRetireEvent,
+  ProjectNftTokenMetadataEvent,
+  ProjectNftTransferEvent,
+  ProjectNftVerificationEvent,
+  ProjectNftVerifierAddedEvent,
+  ProjectNftVerifierRemovedEvent,
+} from "../../models/web/Events";
+import { getContractEvents } from "../../models/web/WebClient";
+import DisplayError from "../ui/DisplayError";
 
-const eventTypes = ["Mint", "TokenMetadata", "MaturityTime", "Transfer", "Retire"];
+const eventTypes = [
+  "Mint",
+  "TokenMetadata",
+  "MaturityTime",
+  "Transfer",
+  "Retire",
+  "VerifierAdded",
+  "VerifierRemoved",
+  "Verification",
+];
 
 function MintEvent(props: { event: ProjectNftMintEvent }) {
   const { event } = props;
@@ -106,6 +135,58 @@ function RetireEvent(props: { event: ProjectNftRetireEvent }) {
   );
 }
 
+function VerifierAddedEvent(props: { event: ProjectNftVerifierAddedEvent }) { 
+  const { event } = props;
+
+  return (
+    <ListItem alignItems="flex-start">
+      <ListItemText
+        primary="Verifier Added"
+        secondary={
+          <>
+            <Typography component="div">Verifier {event.verifier.Account?.[0]}</Typography>
+          </>
+        }
+      />
+    </ListItem>
+  );
+}
+
+function VerifierRemovedEvent(props: { event: ProjectNftVerifierRemovedEvent }) {
+  const { event } = props;
+
+  return (
+    <ListItem alignItems="flex-start">
+      <ListItemText
+        primary="Verifier Removed"
+        secondary={
+          <>
+            <Typography component="div">Verifier {event.verifier.Account?.[0]}</Typography>
+          </>
+        }
+      />
+    </ListItem>
+  );
+}
+
+function VerificationEvent(props: { event: ProjectNftVerificationEvent }) { 
+  const { event } = props;
+
+  return (
+    <ListItem alignItems="flex-start">
+      <ListItemText
+        primary="Verification"
+        secondary={
+          <>
+            <Typography component="div">Token {event.token_id}</Typography>
+            <Typography component="div">Verifier {event.verifier.Account?.[0]}</Typography>
+          </>
+        }
+      />
+    </ListItem>
+  );
+}
+
 function Event(props: { event: ProjectNftEvent }) {
   const { event } = props;
   const eventType = Object.keys(event)[0];
@@ -121,6 +202,12 @@ function Event(props: { event: ProjectNftEvent }) {
       return <TransferEvent event={event[eventType]!} />;
     case "Retire":
       return <RetireEvent event={event[eventType]!} />;
+    case "VerifierAdded":
+      return <VerifierAddedEvent event={event[eventType]!} />;
+    case "VerifierRemoved":
+      return <VerifierRemovedEvent event={event[eventType]!} />;
+    case "Verification":
+      return <VerificationEvent event={event[eventType]!} />;
     default:
       return <div>Unknown event type: {eventType}</div>;
   }
