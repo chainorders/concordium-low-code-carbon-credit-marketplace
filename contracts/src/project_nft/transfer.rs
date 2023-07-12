@@ -1,7 +1,7 @@
 use concordium_cis2::*;
 use concordium_std::*;
 
-use super::{contract_types::*, error::*, state::*, events::*};
+use super::{contract_types::*, error::*, events::*, state::*};
 
 pub type TransferParameter = TransferParams<ContractTokenId, ContractTokenAmount>;
 
@@ -52,6 +52,11 @@ pub fn transfer<S: HasStateApi>(
         ensure!(
             amount.cmp(&1.into()).is_eq(),
             ContractError::Custom(CustomContractError::InvalidAmount)
+        );
+        // Ensure token is verified
+        ensure!(
+            state.is_verified(&token_id),
+            ContractError::Custom(CustomContractError::TokenNotVerified)
         );
         let to_address = to.address();
         // Update the contract state

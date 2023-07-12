@@ -23,6 +23,8 @@ pub enum CustomContractError {
     InvalidAmount,
     /// Token Not Mature
     TokenNotMature,
+    /// Token Not Verified
+    TokenNotVerified
 }
 
 /// Mapping the logging errors to ContractError.

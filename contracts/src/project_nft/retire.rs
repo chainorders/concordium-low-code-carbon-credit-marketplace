@@ -35,6 +35,11 @@ fn retire<S: HasStateApi>(
             token.is_mature(&ctx.metadata().slot_time()),
             ContractError::Custom(CustomContractError::TokenNotMature)
         );
+        // Ensure token is verified
+        ensure!(
+            state.is_verified(&token_id),
+            ContractError::Custom(CustomContractError::TokenNotVerified)
+        );
         // Ensure that the sender has token balance.
         ensure!(
             state.balance(&token_id, &sender)?.cmp(&0.into()).is_gt(),
