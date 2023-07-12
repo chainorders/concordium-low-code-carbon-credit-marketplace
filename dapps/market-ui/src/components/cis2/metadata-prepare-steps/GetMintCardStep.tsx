@@ -18,9 +18,6 @@ function GetMintCardStep(props: {
       <CardContent>
         <Typography>Ready to be Minted</Typography>
         <Typography variant="caption" component="div">
-          Token Id: {props.tokenId}
-        </Typography>
-        <Typography variant="caption" component="div">
           Maturity Time: {props.maturityTime.toLocaleString()}
         </Typography>
         <Link href={props.imageIpfsUrl} variant="caption" component="div">

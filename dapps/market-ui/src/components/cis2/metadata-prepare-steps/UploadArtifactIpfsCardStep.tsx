@@ -55,7 +55,6 @@ export default function UploadArtifactIpfsCardStep(props: {
           title={""}
           accept={[".pdf"]}
         />
-        <Typography variant="caption">Token Id: {props.tokenId}</Typography>
         <DisplayError error={state.error} />
       </CardContent>
       <CardActions>

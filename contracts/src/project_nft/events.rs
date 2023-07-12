@@ -19,16 +19,38 @@ pub struct MaturityTimeEvent {
     pub maturity_time: Timestamp,
 }
 
+#[derive(Serial, SchemaType)]
+pub struct VerifierAddedEvent {
+    pub verifier: Address,
+}
+
+#[derive(Serial, SchemaType)]
+pub struct VerifierRemovedEvent {
+    pub verifier: Address,
+}
+
+#[derive(Serial, SchemaType)]
+pub struct VerificationEvent {
+    pub verifier: Address,
+    pub token_id: ContractTokenId,
+}
+
 pub enum ContractEvent {
     Mint(MintEvent),
     TokenMetadata(TokenMetadataEvent),
     MaturityTime(MaturityTimeEvent),
     Transfer(TransferEvent),
     Retire(RetireEvent),
+    VerifierAdded(VerifierAddedEvent),
+    VerifierRemoved(VerifierRemovedEvent),
+    Verification(VerificationEvent),
 }
 
 const RETIRE_EVENT_TAG: u8 = u8::MIN;
 const MATURITY_TIME_EVENT_TAG: u8 = u8::MIN + 1;
+const VERIFIER_ADDED_EVENT_TAG: u8 = u8::MIN + 2;
+const VERIFIER_REMOVED_EVENT_TAG: u8 = u8::MIN + 3;
+const VERIFICATION_EVENT_TAG: u8 = u8::MIN + 4;
 
 impl Serial for ContractEvent {
     fn serial<W: Write>(&self, out: &mut W) -> Result<(), W::Err> {
@@ -51,6 +73,18 @@ impl Serial for ContractEvent {
             }
             ContractEvent::MaturityTime(event) => {
                 out.write_u8(MATURITY_TIME_EVENT_TAG)?;
+                event.serial(out)
+            }
+            ContractEvent::VerifierAdded(event) => {
+                out.write_u8(VERIFIER_ADDED_EVENT_TAG)?;
+                event.serial(out)
+            }
+            ContractEvent::VerifierRemoved(event) => {
+                out.write_u8(VERIFIER_REMOVED_EVENT_TAG)?;
+                event.serial(out)
+            }
+            ContractEvent::Verification(event) => {
+                out.write_u8(VERIFICATION_EVENT_TAG)?;
                 event.serial(out)
             }
         }
@@ -110,6 +144,36 @@ impl SchemaType for ContractEvent {
                 schema::Fields::Named(vec![
                     (String::from("token_id"), ContractTokenId::get_type()),
                     (String::from("metadata_url"), MetadataUrl::get_type()),
+                ]),
+            ),
+        );
+        event_map.insert(
+            VERIFIER_ADDED_EVENT_TAG,
+            (
+                "VerifierAdded".to_string(),
+                schema::Fields::Named(vec![(
+                    String::from("verifier"),
+                    Address::get_type(),
+                )]),
+            ),
+        );
+        event_map.insert(
+            VERIFIER_REMOVED_EVENT_TAG,
+            (
+                "VerifierRemoved".to_string(),
+                schema::Fields::Named(vec![(
+                    String::from("verifier"),
+                    Address::get_type(),
+                )]),
+            ),
+        );
+        event_map.insert(
+            VERIFICATION_EVENT_TAG,
+            (
+                "Verification".to_string(),
+                schema::Fields::Named(vec![
+                    (String::from("verifier"), Address::get_type()),
+                    (String::from("token_id"), ContractTokenId::get_type()),
                 ]),
             ),
         );

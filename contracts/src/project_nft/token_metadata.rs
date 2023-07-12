@@ -28,7 +28,7 @@ pub fn token_metadata<S: HasStateApi>(
     // Build the response.
     let mut response = Vec::with_capacity(params.queries.len());
     for token_id in params.queries {
-        let token_state = match host.state().tokens.get(&token_id) {
+        let token_state = match host.state().metadatas.get(&token_id) {
             Some(metadata_url) => metadata_url.clone(),
             None => bail!(ContractError::InvalidTokenId),
         };

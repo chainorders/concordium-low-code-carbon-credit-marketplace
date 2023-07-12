@@ -1,34 +1,17 @@
-import { useState } from "react";
+import { useState } from 'react';
 
-import { ContractAddress } from "@concordium/web-sdk";
+import { ContractAddress } from '@concordium/web-sdk';
 import {
-  Button,
-  Container,
-  Divider,
-  FormControl,
-  InputLabel,
-  List,
-  ListItem,
-  ListItemText,
-  MenuItem,
-  Pagination,
-  Select,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+    Button, Container, Divider, FormControl, InputLabel, List, ListItem, ListItemText, MenuItem,
+    Pagination, Select, Stack, TextField, Typography
+} from '@mui/material';
 
 import {
-  ModuleEvent,
-  ProjectNftEvent,
-  ProjectNftMaturityTimeEvent,
-  ProjectNftMintEvent,
-  ProjectNftRetireEvent,
-  ProjectNftTokenMetadataEvent,
-  ProjectNftTransferEvent,
-} from "../../models/web/Events";
-import { getContractEvents } from "../../models/web/WebClient";
-import DisplayError from "../ui/DisplayError";
+    ModuleEvent, ProjectNftEvent, ProjectNftMaturityTimeEvent, ProjectNftMintEvent,
+    ProjectNftRetireEvent, ProjectNftTokenMetadataEvent, ProjectNftTransferEvent
+} from '../../models/web/Events';
+import { getContractEvents } from '../../models/web/WebClient';
+import DisplayError from '../ui/DisplayError';
 
 const eventTypes = ["Mint", "TokenMetadata", "MaturityTime", "Transfer", "Retire"];
 
@@ -177,7 +160,7 @@ export default function ProjectEvents({ defaultContractAddress }: { defaultContr
       <Stack spacing={2} direction={"row"}>
         <TextField
           id="contract-index"
-          name="contractIndex"
+          name="index"
           label="Contract Index"
           variant="standard"
           type={"number"}
@@ -188,7 +171,7 @@ export default function ProjectEvents({ defaultContractAddress }: { defaultContr
         />
         <TextField
           id="contract-subindex"
-          name="contractSubindex"
+          name="subindex"
           label="Contract Sub Index"
           variant="standard"
           type={"number"}

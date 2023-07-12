@@ -1,10 +1,9 @@
 import { SmartContractParameters, WalletApi } from '@concordium/browser-wallet-api-helpers';
-import {
-    CIS2, ContractAddress, TransactionStatusEnum} from '@concordium/web-sdk';
+import { CIS2, ContractAddress, TransactionStatusEnum } from '@concordium/web-sdk';
 
 import * as connClient from './ConcordiumContractClient';
-import { projectNftGetTxnContractEvents } from './web/WebClient';
 import { ProjectNftEvent } from './web/Events';
+import { projectNftGetTxnContractEvents } from './web/WebClient';
 
 interface MintParams {
   owner: { Account: [string] };
@@ -120,6 +119,124 @@ export async function retire(
     account,
     nftContractAddress,
     "retire",
+    maxContractExecutionEnergy,
+    BigInt(0),
+    onStatusUpdate,
+  );
+
+  return outcomes;
+}
+
+/**
+ * Adds a verifier to the contract.
+ * @param provider Wallet Provider.
+ * @param account Account address.
+ * @param nftContractAddress CIS-NFT contract address.
+ * @param contractInfo Contract info.
+ * @param verifier Verifier address.
+ * @param maxContractExecutionEnergy Max allowed energy.
+ * @returns Transaction outcomes {@link Record<string, TransactionSummary>}
+ */
+export async function addVerifier(
+  provider: WalletApi,
+  account: string,
+  nftContractAddress: ContractAddress,
+  contractInfo: connClient.ContractInfo,
+  verifier: string,
+  maxContractExecutionEnergy = BigInt(9999),
+  onStatusUpdate: (status: TransactionStatusEnum, hash: string) => void = (status, hash) => console.log(status, hash),
+) {
+  const paramsJson = {
+    verifier: {
+      Account: [verifier],
+    },
+  };
+
+  const outcomes = await connClient.updateContract(
+    provider,
+    contractInfo,
+    paramsJson as unknown as SmartContractParameters,
+    account,
+    nftContractAddress,
+    "addVerifier",
+    maxContractExecutionEnergy,
+    BigInt(0),
+    onStatusUpdate,
+  );
+
+  return outcomes;
+}
+
+/**
+ * Removes a verifier from the contract.
+ * @param provider Wallet Provider.
+ * @param account Account address.
+ * @param nftContractAddress CIS-NFT contract address.
+ * @param contractInfo Contract info.
+ * @param verifier Verifier address.
+ * @param maxContractExecutionEnergy Max allowed energy.
+ * @returns Transaction outcomes {@link Record<string, TransactionSummary>}
+ */
+export async function removeVerifier(
+  provider: WalletApi,
+  account: string,
+  nftContractAddress: ContractAddress,
+  contractInfo: connClient.ContractInfo,
+  verifier: string,
+  maxContractExecutionEnergy = BigInt(9999),
+  onStatusUpdate: (status: TransactionStatusEnum, hash: string) => void = (status, hash) => console.log(status, hash),
+) {
+  const paramsJson = {
+    verifier: {
+      Account: [verifier],
+    },
+  };
+
+  const outcomes = await connClient.updateContract(
+    provider,
+    contractInfo,
+    paramsJson as unknown as SmartContractParameters,
+    account,
+    nftContractAddress,
+    "removeVerifier",
+    maxContractExecutionEnergy,
+    BigInt(0),
+    onStatusUpdate,
+  );
+
+  return outcomes;
+}
+
+/**
+ * Verifies a token.
+ * @param provider Wallet Provider.
+ * @param account Account address.
+ * @param nftContractAddress CIS-NFT contract address.
+ * @param contractInfo Contract info.
+ * @param tokenId Token Id.
+ * @param maxContractExecutionEnergy Max allowed energy.
+ * @returns Transaction outcomes {@link Record<string, TransactionSummary>}
+ */
+export async function verify(
+  provider: WalletApi,
+  account: string,
+  nftContractAddress: ContractAddress,
+  contractInfo: connClient.ContractInfo,
+  tokenId: string,
+  maxContractExecutionEnergy = BigInt(9999),
+  onStatusUpdate: (status: TransactionStatusEnum, hash: string) => void = (status, hash) => console.log(status, hash),
+) {
+  const paramsJson = {
+    token_id: tokenId,
+  };
+
+  const outcomes = await connClient.updateContract(
+    provider,
+    contractInfo,
+    paramsJson as unknown as SmartContractParameters,
+    account,
+    nftContractAddress,
+    "verify",
     maxContractExecutionEnergy,
     BigInt(0),
     onStatusUpdate,

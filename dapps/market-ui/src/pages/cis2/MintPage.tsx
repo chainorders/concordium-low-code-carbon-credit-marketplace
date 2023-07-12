@@ -1,24 +1,21 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk";
-import { ArrowBackRounded } from "@mui/icons-material";
-import { Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography } from "@mui/material";
-import { Container } from "@mui/system";
+import { ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
+import { ArrowBackRounded } from '@mui/icons-material';
+import { Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography } from '@mui/material';
+import { Container } from '@mui/system';
 
-import Cis2BatchMetadataPrepareOrAdd from "../../components/cis2/Cis2BatchMetadataPrepareOrAdd";
-import Cis2BatchMint from "../../components/cis2/Cis2BatchMint";
-import Cis2FindInstanceOrInit from "../../components/cis2/Cis2FindInstanceOrInit";
-import Cis2TokensDisplay from "../../components/cis2/Cis2TokensDisplay";
-import ConnectPinata from "../../components/ConnectPinata";
-import UploadFiles from "../../components/ui/UploadFiles";
-import { Cis2ContractInfo } from "../../models/ConcordiumContractClient";
-import { TokenInfo } from "../../models/ProjectNFTClient";
+import Cis2BatchMetadataPrepareOrAdd from '../../components/cis2/Cis2BatchMetadataPrepareOrAdd';
+import Cis2BatchMint from '../../components/cis2/Cis2BatchMint';
+import Cis2FindInstanceOrInit from '../../components/cis2/Cis2FindInstanceOrInit';
+import Cis2TokensDisplay from '../../components/cis2/Cis2TokensDisplay';
+import ConnectPinata from '../../components/ConnectPinata';
+import UploadFiles from '../../components/ui/UploadFiles';
+import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
+import { TokenInfo } from '../../models/ProjectNFTClient';
 import {
-  ProjectNftMintEvent,
-  ProjectNftTokenMetadataEvent,
-  ProjectNftMaturityTimeEvent,
-  ProjectNftEvent,
-} from "../../models/web/Events";
+    ProjectNftEvent, ProjectNftMaturityTimeEvent, ProjectNftMintEvent, ProjectNftTokenMetadataEvent
+} from '../../models/web/Events';
 
 enum Steps {
   GetOrInitCis2,

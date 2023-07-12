@@ -129,9 +129,6 @@ export default function UploadMetadataIpfsCardStep(props: {
         <form onSubmit={(e) => uploadMetadataClicked(e)}>
           <CardContent>
             <Typography>Create Metadata</Typography>
-            <Typography variant="caption" component="div">
-              Token Id: {props.tokenId}
-            </Typography>
             <Link href={props.imageIpfsUrl} variant="caption">
               Image IPFS Url
             </Link>

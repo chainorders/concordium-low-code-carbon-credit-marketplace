@@ -1,11 +1,11 @@
-import { Card, CardContent, CardMedia, Grid, Skeleton, SxProps, Theme, Typography } from "@mui/material";
-
-import LazyCis2Metadata from "./LazyCis2Metadata";
 import {
-  ProjectNftMaturityTimeEvent,
-  ProjectNftMintEvent,
-  ProjectNftTokenMetadataEvent,
-} from "../../models/web/Events";
+    Card, CardContent, CardMedia, Grid, Skeleton, SxProps, Theme, Typography
+} from '@mui/material';
+
+import {
+    ProjectNftMaturityTimeEvent, ProjectNftMintEvent, ProjectNftTokenMetadataEvent
+} from '../../models/web/Events';
+import LazyCis2Metadata from './LazyCis2Metadata';
 
 const cardMediaSx: SxProps<Theme> = { maxHeight: "200px" };
 

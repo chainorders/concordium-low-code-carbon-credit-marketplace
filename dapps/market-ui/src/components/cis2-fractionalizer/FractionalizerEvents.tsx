@@ -1,35 +1,18 @@
-import { useState } from "react";
+import { useState } from 'react';
 
-import { ContractAddress } from "@concordium/web-sdk";
+import { ContractAddress } from '@concordium/web-sdk';
 import {
-  Button,
-  Container,
-  Divider,
-  FormControl,
-  InputLabel,
-  List,
-  ListItem,
-  ListItemText,
-  MenuItem,
-  Pagination,
-  Select,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+    Button, Container, Divider, FormControl, InputLabel, List, ListItem, ListItemText, MenuItem,
+    Pagination, Select, Stack, TextField, Typography
+} from '@mui/material';
 
 import {
-  FractionalizerCollateralAddedEvent,
-  FractionalizerCollateralRemovedEvent,
-  FractionalizerEvent,
-  FractionalizerMintEvent,
-  FractionalizerRetireEvent,
-  FractionalizerTokenMetadataEvent,
-  FractionalizerTransferEvent,
-  ModuleEvent,
-} from "../../models/web/Events";
-import { getContractEvents } from "../../models/web/WebClient";
-import DisplayError from "../ui/DisplayError";
+    FractionalizerCollateralAddedEvent, FractionalizerCollateralRemovedEvent, FractionalizerEvent,
+    FractionalizerMintEvent, FractionalizerRetireEvent, FractionalizerTokenMetadataEvent,
+    FractionalizerTransferEvent, ModuleEvent
+} from '../../models/web/Events';
+import { getContractEvents } from '../../models/web/WebClient';
+import DisplayError from '../ui/DisplayError';
 
 const eventTypes = ["Mint", "TokenMetadata", "Transfer", "Retire", "CollateralAdded", "CollateralRemoved"];
 

@@ -14,6 +14,9 @@ import FractionalizerEvents from './components/cis2-fractionalizer/Fractionalize
 import MarketEvents from './components/cis2-market/MarketEvents';
 import Cis2BalanceOf from './components/cis2/Cis2BalanceOf';
 import ProjectEvents from './components/cis2/ProjectEvents';
+import AddVerifier from './components/cis2/verifier/AddVerifier';
+import RemoveVerifier from './components/cis2/verifier/RemoveVerifier';
+import Verify from './components/cis2/verifier/Verify';
 import MarketplaceTokensList from './components/MarketplaceTokensList';
 import { useParamsContractAddress } from './components/utils';
 import {
@@ -30,6 +33,7 @@ import FractionalizeTokenPage from './pages/fractionalizer/FractionalizeTokenPag
 import MarketFindOrInit from './pages/marketplace/MarketFindOrInit';
 import MarketPage from './pages/marketplace/MarketPage';
 import SellPage from './pages/marketplace/SellPage';
+import VerifyPage from './pages/verification/VerificationPage';
 import { User } from './types/user';
 
 const theme = createTheme({
@@ -83,7 +87,10 @@ function App() {
                 Fractionalizer
               </HeaderButton>
               <HeaderButton color="inherit" onClick={() => navigate("/cis2")} disabled={!isWalletUser()}>
-                CIS2 Token Tools
+                NFT
+              </HeaderButton>
+              <HeaderButton color="inherit" onClick={() => navigate("/verifier")} disabled={!isWalletUser()}>
+                verifier
               </HeaderButton>
               <UserAuth user={user} onLogin={setUser} onLogout={() => setUser(loggedOutUser)} />
             </Toolbar>
@@ -197,6 +204,14 @@ function App() {
                     }
                   />
                   <Route path="" element={<Navigate to={`fractionalize`} replace={true} />} />
+                </Route>
+              </Route>
+              <Route element={<GuardedRoute isRouteAccessible={!!user?.account} redirectRoute="/market" />}>
+                <Route path="/verifier" element={<VerifyPage />} key="verifier">
+                  <Route path="verify" element={<Verify contractInfo={CIS2_MULTI_CONTRACT_INFO} />} />
+                  <Route path="add" element={<AddVerifier contractInfo={CIS2_MULTI_CONTRACT_INFO} />} />
+                  <Route path="remove" element={<RemoveVerifier contractInfo={CIS2_MULTI_CONTRACT_INFO} />} />
+                  <Route path="" element={<Navigate to={"verify"} replace={true} />} />
                 </Route>
               </Route>
               <Route path="*" element={<Navigate to={"/market"} replace={true} />} />

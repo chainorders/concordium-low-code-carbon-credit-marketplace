@@ -1,3 +1,4 @@
+import moment from 'moment';
 import React, { FormEvent, useState } from 'react';
 
 import {
@@ -13,25 +14,24 @@ export default function GetMaturityTimeCardStep(props: {
   tokenId: string;
   onDone: (data: { tokenId: string; maturityTime: Date }) => void;
 }) {
+  const [form, setForm] = useState({
+    maturityTime: moment().add(1, "days").format("YYYY-MM-DDTHH:mm:ss")
+  });
   const [state, setState] = useState({
     tokenId: props.tokenId.toString(),
     error: "",
     imageUrl: props.imageUrl,
-    quantity: "",
   });
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const time = formData.get("maturityTime")?.toString() || "";
-
-    if (!time) {
+    if (!form.maturityTime) {
       setState({ ...state, error: "Invalid Time" });
       return;
     }
 
-    setState({ ...state, quantity: time, error: "" });
-    props.onDone({ tokenId: props.tokenId, maturityTime: new Date(time) });
+    setState({ ...state, error: "" });
+    props.onDone({ tokenId: props.tokenId, maturityTime: new Date(form.maturityTime) });
   }
 
   return (
@@ -43,15 +43,16 @@ export default function GetMaturityTimeCardStep(props: {
             Set Maturity Time
           </Typography>
           <TextField
-            defaultValue={0}
             name="maturityTime"
             id="maturityTime"
             label="Maturity Time"
             variant="outlined"
             size="small"
             fullWidth={true}
-            required={true}
+            required
             type="datetime-local"
+            onChange={(e) => setForm({ ...form, maturityTime: e.target.value })}
+            value={form.maturityTime}
           />
           <DisplayError error={state.error} />
         </CardContent>

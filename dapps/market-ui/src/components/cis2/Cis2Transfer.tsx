@@ -1,20 +1,15 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useState } from 'react';
 
-import { SchemaWithContext, WalletApi } from "@concordium/browser-wallet-api-helpers";
+import { SchemaWithContext, WalletApi } from '@concordium/browser-wallet-api-helpers';
 import {
-  CIS0,
-  cis0Supports,
-  CIS2,
-  CIS2Contract,
-  ConcordiumGRPCClient,
-  ContractAddress,
-  TransactionStatusEnum,
-} from "@concordium/web-sdk";
-import { Button, Container, Stack, TextField } from "@mui/material";
+    CIS0, cis0Supports, CIS2, CIS2Contract, ConcordiumGRPCClient, ContractAddress,
+    TransactionStatusEnum
+} from '@concordium/web-sdk';
+import { Button, Container, Stack, TextField } from '@mui/material';
 
-import { connectToWallet, waitAndThrowError } from "../../models/ConcordiumContractClient";
-import DisplayError from "../ui/DisplayError";
-import TransactionProgress from "../ui/TransactionProgress";
+import { connectToWallet, waitAndThrowError } from '../../models/ConcordiumContractClient';
+import DisplayError from '../ui/DisplayError';
+import TransactionProgress from '../ui/TransactionProgress';
 
 export default function Cis2Transfer(props: {
   defaultQuantity?: string;

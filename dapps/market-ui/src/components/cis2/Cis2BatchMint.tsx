@@ -5,10 +5,10 @@ import { Alert, Button, Grid, Stack, Typography } from '@mui/material';
 
 import { connectToWallet, ContractInfo } from '../../models/ConcordiumContractClient';
 import { mint, TokenInfo } from '../../models/ProjectNFTClient';
+import { ProjectNftEvent } from '../../models/web/Events';
 import DisplayError from '../ui/DisplayError';
 import TransactionProgress from '../ui/TransactionProgress';
 import Cis2BatchItemMint from './Cis2BatchItemMint';
-import { ProjectNftEvent } from '../../models/web/Events';
 
 function Cis2BatchMint(props: {
   contractInfo: ContractInfo;

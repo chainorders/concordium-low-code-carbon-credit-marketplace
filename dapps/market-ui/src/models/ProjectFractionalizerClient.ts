@@ -2,8 +2,8 @@ import {
     SchemaWithContext, SmartContractParameters, WalletApi
 } from '@concordium/browser-wallet-api-helpers';
 import {
-    CIS2, CIS2Contract, ConcordiumGRPCClient, ContractAddress,
-    RejectReasonTag, TransactionStatusEnum, TransactionSummary
+    CIS2, CIS2Contract, ConcordiumGRPCClient, ContractAddress, RejectReasonTag,
+    TransactionStatusEnum, TransactionSummary
 } from '@concordium/web-sdk';
 
 import { ContractInfo, updateContract, waitAndThrowError } from './ConcordiumContractClient';

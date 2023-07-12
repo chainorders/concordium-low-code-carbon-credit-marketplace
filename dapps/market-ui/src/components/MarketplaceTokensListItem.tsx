@@ -4,8 +4,8 @@ import { CIS2Contract, ContractAddress } from '@concordium/web-sdk';
 import { Expand, Info, ShoppingCartCheckout } from '@mui/icons-material';
 import CheckIcon from '@mui/icons-material/Check';
 import {
-    Accordion, AccordionDetails, AccordionSummary, Card, CardActions, CardContent, CardMedia, Chip,
-    Grid, Tooltip, Typography
+    Accordion, AccordionDetails, AccordionSummary, Card, CardContent, CardMedia, Chip, Grid,
+    Tooltip, Typography
 } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 
