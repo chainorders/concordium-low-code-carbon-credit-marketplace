@@ -1,27 +1,27 @@
 use concordium_std::*;
 
-use super::{contract_types::*, error::*, state::*, events::*};
+use super::{contract_types::*, error::*, events::*, state::*};
 
 #[derive(Serial, Deserial, SchemaType)]
-struct RetireParams {
+struct RetractParams {
     tokens: Vec<ContractTokenId>,
 }
 
 #[receive(
     contract = "project_nft",
-    name = "retire",
-    parameter = "RetireParams",
+    name = "retract",
+    parameter = "RetractParams",
     error = "ContractError",
     enable_logger,
-    mutable,
+    mutable
 )]
-fn retire<S: HasStateApi>(
+fn retract<S: HasStateApi>(
     ctx: &impl HasReceiveContext,
     host: &mut impl HasHost<State<S>, StateApiType = S>,
     logger: &mut impl HasLogger,
 ) -> ContractResult<()> {
     let sender = ctx.sender();
-    let params: RetireParams = ctx.parameter_cursor().get()?;
+    let params: RetractParams = ctx.parameter_cursor().get()?;
 
     let state = host.state_mut();
     for token_id in params.tokens {
@@ -32,13 +32,8 @@ fn retire<S: HasStateApi>(
 
         // Ensure that the token is mature.
         ensure!(
-            token.is_mature(&ctx.metadata().slot_time()),
+            !token.is_mature(&ctx.metadata().slot_time()),
             ContractError::Custom(CustomContractError::TokenNotMature)
-        );
-        // Ensure token is verified
-        ensure!(
-            state.is_verified(&token_id),
-            ContractError::Custom(CustomContractError::TokenNotVerified)
         );
         // Ensure that the sender has token balance.
         ensure!(
@@ -50,10 +45,10 @@ fn retire<S: HasStateApi>(
         state.burn(&token_id, &sender)?;
 
         //log token retire event.
-        logger.log(&ContractEvent::Retire(BurnEvent {
+        logger.log(&ContractEvent::Retract(BurnEvent {
             token_id,
             owner: sender,
-            amount: 1.into()
+            amount: 1.into(),
         }))?;
     }
 

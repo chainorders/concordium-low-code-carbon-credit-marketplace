@@ -1,0 +1,14 @@
+.project_nft .price {
+    color: brown;
+}
+.project_nft .attributes {
+    border-radius: 1px;
+    border-color: brown;
+}
+.project_fractionalizer .price{
+    color: green;
+}
+.project_fractionalizer .attributes {
+    border-radius: 1px;
+    border-color: green;
+}

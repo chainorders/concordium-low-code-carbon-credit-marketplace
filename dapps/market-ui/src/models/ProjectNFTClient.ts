@@ -2,8 +2,8 @@ import { SmartContractParameters, WalletApi } from '@concordium/browser-wallet-a
 import { CIS2, ContractAddress, TransactionStatusEnum } from '@concordium/web-sdk';
 
 import * as connClient from './ConcordiumContractClient';
-import { ProjectNftEvent } from './web/Events';
-import { projectNftGetTxnContractEvents } from './web/WebClient';
+import { ModuleEvent } from './web/Events';
+import { getContractEventsByTransactionHash } from './web/WebClient';
 
 interface MintParams {
   owner: { Account: [string] };
@@ -65,7 +65,7 @@ export async function mint(
   contractInfo: connClient.ContractInfo,
   maxContractExecutionEnergy = BigInt(9999),
   onStatusUpdate: (status: TransactionStatusEnum, hash: string) => void = (status, hash) => console.log(status, hash),
-): Promise<ProjectNftEvent[]> {
+): Promise<ModuleEvent[]> {
   const paramJson = {
     owner: {
       Account: [account],
@@ -75,7 +75,7 @@ export async function mint(
         ({
           metadata_url: {
             url: token.metadataUrl.url,
-            hash: token.metadataUrl.hash ? { Some: [hexToUnsignedInt(token.metadataUrl.hash)] } : { None: [] },
+            hash: token.metadataUrl.hash ? { Some: [token.metadataUrl.hash] } : { None: [] },
           },
           maturity_time: token.maturityTime.toISOString(),
         } as MintParam),
@@ -94,9 +94,7 @@ export async function mint(
     onStatusUpdate,
   );
 
-  const events = await projectNftGetTxnContractEvents(txnHash);
-  console.log(events);
-  return events;
+  return getContractEventsByTransactionHash(txnHash);
 }
 
 export async function retire(
@@ -119,6 +117,34 @@ export async function retire(
     account,
     nftContractAddress,
     "retire",
+    maxContractExecutionEnergy,
+    BigInt(0),
+    onStatusUpdate,
+  );
+
+  return outcomes;
+}
+
+export async function retract(
+  provider: WalletApi,
+  account: string,
+  nftContractAddress: ContractAddress,
+  contractInfo: connClient.ContractInfo,
+  tokenIds: string[],
+  maxContractExecutionEnergy = BigInt(9999),
+  onStatusUpdate: (status: TransactionStatusEnum, hash: string) => void = (status, hash) => console.log(status, hash),
+) {
+  const paramsJson = {
+    tokens: tokenIds,
+  };
+
+  const outcomes = await connClient.updateContract(
+    provider,
+    contractInfo,
+    paramsJson as unknown as SmartContractParameters,
+    account,
+    nftContractAddress,
+    "retract",
     maxContractExecutionEnergy,
     BigInt(0),
     onStatusUpdate,
@@ -247,14 +273,4 @@ export async function verify(
 
 export const toTokenId = (integer: number, contractInfo: connClient.Cis2ContractInfo) => {
   return integer.toString(16).padStart(contractInfo.tokenIdByteSize * 2, "0");
-};
-
-const hexToUnsignedInt = (inputStr: string) => {
-  const hex = inputStr.toString();
-  const Uint8Array = new Array<number>();
-  for (let n = 0; n < hex.length; n += 2) {
-    Uint8Array.push(parseInt(hex.substr(n, 2), 16));
-  }
-
-  return Uint8Array;
 };

@@ -18,6 +18,9 @@ export default function CIS2Page() {
           <Button color="inherit" onClick={() => navigate(`retire`)}>
             Retire
           </Button>
+          <Button color="inherit" onClick={() => navigate(`retract`)}>
+            Retract
+          </Button>
           <Button color="inherit" onClick={() => navigate(`events`)}>
             Events
           </Button>

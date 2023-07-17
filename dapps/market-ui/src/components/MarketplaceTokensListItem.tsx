@@ -1,6 +1,10 @@
+import './MarketplaceTokenListItem.css';
+
 import React, { useEffect, useState } from 'react';
 
-import { CIS2Contract, ContractAddress } from '@concordium/web-sdk';
+import {
+    CIS2Contract, ConcordiumGRPCClient, ContractAddress, InstanceInfo
+} from '@concordium/web-sdk';
 import { Expand, Info, ShoppingCartCheckout } from '@mui/icons-material';
 import CheckIcon from '@mui/icons-material/Check';
 import {
@@ -10,6 +14,7 @@ import {
 import IconButton from '@mui/material/IconButton';
 
 import { TokenListItem } from '../models/CarbonCreditMarketClient';
+import { getContractInformation } from '../models/ConcordiumContractClient';
 import { Metadata } from '../models/ProjectNFTClient';
 import { fetchJson } from '../models/Utils';
 import { User } from '../types/user';
@@ -78,6 +83,7 @@ const ActionButton = (props: {
  * Displays a single token from the list of all the tokens listed on Marketplace.
  */
 function MarketplaceTokensListItem(props: {
+  grpcClient: ConcordiumGRPCClient;
   onReturnClicked(item: ListItem): void;
   item: ListItem;
   marketContractAddress: ContractAddress;
@@ -86,6 +92,11 @@ function MarketplaceTokensListItem(props: {
 }) {
   const { item, user } = props;
   const [metadata, setMetadata] = useState<Metadata>();
+  const [contractInfo, setContractInfo] = useState<InstanceInfo>();
+
+  useEffect(() => {
+    getContractInformation(props.grpcClient, props.item.contract).then(setContractInfo);
+  }, [props.item.contract]);
 
   useEffect(() => {
     props.item.cis2Contract
@@ -99,16 +110,19 @@ function MarketplaceTokensListItem(props: {
   }, [props.item.cis2Contract, props.item.tokenId]);
 
   return (
-    <Grid item xs={3} key={item.tokenId + item.contract.index + item.contract.subindex}>
+    <Grid item xs={3}
+      key={item.tokenId + item.contract.index + item.contract.subindex}
+      className={contractInfo?.name.replace("init_", "")}>
       <Card variant="elevation">
         <CardMedia>
           <Cis2MetadataImageLazy cis2Contract={props.item.cis2Contract} tokenId={item.tokenId} />
         </CardMedia>
         <CardContent>
           <Grid container justifyContent={"space-between"}>
-            <Grid item xs={6} key="left">
-              <Typography variant="body1" textAlign={"left"} fontSize={"2em"} fontWeight={"bold"}>
-                {item.price.toString()}{" "}
+            <Grid item xs={6} key="left" textAlign={"left"}>
+              <Chip label={contractInfo?.name.replace("init_", "")} />
+              <Typography className="price" variant="body1" textAlign={"left"} fontSize={"2em"} fontWeight={"bold"}>
+                {item.price.toString()}&nbsp;
                 <Typography component={"span"} padding={0} margin={0}>
                   CCD
                 </Typography>
@@ -120,7 +134,7 @@ function MarketplaceTokensListItem(props: {
             </Grid>
             <Grid item xs={6} textAlign={"right"} key="right">
               <Tooltip title={"Token Id"}>
-                <Typography variant="caption" component={"div"} textAlign={"right"}>
+                <Typography variant="body1" component={"div"} textAlign={"right"}>
                   {item.tokenId.toString()}
                 </Typography>
               </Tooltip>
@@ -142,7 +156,7 @@ function MarketplaceTokensListItem(props: {
               />
             </Grid>
             <Grid item xs={12} mt={"1em"} key="bottom">
-              <Accordion variant="outlined">
+              <Accordion variant="outlined" className="attributes">
                 <AccordionSummary expandIcon={<Expand />}>
                   <Typography>Attributes</Typography>
                 </AccordionSummary>

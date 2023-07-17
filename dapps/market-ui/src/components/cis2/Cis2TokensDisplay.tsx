@@ -1,23 +1,20 @@
 import {
-    Card, CardContent, CardMedia, Grid, Skeleton, SxProps, Theme, Typography
+    Card, CardContent, CardMedia, Grid, Link, Skeleton, SxProps, Theme, Tooltip, Typography
 } from '@mui/material';
 
-import {
-    ProjectNftMaturityTimeEvent, ProjectNftMintEvent, ProjectNftTokenMetadataEvent
-} from '../../models/web/Events';
+import { Cis2MintEvent, Cis2TokenMetadataEvent } from '../../models/web/Events';
 import LazyCis2Metadata from './LazyCis2Metadata';
 
 const cardMediaSx: SxProps<Theme> = { maxHeight: "200px" };
 
 function Cis2TokenDisplay(props: {
   token: {
-    mint: ProjectNftMintEvent;
-    tokenMetadata: ProjectNftTokenMetadataEvent;
-    maturityTime: ProjectNftMaturityTimeEvent;
+    mint: Cis2MintEvent;
+    tokenMetadata: Cis2TokenMetadataEvent;
   };
 }) {
   const {
-    token: { mint, tokenMetadata, maturityTime },
+    token: { mint, tokenMetadata },
   } = props;
 
   return (
@@ -34,7 +31,23 @@ function Cis2TokenDisplay(props: {
       />
       <CardContent>
         <Typography>Token Id: {mint.token_id}</Typography>
-        <Typography>Maturity Time: {maturityTime.maturity_time}</Typography>
+        {mint.owner.Account && (
+          <Tooltip title={mint.owner.Account[0]}>
+            <Typography>Owner: {mint.owner.Account[0].substring(0, 6)}...</Typography>
+          </Tooltip>
+        )}
+        {mint.owner.Contract && (
+          <Typography>
+            Owner: {mint.owner.Contract[0].index} / {mint.owner.Contract[0].subindex}
+          </Typography>
+        )}
+        <Tooltip title={tokenMetadata.metadata_url.url}>
+          <Typography>
+            <Link href={tokenMetadata.metadata_url.url} target="_blank" rel="noreferrer">
+              Metadata Url
+            </Link>
+          </Typography>
+        </Tooltip>
       </CardContent>
     </Card>
   );
@@ -42,9 +55,8 @@ function Cis2TokenDisplay(props: {
 
 export default function Cis2TokensDisplay(props: {
   tokens: {
-    mint: ProjectNftMintEvent;
-    tokenMetadata: ProjectNftTokenMetadataEvent;
-    maturityTime: ProjectNftMaturityTimeEvent;
+    mint: Cis2MintEvent;
+    tokenMetadata: Cis2TokenMetadataEvent;
   }[];
 }) {
   const { tokens } = props;

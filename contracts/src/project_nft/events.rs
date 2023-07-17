@@ -6,12 +6,7 @@ use super::contract_types::*;
 pub type MintEvent = concordium_cis2::MintEvent<ContractTokenId, ContractTokenAmount>;
 pub type TransferEvent = concordium_cis2::TransferEvent<ContractTokenId, ContractTokenAmount>;
 pub type TokenMetadataEvent = concordium_cis2::TokenMetadataEvent<ContractTokenId>;
-
-#[derive(Serial, SchemaType)]
-pub struct RetireEvent {
-    pub token_id: ContractTokenId,
-    pub owner: Address,
-}
+pub type BurnEvent = concordium_cis2::BurnEvent<ContractTokenId, ContractTokenAmount>;
 
 #[derive(Serial, SchemaType)]
 pub struct MaturityTimeEvent {
@@ -20,12 +15,7 @@ pub struct MaturityTimeEvent {
 }
 
 #[derive(Serial, SchemaType)]
-pub struct VerifierAddedEvent {
-    pub verifier: Address,
-}
-
-#[derive(Serial, SchemaType)]
-pub struct VerifierRemovedEvent {
+pub struct VerifierUpdatedEvent {
     pub verifier: Address,
 }
 
@@ -40,9 +30,10 @@ pub enum ContractEvent {
     TokenMetadata(TokenMetadataEvent),
     MaturityTime(MaturityTimeEvent),
     Transfer(TransferEvent),
-    Retire(RetireEvent),
-    VerifierAdded(VerifierAddedEvent),
-    VerifierRemoved(VerifierRemovedEvent),
+    Retire(BurnEvent),
+    Retract(BurnEvent),
+    VerifierAdded(VerifierUpdatedEvent),
+    VerifierRemoved(VerifierUpdatedEvent),
     Verification(VerificationEvent),
 }
 
@@ -51,6 +42,7 @@ const MATURITY_TIME_EVENT_TAG: u8 = u8::MIN + 1;
 const VERIFIER_ADDED_EVENT_TAG: u8 = u8::MIN + 2;
 const VERIFIER_REMOVED_EVENT_TAG: u8 = u8::MIN + 3;
 const VERIFICATION_EVENT_TAG: u8 = u8::MIN + 4;
+const RETRACT_EVENT_TAG: u8 = u8::MIN + 5;
 
 impl Serial for ContractEvent {
     fn serial<W: Write>(&self, out: &mut W) -> Result<(), W::Err> {
@@ -69,6 +61,10 @@ impl Serial for ContractEvent {
             }
             ContractEvent::Retire(event) => {
                 out.write_u8(RETIRE_EVENT_TAG)?;
+                event.serial(out)
+            }
+            ContractEvent::Retract(event) => {
+                out.write_u8(RETRACT_EVENT_TAG)?;
                 event.serial(out)
             }
             ContractEvent::MaturityTime(event) => {
@@ -123,6 +119,18 @@ impl SchemaType for ContractEvent {
                 "Retire".to_string(),
                 schema::Fields::Named(vec![
                     (String::from("token_id"), ContractTokenId::get_type()),
+                    (String::from("amount"), ContractTokenAmount::get_type()),
+                    (String::from("owner"), Address::get_type()),
+                ]),
+            ),
+        );
+        event_map.insert(
+            RETRACT_EVENT_TAG,
+            (
+                "Retract".to_string(),
+                schema::Fields::Named(vec![
+                    (String::from("token_id"), ContractTokenId::get_type()),
+                    (String::from("amount"), ContractTokenAmount::get_type()),
                     (String::from("owner"), Address::get_type()),
                 ]),
             ),
@@ -151,20 +159,14 @@ impl SchemaType for ContractEvent {
             VERIFIER_ADDED_EVENT_TAG,
             (
                 "VerifierAdded".to_string(),
-                schema::Fields::Named(vec![(
-                    String::from("verifier"),
-                    Address::get_type(),
-                )]),
+                schema::Fields::Named(vec![(String::from("verifier"), Address::get_type())]),
             ),
         );
         event_map.insert(
             VERIFIER_REMOVED_EVENT_TAG,
             (
                 "VerifierRemoved".to_string(),
-                schema::Fields::Named(vec![(
-                    String::from("verifier"),
-                    Address::get_type(),
-                )]),
+                schema::Fields::Named(vec![(String::from("verifier"), Address::get_type())]),
             ),
         );
         event_map.insert(

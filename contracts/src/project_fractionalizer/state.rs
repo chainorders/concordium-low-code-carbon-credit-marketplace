@@ -3,9 +3,9 @@ use core::ops::{AddAssign, SubAssign};
 use concordium_cis2::*;
 use concordium_std::*;
 
-use crate::cis2_utils::cis2_types::{ContractTokenAmount, ContractTokenId};
+use crate::cis2_utils::cis2_types::{ContractMetadataUrl, ContractTokenAmount, ContractTokenId};
 
-use super::{contract_types::*, error::*, token_metadata::TokenMetadata};
+use super::{contract_types::*, error::*};
 
 /// The state for each address.
 #[derive(Serial, DeserialWithState, Deletable, StateClone)]
@@ -60,6 +60,7 @@ pub struct State<S> {
     pub tokens: StateMap<ContractTokenId, MetadataUrl, S>,
     pub token_supply: StateMap<ContractTokenId, ContractTokenAmount, S>,
     pub tokens_owned: StateMap<CollateralToken, CollateralState, S>,
+    pub last_token_id: ContractTokenId,
 }
 
 impl<S: HasStateApi> State<S> {
@@ -70,35 +71,39 @@ impl<S: HasStateApi> State<S> {
             tokens: state_builder.new_map(),
             tokens_owned: state_builder.new_map(),
             token_supply: state_builder.new_map(),
+            last_token_id: 0.into(),
         }
     }
 
     /// Mints an amount of tokens with a given address as the owner.
     pub fn mint(
         &mut self,
-        token_id: &ContractTokenId,
-        token_metadata: &TokenMetadata,
+        token_metadata: &ContractMetadataUrl,
         amount: ContractTokenAmount,
         owner: &Address,
         state_builder: &mut StateBuilder<S>,
-    ) {
-        self.tokens
-            .insert(*token_id, token_metadata.to_metadata_url());
+    ) -> ContractTokenId {
+        let token_id = self.last_token_id;
+        self.tokens.insert(token_id, token_metadata.clone().into());
 
         self.state
             .entry(*owner)
             .and_modify(|b| {
                 b.balances
-                    .entry(*token_id)
+                    .entry(token_id)
                     .and_modify(|a| *a += amount)
                     .or_insert(amount);
             })
             .or_insert_with(|| AddressState::empty(state_builder));
 
         self.token_supply
-            .entry(*token_id)
+            .entry(token_id)
             .and_modify(|a| a.add_assign(amount))
             .or_insert(amount);
+
+        // Update the last token id
+        self.last_token_id = ContractTokenId::from(token_id.0 + 1);
+        token_id
     }
 
     pub fn burn(
@@ -218,14 +223,10 @@ impl<S: HasStateApi> State<S> {
     }
 
     /// Returns false if the owned token is used for any token Id other than the token being minted.
-    pub fn has_unsed_owned_token(
-        &self,
-        collateral_key: &CollateralToken,
-        minted_token_id: &ContractTokenId,
-    ) -> bool {
+    pub fn has_unsed_owned_token(&self, collateral_key: &CollateralToken) -> bool {
         match self.tokens_owned.get(collateral_key) {
             Some(c) => match c.minted_token_id {
-                Some(minted_token) => minted_token.eq(minted_token_id),
+                Some(_) => false,
                 None => true,
             },
             None => false,
@@ -259,12 +260,12 @@ impl<S: HasStateApi> State<S> {
         &mut self,
         owned_token: &CollateralToken,
         minted_token_id: &ContractTokenId,
-    ) -> ContractResult<()> {
+    ) -> ContractResult<ContractCollateralTokenAmount> {
         match self.tokens_owned.entry(owned_token.to_owned()) {
             Entry::Vacant(_) => bail!(Cis2Error::Custom(CustomContractError::InvalidCollateral)),
             Entry::Occupied(mut e) => {
                 e.modify(|s| s.minted_token_id = Some(minted_token_id.to_owned()));
-                Ok(())
+                Ok(e.received_token_amount)
             }
         }
     }

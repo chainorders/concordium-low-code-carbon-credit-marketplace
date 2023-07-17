@@ -1,10 +1,12 @@
-use crate::project_nft::{contract_types::*, error::*, events::*, state::*};
-use concordium_cis2::*;
+use crate::{
+    cis2_utils::cis2_types::ContractMetadataUrl,
+    project_nft::{contract_types::*, error::*, events::*, state::*},
+};
 use concordium_std::*;
 
 #[derive(Serial, Deserial, SchemaType)]
 pub struct MintParam {
-    pub metadata_url: MetadataUrl,
+    pub metadata_url: ContractMetadataUrl,
     pub maturity_time: Timestamp,
 }
 
@@ -76,7 +78,7 @@ fn mint<S: HasStateApi>(
         logger.log(&ContractEvent::TokenMetadata(
             super::events::TokenMetadataEvent {
                 token_id,
-                metadata_url: mint_param.metadata_url,
+                metadata_url: mint_param.metadata_url.into(),
             },
         ))?;
         // Event for maturity time.

@@ -35,7 +35,7 @@ fn add_verifier<S: HasStateApi>(
     );
     // Update the contract state
     state.add_verifier(&verifier);
-    logger.log(&ContractEvent::VerifierAdded(VerifierAddedEvent {
+    logger.log(&ContractEvent::VerifierAdded(VerifierUpdatedEvent {
         verifier,
     }))?;
 
@@ -70,7 +70,7 @@ fn remove_verifier<S: HasStateApi>(
     );
     // Update the contract state
     state.remove_verifier(&verifier);
-    logger.log(&ContractEvent::VerifierRemoved(VerifierRemovedEvent {
+    logger.log(&ContractEvent::VerifierRemoved(VerifierUpdatedEvent {
         verifier,
     }))?;
 

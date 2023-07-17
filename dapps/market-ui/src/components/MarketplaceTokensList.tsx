@@ -65,6 +65,7 @@ function MarketplaceTokensList(props: { grpcClient: ConcordiumGRPCClient, user: 
       <Grid key="nft-image-list" container spacing={1}>
         {tokens.map((t) => (
           <MarketplaceTokensListItem
+            grpcClient={grpcClient}
             marketContractAddress={marketContractAddress}
             item={t}
             key={t.tokenId + t.contract.index + t.contract.subindex + t.owner}

@@ -8,13 +8,13 @@ export type Address = {
   Contract?: [{ index: number; subindex: number }];
 };
 
-export type ProjectNftMintEvent = {
+export type Cis2MintEvent = {
   owner: Address;
   token_id: string;
   amount: string;
 };
 
-export type ProjectNftTokenMetadataEvent = {
+export type Cis2TokenMetadataEvent = {
   token_id: string;
   metadata_url: {
     url: string;
@@ -27,22 +27,20 @@ export type ProjectNftMaturityTimeEvent = {
   maturity_time: string;
 };
 
-export type ProjectNftRetireEvent = {
+export type Cis2BurnEvent = {
   owner: Address;
   token_id: string;
+  amount: string;
 };
-export type ProjectNftTransferEvent = {
+
+export type Cis2TransferEvent = {
   token_id: string;
   amount: string;
   from: Address;
   to: Address;
 };
 
-export type ProjectNftVerifierAddedEvent = {
-  verifier: Address;
-};
-
-export type ProjectNftVerifierRemovedEvent = {
+export type ProjectNftVerifierUpdatedEvent = {
   verifier: Address;
 };
 
@@ -52,27 +50,21 @@ export type ProjectNftVerificationEvent = {
 };
 
 export type ProjectNftEvent = {
-  Mint?: ProjectNftMintEvent;
-  Retire?: ProjectNftRetireEvent;
-  Transfer?: ProjectNftTransferEvent;
-  TokenMetadata?: ProjectNftTokenMetadataEvent;
+  Mint?: Cis2MintEvent;
+  Transfer?: Cis2TransferEvent;
+  TokenMetadata?: Cis2TokenMetadataEvent;
+  Retire?: Cis2BurnEvent;
+  Retract?: Cis2BurnEvent;
   MaturityTime?: ProjectNftMaturityTimeEvent;
-  VerifierAdded?: ProjectNftVerifierAddedEvent;
-  VerifierRemoved?: ProjectNftVerifierRemovedEvent;
+  VerifierAdded?: ProjectNftVerifierUpdatedEvent;
+  VerifierRemoved?: ProjectNftVerifierUpdatedEvent;
   Verification?: ProjectNftVerificationEvent;
 };
 
-export type FractionalizerMintEvent = ProjectNftMintEvent;
-export type FractionalizerTokenMetadataEvent = ProjectNftTokenMetadataEvent;
-export type FractionalizerTransferEvent = ProjectNftTransferEvent;
-
-export type FractionalizerRetireEvent = {
-  owner: Address;
-  token_id: string;
-  amount: string;
-};
-
-export type FractionalizerCollateralAddedEvent = {
+export type FractionalizerMintEvent = Cis2MintEvent;
+export type FractionalizerTokenMetadataEvent = Cis2TokenMetadataEvent;
+export type FractionalizerTransferEvent = Cis2TransferEvent;
+export type FractionalizerCollateralUpdatedEvent = {
   owner: Address;
   token_id: string;
   amount: string;
@@ -81,25 +73,15 @@ export type FractionalizerCollateralAddedEvent = {
     subindex: number;
   };
 };
-
-export type FractionalizerCollateralRemovedEvent = {
-  owner: Address;
-  token_id: string;
-  amount: string;
-  contract: {
-    index: number;
-    subindex: number;
-  };
-};
-
 
 export type FractionalizerEvent = {
   Mint?: FractionalizerMintEvent;
   TokenMetadata?: FractionalizerTokenMetadataEvent;
-  Retire?: FractionalizerRetireEvent;
+  Retire?: Cis2BurnEvent;
   Transfer?: FractionalizerTransferEvent;
-  CollateralAdded?: FractionalizerCollateralAddedEvent;
-  CollateralRemoved?: FractionalizerCollateralRemovedEvent;
+  CollateralAdded?: FractionalizerCollateralUpdatedEvent;
+  CollateralRemoved?: FractionalizerCollateralUpdatedEvent;
+  CollateralUsed?: FractionalizerCollateralUpdatedEvent;
 };
 
 export type MarketTokenListedEvent = {

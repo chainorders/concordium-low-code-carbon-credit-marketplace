@@ -59,7 +59,7 @@ fn on_cis2_received<S: HasStateApi>(
 
     host.state_mut()
         .add_owned_token(sender, params.token_id, from_account, params.amount);
-    logger.log(&ContractEvent::CollateralAdded(CollateralAddedEvent {
+    logger.log(&ContractEvent::CollateralAdded(CollateralUpdatedEvent {
         amount: params.amount,
         contract: sender,
         token_id: params.token_id,

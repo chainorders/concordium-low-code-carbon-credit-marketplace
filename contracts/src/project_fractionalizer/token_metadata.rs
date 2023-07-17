@@ -4,38 +4,6 @@ use concordium_std::*;
 use crate::cis2_utils::cis2_types::*;
 use super::{state::*, contract_types::*, error::*};
 
-#[derive(Debug, Serialize, Clone, SchemaType)]
-pub struct TokenMetadata {
-    /// The URL following the specification RFC1738.
-    #[concordium(size_length = 2)]
-    pub url: String,
-    /// A optional hash of the content.
-    #[concordium(size_length = 2)]
-    pub hash: String,
-}
-
-impl TokenMetadata {
-    fn get_hash_bytes(&self) -> Option<[u8; 32]> {
-        match hex::decode(&self.hash) {
-            Ok(v) => {
-                let slice = v.as_slice();
-                match slice.try_into() {
-                    Ok(array) => Option::Some(array),
-                    Err(_) => Option::None,
-                }
-            }
-            Err(_) => Option::None,
-        }
-    }
-
-    pub(crate) fn to_metadata_url(&self) -> MetadataUrl {
-        MetadataUrl {
-            url: self.url.to_string(),
-            hash: self.get_hash_bytes(),
-        }
-    }
-}
-
 /// Parameter type for the CIS-2 function `tokenMetadata` specialized to the
 /// subset of TokenIDs used by this contract.
 pub type ContractTokenMetadataQueryParams = TokenMetadataQueryParams<ContractTokenId>;

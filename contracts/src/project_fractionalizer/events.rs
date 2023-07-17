@@ -5,42 +5,30 @@ use super::contract_types::{ContractCollateralTokenAmount, ContractTokenAmount, 
 pub type TransferEvent = concordium_cis2::TransferEvent<ContractTokenId, ContractTokenAmount>;
 pub type TokenMetadataEvent = concordium_cis2::TokenMetadataEvent<ContractTokenId>;
 pub type MintEvent = concordium_cis2::MintEvent<ContractTokenId, ContractTokenAmount>;
+pub type BurnEvent = concordium_cis2::BurnEvent<ContractTokenId, ContractTokenAmount>;
 
 #[derive(Serial, SchemaType)]
-pub struct CollateralAddedEvent {
+pub struct CollateralUpdatedEvent {
     pub contract: ContractAddress,
     pub token_id: ContractTokenId,
     pub amount: ContractCollateralTokenAmount,
     pub owner: Address,
-}
-
-#[derive(Serial, SchemaType)]
-pub struct CollateralRemovedEvent {
-    pub contract: ContractAddress,
-    pub token_id: ContractTokenId,
-    pub amount: ContractCollateralTokenAmount,
-    pub owner: Address,
-}
-
-#[derive(Serial, SchemaType)]
-pub struct RetireEvent {
-    pub token_id: ContractTokenId,
-    pub owner: Address,
-    pub amount: ContractTokenAmount,
 }
 
 pub enum ContractEvent {
     Mint(MintEvent),
     TokenMetadata(TokenMetadataEvent),
     Transfer(TransferEvent),
-    Retire(RetireEvent),
-    CollateralAdded(CollateralAddedEvent),
-    CollateralRemoved(CollateralRemovedEvent),
+    Retire(BurnEvent),
+    CollateralAdded(CollateralUpdatedEvent),
+    CollateralRemoved(CollateralUpdatedEvent),
+    CollateralUsedEvent(CollateralUpdatedEvent)
 }
 
 const RETIRE_EVENT_TAG: u8 = u8::MIN;
 const COLLATERAL_ADDED_EVENT_TAG: u8 = u8::MIN + 1;
 const COLLATERAL_REMOVED_EVENT_TAG: u8 = u8::MIN + 2;
+const COLLATERAL_USED_EVENT_TAG: u8 = u8::MIN + 3;
 
 impl Serial for ContractEvent {
     fn serial<W: Write>(&self, out: &mut W) -> Result<(), W::Err> {
@@ -67,6 +55,10 @@ impl Serial for ContractEvent {
             }
             ContractEvent::CollateralRemoved(event) => {
                 out.write_u8(COLLATERAL_REMOVED_EVENT_TAG)?;
+                event.serial(out)
+            }
+            ContractEvent::CollateralUsedEvent(event) => {
+                out.write_u8(COLLATERAL_USED_EVENT_TAG)?;
                 event.serial(out)
             }
         }
@@ -115,8 +107,8 @@ impl SchemaType for ContractEvent {
                 "Retire".to_string(),
                 schema::Fields::Named(vec![
                     (String::from("token_id"), ContractTokenId::get_type()),
-                    (String::from("owner"), Address::get_type()),
                     (String::from("amount"), ContractTokenAmount::get_type()),
+                    (String::from("owner"), Address::get_type()),
                 ]),
             ),
         );
@@ -139,6 +131,21 @@ impl SchemaType for ContractEvent {
             COLLATERAL_REMOVED_EVENT_TAG,
             (
                 "CollateralRemoved".to_string(),
+                schema::Fields::Named(vec![
+                    (String::from("contract"), ContractAddress::get_type()),
+                    (String::from("token_id"), ContractTokenId::get_type()),
+                    (
+                        String::from("amount"),
+                        ContractCollateralTokenAmount::get_type(),
+                    ),
+                    (String::from("owner"), Address::get_type()),
+                ]),
+            ),
+        );
+        event_map.insert(
+            COLLATERAL_USED_EVENT_TAG,
+            (
+                "CollateralUsed".to_string(),
                 schema::Fields::Named(vec![
                     (String::from("contract"), ContractAddress::get_type()),
                     (String::from("token_id"), ContractTokenId::get_type()),

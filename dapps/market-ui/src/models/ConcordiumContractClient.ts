@@ -169,6 +169,10 @@ export async function updateContract(
   return { txnHash, outcomes };
 }
 
+export async function getContractInformation(grpcClient: ConcordiumGRPCClient, contractAddress: ContractAddress) {
+  return grpcClient.getInstanceInfo(contractAddress);
+}
+
 export async function waitAndThrowError(
   provider: WalletApi,
   txnHash: string,

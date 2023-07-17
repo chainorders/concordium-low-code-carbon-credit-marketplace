@@ -27,6 +27,7 @@ import {
 import CIS2Page from './pages/cis2/CIS2Page';
 import MintPage from './pages/cis2/MintPage';
 import ProjectRetirePage from './pages/cis2/ProjectRetirePage';
+import ProjectRetractPage from './pages/cis2/ProjectRetractPage';
 import FractionalizerPage from './pages/fractionalizer/FractionalizerPage';
 import FractionalizerRetirePage from './pages/fractionalizer/FractionalizerRetirePage';
 import FractionalizeTokenPage from './pages/fractionalizer/FractionalizeTokenPage';
@@ -151,6 +152,16 @@ function App() {
                         grpcClient={state.grpcClient}
                         contractInfo={CIS2_MULTI_CONTRACT_INFO}
                         onDone={() => alert("tokens retireds")}
+                      />
+                    }
+                  />
+                  <Route
+                    path="retract"
+                    element={
+                      <ProjectRetractPage
+                        grpcClient={state.grpcClient}
+                        contractInfo={CIS2_MULTI_CONTRACT_INFO}
+                        onDone={() => alert("tokens retracted")}
                       />
                     }
                   />

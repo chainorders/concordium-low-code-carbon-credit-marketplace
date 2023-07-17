@@ -100,7 +100,7 @@ export default function Cis2Transfer(props: {
     <Stack component={"form"} onSubmit={submit} spacing={2}>
       <TextField
         id="contract-index"
-        name="contractIndex"
+        name="index"
         label="Contract Index"
         variant="standard"
         type={"number"}
@@ -110,7 +110,7 @@ export default function Cis2Transfer(props: {
       />
       <TextField
         id="contract-subindex"
-        name="contractSubindex"
+        name="subindex"
         label="Contract Sub Index"
         variant="standard"
         type={"number"}

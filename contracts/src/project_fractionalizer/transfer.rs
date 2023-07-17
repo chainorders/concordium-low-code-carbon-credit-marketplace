@@ -1,4 +1,4 @@
-use concordium_cis2::*;
+use concordium_cis2::{Cis2Error, OnReceivingCis2Params, Receiver, Transfer, TransferParams};
 use concordium_std::*;
 
 use super::{contract_types::*, error::*, events::*, state::*};
@@ -52,12 +52,14 @@ fn contract_transfer<S: HasStateApi>(
         let to_address = to.address();
 
         if to_address.matches_contract(&ctx.self_address()) {
+            let balance = state.balance(&token_id, &from)?;
+            ensure!(balance >= amount, Cis2Error::InsufficientFunds);
             // tokens are being transferred to self
             // burn the tokens
             state.burn(&token_id, amount, &from);
 
             // log burn event
-            logger.log(&ContractEvent::Retire(RetireEvent {
+            logger.log(&ContractEvent::Retire(BurnEvent {
                 token_id,
                 amount,
                 owner: from,
@@ -76,7 +78,7 @@ fn contract_transfer<S: HasStateApi>(
 
                 // Remove the collateral from the state
                 state.remove_owned_token(&collateral_key);
-                logger.log(&ContractEvent::CollateralRemoved(CollateralRemovedEvent {
+                logger.log(&ContractEvent::CollateralRemoved(CollateralUpdatedEvent {
                     amount: _collateral_amount,
                     contract: collateral_key.contract,
                     token_id: collateral_key.token_id,

@@ -10,11 +10,11 @@ import Cis2TokenMetadataForm from '../cis2/Cis2TokenMetadataForm';
 import Alert from '../ui/Alert';
 
 export default function PrepareMetadata(props: {
-  cis2Contract: CIS2Contract;
-  cis2TokenId: string;
+  collateralTokenContract: CIS2Contract;
+  collateralTokenId: string;
   onMetadataPrepared: (metadata: Metadata) => void;
 }) {
-  const { cis2Contract, cis2TokenId, onMetadataPrepared } = props;
+  const { collateralTokenContract: cis2Contract, collateralTokenId: cis2TokenId, onMetadataPrepared } = props;
   const [cis2TokenMetadata, setCis2TokenMetadata] = useState<Metadata>({});
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
   const [state, setState] = useState({
@@ -57,10 +57,7 @@ export default function PrepareMetadata(props: {
 
   return (
     <>
-      <Cis2TokenMetadataForm
-        defaultFormData={cis2TokenMetadata}
-        onSubmit={onMetadataPrepared}
-      />
+      <Cis2TokenMetadataForm defaultFormData={cis2TokenMetadata} onSubmit={onMetadataPrepared} />
     </>
   );
 }

@@ -3,28 +3,32 @@ import {
 } from '@concordium/browser-wallet-api-helpers';
 import {
     CIS2, CIS2Contract, ConcordiumGRPCClient, ContractAddress, RejectReasonTag,
-    TransactionStatusEnum, TransactionSummary
+    TransactionStatusEnum
 } from '@concordium/web-sdk';
 
 import { ContractInfo, updateContract, waitAndThrowError } from './ConcordiumContractClient';
 import { Attribute } from './ProjectNFTClient';
+import { ModuleEvent } from './web/Events';
+import { getContractEventsByTransactionHash } from './web/WebClient';
+
+export type Option<T> = { None: [] } | { Some: [T] };
+
+export type MintParam = {
+  amount: string;
+  contract: {
+    index: number;
+    subindex: number;
+  };
+  token_id: string;
+  metadata: {
+    url: string;
+    hash: Option<string>;
+  };
+};
 
 export interface MintParams {
   owner: { Account: [string] };
-  tokens: [
-    [
-      string,
-      {
-        metadata: {
-          url: string;
-          hash?: string;
-        };
-        amount: string;
-        contract: { index: number; subindex: number };
-        token_id: string;
-      },
-    ],
-  ];
+  tokens: MintParam[];
 }
 
 /**
@@ -45,24 +49,27 @@ export async function mint(
   maxContractExecutionEnergy = BigInt(9999),
   onStatusUpdate: (status: TransactionStatusEnum, txnHash: string) => void = (status, txnHash) =>
     console.log(`txn #${txnHash}, status:${status}`),
-): Promise<{ txnHash: string; outcomes: Record<string, TransactionSummary> }> {
-  return updateContract(
-    provider,
-    contractInfo,
-    paramJson as unknown as SmartContractParameters,
-    account,
-    fracContractAddress,
-    "mint",
-    maxContractExecutionEnergy,
-    BigInt(0),
-    onStatusUpdate,
-  ).catch((err) => {
-    console.error(err);
+): Promise<ModuleEvent[]> {
+  try {
+    const { txnHash } = await updateContract(
+      provider,
+      contractInfo,
+      paramJson as unknown as SmartContractParameters,
+      account,
+      fracContractAddress,
+      "mint",
+      maxContractExecutionEnergy,
+      BigInt(0),
+      onStatusUpdate,
+    );
+
+    return getContractEventsByTransactionHash(txnHash);
+  } catch (err: any) {
     if (err.cause && err.cause.tag === RejectReasonTag.RejectedReceive) {
       throw new Error(getErrorString(err.cause.rejectReason));
     }
     throw err;
-  });
+  }
 }
 
 export async function retire(

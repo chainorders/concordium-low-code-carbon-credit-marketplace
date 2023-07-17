@@ -9,10 +9,14 @@ import { Container } from '@mui/system';
 import FractionalizerMint from '../../components/cis2-fractionalizer/FractionalizerMint';
 import PrepareMetadata from '../../components/cis2-fractionalizer/PrepareMetadata';
 import UploadMetadata from '../../components/cis2-fractionalizer/UploadMetadata';
+import Cis2TokensDisplay from '../../components/cis2/Cis2TokensDisplay';
 import Cis2Transfer from '../../components/cis2/Cis2Transfer';
 import { ContractInfo } from '../../models/ConcordiumContractClient';
 import { getCarbonCreditQuantityAttribute } from '../../models/ProjectFractionalizerClient';
 import { Metadata } from '../../models/ProjectNFTClient';
+import {
+    FractionalizerEvent, FractionalizerMintEvent, FractionalizerTokenMetadataEvent, ModuleEvent
+} from '../../models/web/Events';
 import FractionalizerFindOrInit from './FractionalizerFindOrInit';
 
 enum Steps {
@@ -21,9 +25,15 @@ enum Steps {
   PrepareMetadata = 2,
   UploadMetadata = 3,
   Mint = 4,
+  Minted = 5
 }
 
 type StepType = { step: Steps; title: string };
+
+type MintMethodEvents = {
+  mint: FractionalizerMintEvent;
+  tokenMetadata: FractionalizerTokenMetadataEvent;
+};
 
 function FractionalizeTokenPage(props: {
   grpcClient: ConcordiumGRPCClient;
@@ -48,6 +58,7 @@ function FractionalizeTokenPage(props: {
       title: "Upload Metadata",
     },
     { step: Steps.Mint, title: "Mint" },
+    { step: Steps.Minted, title: "Minted" },
   ];
 
   const [step, setStep] = useState<StepType>(steps[0]);
@@ -65,6 +76,7 @@ function FractionalizeTokenPage(props: {
     hash: "",
   });
   const [metadataUrl, setMetadataUrl] = useState<{ url: string; hash: string }>();
+  const [mintedTokens, setMintedTokens] = useState<MintMethodEvents[]>([]);
 
   function goForward() {
     if (step.step === steps.length - 1) {
@@ -108,8 +120,22 @@ function FractionalizeTokenPage(props: {
     goForward();
   }
 
-  function onMinted(tokenId: string, quantity: string) {
-    console.log(`Minted token: ${tokenId} with quantity: ${quantity}`);
+  function onTokensMinted(mintedEvents: ModuleEvent[]) {
+    const mintedTokens: { [tokenId: string]: MintMethodEvents } = {};
+    (mintedEvents as FractionalizerEvent[]).forEach((event) => {
+      if (event.Mint) {
+        const token = mintedTokens[event.Mint.token_id] || {};
+        token.mint = event.Mint;
+        mintedTokens[event.Mint.token_id] = token;
+      } else if (event.TokenMetadata) {
+        const token = mintedTokens[event.TokenMetadata.token_id] || {};
+        token.tokenMetadata = event.TokenMetadata;
+        mintedTokens[event.TokenMetadata.token_id] = token;
+      }
+    });
+
+    setMintedTokens(Object.values(mintedTokens));
+    goForward();
   }
 
   function StepContent() {
@@ -141,8 +167,8 @@ function FractionalizeTokenPage(props: {
       case Steps.PrepareMetadata:
         return (
           <PrepareMetadata
-            cis2Contract={token!.cis2Contract!}
-            cis2TokenId={token!.tokenId}
+            collateralTokenContract={token!.cis2Contract!}
+            collateralTokenId={token!.tokenId}
             onMetadataPrepared={onMetadataPrepared}
           />
         );
@@ -167,9 +193,11 @@ function FractionalizeTokenPage(props: {
             disableMetadataUrlUpdate
             defaultMetadataHash={metadataUrl!.hash}
             disableMetadataHashUpdate
-            onDone={onMinted}
+            onDone={onTokensMinted}
           />
         );
+        case Steps.Minted:
+          return <Cis2TokensDisplay tokens={mintedTokens} />;
       default:
         return <>Invalid Step</>;
     }

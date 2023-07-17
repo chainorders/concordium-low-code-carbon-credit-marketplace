@@ -14,7 +14,7 @@ import UploadFiles from '../../components/ui/UploadFiles';
 import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
 import { TokenInfo } from '../../models/ProjectNFTClient';
 import {
-    ProjectNftEvent, ProjectNftMaturityTimeEvent, ProjectNftMintEvent, ProjectNftTokenMetadataEvent
+    Cis2MintEvent, Cis2TokenMetadataEvent, ModuleEvent, ProjectNftEvent, ProjectNftMaturityTimeEvent
 } from '../../models/web/Events';
 
 enum Steps {
@@ -28,8 +28,8 @@ enum Steps {
 
 type StepType = { step: Steps; title: string };
 type MintMethodEvents = {
-  mint: ProjectNftMintEvent;
-  tokenMetadata: ProjectNftTokenMetadataEvent;
+  mint: Cis2MintEvent;
+  tokenMetadata: Cis2TokenMetadataEvent;
   maturityTime: ProjectNftMaturityTimeEvent;
 };
 
@@ -111,9 +111,9 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
     });
   }
 
-  function onTokensMinted(mintedEvents: ProjectNftEvent[]) {
+  function onTokensMinted(mintedEvents: ModuleEvent[]) {
     const mintedTokens: { [tokenId: string]: MintMethodEvents } = {};
-    mintedEvents.forEach((event) => {
+    (mintedEvents as ProjectNftEvent[]).forEach((event) => {
       if (event.Mint) {
         const token = mintedTokens[event.Mint.token_id] || {};
         token.mint = event.Mint;

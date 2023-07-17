@@ -22,7 +22,7 @@ pub type ContractBalanceOfQueryResponse = BalanceOfQueryResponse<ContractTokenAm
     parameter = "ContractBalanceOfQueryParams",
     return_value = "ContractBalanceOfQueryResponse",
 )]
-pub fn contract_balance_of<S: HasStateApi>(
+pub fn balance_of<S: HasStateApi>(
     ctx: &impl HasReceiveContext,
     host: &impl HasHost<State<S>, StateApiType = S>,
 ) -> ContractResult<ContractBalanceOfQueryResponse> {

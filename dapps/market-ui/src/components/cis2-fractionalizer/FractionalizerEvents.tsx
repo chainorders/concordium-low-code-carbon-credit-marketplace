@@ -7,14 +7,22 @@ import {
 } from '@mui/material';
 
 import {
-    FractionalizerCollateralAddedEvent, FractionalizerCollateralRemovedEvent, FractionalizerEvent,
-    FractionalizerMintEvent, FractionalizerRetireEvent, FractionalizerTokenMetadataEvent,
-    FractionalizerTransferEvent, ModuleEvent
+    Cis2BurnEvent, FractionalizerCollateralUpdatedEvent, FractionalizerEvent,
+    FractionalizerMintEvent, FractionalizerTokenMetadataEvent, FractionalizerTransferEvent,
+    ModuleEvent
 } from '../../models/web/Events';
-import { getContractEvents } from '../../models/web/WebClient';
+import { getContractEventsByContractAddress } from '../../models/web/WebClient';
 import DisplayError from '../ui/DisplayError';
 
-const eventTypes = ["Mint", "TokenMetadata", "Transfer", "Retire", "CollateralAdded", "CollateralRemoved"];
+const eventTypes = [
+  "Mint",
+  "TokenMetadata",
+  "Transfer",
+  "Retire",
+  "CollateralAdded",
+  "CollateralRemoved",
+  "CollateralUsed",
+];
 
 function MintEvent(props: { event: FractionalizerMintEvent }) {
   const { event } = props;
@@ -73,13 +81,13 @@ function TransferEvent(props: { event: FractionalizerTransferEvent }) {
   );
 }
 
-function CollateralAddedEvent(props: { event: FractionalizerCollateralAddedEvent }) {
-  const { event } = props;
+function CollateralUpdatedEvent(props: { event: FractionalizerCollateralUpdatedEvent, name: string }) {
+  const { event, name } = props;
 
   return (
     <ListItem alignItems="flex-start">
       <ListItemText
-        primary="Collateral Added"
+        primary={name}
         secondary={
           <>
             <Typography component="div">
@@ -94,28 +102,7 @@ function CollateralAddedEvent(props: { event: FractionalizerCollateralAddedEvent
   );
 }
 
-function CollateralRemovedEvent(props: { event: FractionalizerCollateralRemovedEvent }) {
-  const { event } = props;
-
-  return (
-    <ListItem alignItems="flex-start">
-      <ListItemText
-        primary="Collateral Removed"
-        secondary={
-          <>
-            <Typography component="div">
-              Token {event.token_id} ({event.contract.index}/{event.contract.subindex})
-            </Typography>
-            <Typography component="div">Amount {event.amount}</Typography>
-            <Typography component="div">From {event.owner.Account?.[0]}</Typography>
-          </>
-        }
-      />
-    </ListItem>
-  );
-}
-
-function RetireEvent(props: { event: FractionalizerRetireEvent }) {
+function RetireEvent(props: { event: Cis2BurnEvent }) {
   const { event } = props;
 
   return (
@@ -146,9 +133,11 @@ function Event(props: { event: FractionalizerEvent }) {
     case "Transfer":
       return <TransferEvent event={event[eventType]!} />;
     case "CollateralAdded":
-      return <CollateralAddedEvent event={event[eventType]!} />;
+      return <CollateralUpdatedEvent event={event[eventType]!} name="Collateral Added" />;
     case "CollateralRemoved":
-      return <CollateralRemovedEvent event={event[eventType]!} />;
+      return <CollateralUpdatedEvent event={event[eventType]!} name="Collateral Removed" />;
+    case "CollateralUsed":
+      return <CollateralUpdatedEvent event={event[eventType]!} name="Collateral Used" />;
     case "Retire":
       return <RetireEvent event={event[eventType]!} />;
     default:
@@ -173,9 +162,8 @@ export default function FractionalizerEvents({ defaultContractAddress }: { defau
 
   function onFormSubmitted(page = 0): void {
     setState({ ...state, error: "", checking: true });
-    getContractEvents(form.index, form.subindex, form.account, form.eventType, page)
+    getContractEventsByContractAddress(form.index, form.subindex, form.account, form.eventType, page)
       .then((res) => {
-        console.log(res);
         setState({ ...state, checking: false, error: "" });
         setEvents(res.events);
         setPageCount(res.pageCount);

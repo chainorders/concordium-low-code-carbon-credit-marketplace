@@ -5,7 +5,7 @@ import { Alert, Button, Grid, Stack, Typography } from '@mui/material';
 
 import { connectToWallet, ContractInfo } from '../../models/ConcordiumContractClient';
 import { mint, TokenInfo } from '../../models/ProjectNFTClient';
-import { ProjectNftEvent } from '../../models/web/Events';
+import { ModuleEvent } from '../../models/web/Events';
 import DisplayError from '../ui/DisplayError';
 import TransactionProgress from '../ui/TransactionProgress';
 import Cis2BatchItemMint from './Cis2BatchItemMint';
@@ -19,7 +19,7 @@ function Cis2BatchMint(props: {
    * @param data Token Ids
    * @returns
    */
-  onDone: (data: ProjectNftEvent[]) => void;
+  onDone: (data: ModuleEvent[]) => void;
 }) {
   const [state, setState] = useState({
     minted: false,

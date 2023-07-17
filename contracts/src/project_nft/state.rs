@@ -26,7 +26,7 @@ impl ContractTokenMetadata {
 impl From<&MintParam> for ContractTokenMetadata {
     fn from(mint_param: &MintParam) -> Self {
         ContractTokenMetadata {
-            metadata_url: mint_param.metadata_url.clone(),
+            metadata_url: mint_param.metadata_url.clone().into(),
             maturity_time: mint_param.maturity_time,
         }
     }
@@ -201,9 +201,10 @@ impl<S: HasStateApi> State<S> {
 
         // Remove token from address.
         self.remove(address, token_id)?;
-
         // Should we remove token from state if balance is zero?
         self.metadatas.remove(token_id);
+        // Remove token from verified tokens.
+        self.verified_tokens.remove(token_id);
 
         Ok(())
     }

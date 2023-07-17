@@ -24,7 +24,9 @@ pub enum CustomContractError {
     /// Token Not Mature
     TokenNotMature,
     /// Token Not Verified
-    TokenNotVerified
+    TokenNotVerified,
+    /// Metadata hash is invalid.
+    InvalidMetadataHash,
 }
 
 /// Mapping the logging errors to ContractError.

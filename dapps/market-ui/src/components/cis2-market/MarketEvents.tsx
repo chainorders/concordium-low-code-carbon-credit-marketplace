@@ -10,7 +10,7 @@ import {
     MarketEvent, MarketTokenListedEvent, MarketTokenReceivedEvent, MarketTokenTransferredEvent,
     ModuleEvent
 } from '../../models/web/Events';
-import { getContractEvents } from '../../models/web/WebClient';
+import { getContractEventsByContractAddress } from '../../models/web/WebClient';
 import DisplayError from '../ui/DisplayError';
 
 const eventTypes = ["TokenReceived", "TokenListed", "TokenTransferred"];
@@ -115,7 +115,7 @@ export default function MarketEvents({ defaultContractAddress }: { defaultContra
 
   function onFormSubmitted(page = 0): void {
     setState({ ...state, error: "", checking: true });
-    getContractEvents(form.index, form.subindex, form.account, form.eventType, page)
+    getContractEventsByContractAddress(form.index, form.subindex, form.account, form.eventType, page)
       .then((res) => {
         console.log(res);
         setState({ ...state, checking: false, error: "" });

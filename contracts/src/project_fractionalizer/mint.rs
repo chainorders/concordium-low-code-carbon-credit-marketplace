@@ -1,16 +1,12 @@
-use concordium_cis2::Cis2Error;
 use concordium_std::*;
 
-use crate::cis2_utils::cis2_types::{ContractTokenAmount, ContractTokenId};
+use crate::cis2_utils::cis2_types::{ContractMetadataUrl, ContractTokenAmount, ContractTokenId};
 
-use super::{
-    contract_types::ContractResult, error::CustomContractError, events::*, state::*,
-    token_metadata::TokenMetadata,
-};
+use super::{contract_types::ContractResult, error::CustomContractError, events::*, state::*};
 
 #[derive(Serial, Deserial, SchemaType)]
 pub struct TokenMintParams {
-    pub metadata: TokenMetadata,
+    pub metadata: ContractMetadataUrl,
     pub amount: ContractTokenAmount,
     /// Collateral Contract
     pub contract: ContractAddress,
@@ -25,7 +21,7 @@ pub struct MintParams {
     /// Owner of the newly minted tokens.
     pub owner: Address,
     /// A collection of tokens to mint.
-    pub tokens: collections::BTreeMap<ContractTokenId, TokenMintParams>,
+    pub tokens: Vec<TokenMintParams>,
 }
 
 /// Mint new tokens with a given address as the owner of these tokens.
@@ -65,32 +61,25 @@ pub fn mint<S: HasStateApi>(
     let params: MintParams = ctx.parameter_cursor().get()?;
 
     let (state, builder) = host.state_and_builder();
-    for (token_id, token_info) in params.tokens {
+    for token_info in params.tokens {
         ensure!(
-            state.has_unsed_owned_token(
-                &CollateralToken {
-                    contract: token_info.contract,
-                    token_id: token_info.token_id,
-                    owner: sender,
-                },
-                &token_id
-            ),
+            state.has_unsed_owned_token(&CollateralToken {
+                contract: token_info.contract,
+                token_id: token_info.token_id,
+                owner: sender,
+            }),
             concordium_cis2::Cis2Error::Custom(CustomContractError::InvalidCollateral)
         );
 
-        // Ensure that the token ID is not already in use.
-        ensure!(!state.contains_token(&token_id), Cis2Error::InvalidTokenId);
-
         // Mint the token in the state.
-        state.mint(
-            &token_id,
+        let token_id = state.mint(
             &token_info.metadata,
             token_info.amount,
             &params.owner,
             builder,
         );
 
-        state.use_owned_token(
+        let collateral_amount = state.use_owned_token(
             &CollateralToken {
                 contract: token_info.contract,
                 token_id: token_info.token_id,
@@ -99,6 +88,14 @@ pub fn mint<S: HasStateApi>(
             &token_id,
         )?;
 
+        logger.log(&ContractEvent::CollateralUsedEvent(
+            CollateralUpdatedEvent {
+                contract: token_info.contract,
+                token_id: token_info.token_id,
+                amount: collateral_amount,
+                owner: params.owner,
+            },
+        ))?;
         // Event for minted token.
         logger.log(&ContractEvent::Mint(MintEvent {
             token_id,
@@ -108,7 +105,7 @@ pub fn mint<S: HasStateApi>(
         logger.log(&ContractEvent::TokenMetadata(
             super::events::TokenMetadataEvent {
                 token_id,
-                metadata_url: token_info.metadata.to_metadata_url(),
+                metadata_url: token_info.metadata.into(),
             },
         ))?;
     }
