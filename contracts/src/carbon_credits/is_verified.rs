@@ -9,7 +9,7 @@ use super::{
 };
 
 #[receive(
-    contract = "project_fractionalizer",
+    contract = "carbon_credits",
     name = "isVerified",
     parameter = "ContractIsVerifiedQueryParams",
     error = "ContractError",

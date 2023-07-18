@@ -13,7 +13,7 @@ pub struct AddVerifierParams {
 }
 
 #[receive(
-    contract = "project_nft",
+    contract = "project_token",
     name = "addVerifier",
     parameter = "AddVerifierParams",
     error = "ContractError",
@@ -48,7 +48,7 @@ pub struct RemoveVerifierParams {
 }
 
 #[receive(
-    contract = "project_nft",
+    contract = "project_token",
     name = "removeVerifier",
     parameter = "RemoveVerifierParams",
     error = "ContractError",
@@ -83,7 +83,7 @@ pub struct VerifyParams {
 }
 
 #[receive(
-    contract = "project_nft",
+    contract = "project_token",
     name = "verify",
     parameter = "VerifyParams",
     error = "ContractError",

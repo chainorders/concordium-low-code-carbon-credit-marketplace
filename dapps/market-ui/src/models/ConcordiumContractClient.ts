@@ -11,7 +11,7 @@ import {
 
 export interface ContractInfo {
   schemaBuffer: Buffer;
-  contractName: "project_nft" | "Market-NFT" | string;
+  contractName: "project_token" | "Market-NFT" | string;
   moduleRef?: ModuleReference;
 }
 

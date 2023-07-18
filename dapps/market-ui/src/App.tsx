@@ -21,7 +21,7 @@ import MarketplaceTokensList from './components/MarketplaceTokensList';
 import { useParamsContractAddress } from './components/utils';
 import {
     CIS2_MULTI_CONTRACT_INFO, CONCORDIUM_NODE_PORT, CONNCORDIUM_NODE_ENDPOINT,
-    FRACTIONALIZER_CONTRACT_ADDRESS, FRACTIONALIZER_CONTRACT_INFO, MARKET_CONTRACT_ADDRESS,
+    CARBON_CREDIT_CONTRACT_ADDRESS, CARBON_CREDIT_CONTRACT_INFO, MARKET_CONTRACT_ADDRESS,
     MARKETPLACE_CONTRACT_INFO
 } from './Constants';
 import CIS2Page from './pages/cis2/CIS2Page';
@@ -59,7 +59,7 @@ const loggedOutUser: User = { account: "", accountType: "", email: "" };
 function App() {
   const navigate = useNavigate();
   const marketContractAddress = useParamsContractAddress() || MARKET_CONTRACT_ADDRESS;
-  const fracContract = useParamsContractAddress() || FRACTIONALIZER_CONTRACT_ADDRESS;
+  const fracContract = useParamsContractAddress() || CARBON_CREDIT_CONTRACT_ADDRESS;
 
   const [user, setUser] = useState<User>(loggedOutUser);
   const [state] = useState({
@@ -186,7 +186,7 @@ function App() {
                     element={
                       <FractionalizeTokenPage
                         grpcClient={state.grpcClient!}
-                        contractInfo={FRACTIONALIZER_CONTRACT_INFO}
+                        contractInfo={CARBON_CREDIT_CONTRACT_INFO}
                         defaultContractAddress={fracContract}
                       />
                     }
@@ -197,7 +197,7 @@ function App() {
                       <FractionalizerRetirePage
                         onDone={() => alert("tokens retireds")}
                         grpcClient={state.grpcClient!}
-                        contractInfo={FRACTIONALIZER_CONTRACT_INFO}
+                        contractInfo={CARBON_CREDIT_CONTRACT_INFO}
                         defaultContractAddress={fracContract}
                       />
                     }
@@ -208,7 +208,7 @@ function App() {
                     element={
                       <Cis2BalanceOf
                         grpcClient={state.grpcClient}
-                        contractName={FRACTIONALIZER_CONTRACT_INFO.contractName}
+                        contractName={CARBON_CREDIT_CONTRACT_INFO.contractName}
                         defaultAccount={user?.account}
                         defaultContractAddress={fracContract}
                       />

@@ -20,7 +20,7 @@ pub type TransferParameter = TransferParams<ContractTokenId, ContractTokenAmount
 /// - Fails to log event.
 /// - Any of the receive hook function calls rejects.
 #[receive(
-    contract = "project_nft",
+    contract = "project_token",
     name = "transfer",
     parameter = "TransferParameter",
     error = "ContractError",

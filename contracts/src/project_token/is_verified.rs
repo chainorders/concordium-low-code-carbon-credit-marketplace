@@ -8,7 +8,7 @@ use super::{
 };
 
 #[receive(
-    contract = "project_nft",
+    contract = "project_token",
     name = "isVerified",
     parameter = "ContractIsVerifiedQueryParams",
     error = "super::error::ContractError",

@@ -20,7 +20,7 @@ use super::{contract_types::*, error::*, events::*, state::*};
 /// - Fails to log event.
 /// - Any of the receive hook function calls rejects.
 #[receive(
-    contract = "project_fractionalizer",
+    contract = "carbon_credits",
     name = "transfer",
     parameter = "TransferParameter",
     error = "ContractError",

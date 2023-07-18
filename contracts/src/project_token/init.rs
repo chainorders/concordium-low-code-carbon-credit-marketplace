@@ -4,7 +4,7 @@ use super::state::State;
 
 /// Initialize contract instance with a no token types.
 #[init(
-    contract = "project_nft",
+    contract = "project_token",
     event = "super::events::ContractEvent",
     error = "super::error::ContractError"
 )]

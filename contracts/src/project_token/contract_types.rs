@@ -1,6 +1,6 @@
 use crate::{
     client_utils::types::{IsVerifiedQueryParams, MaturityOfQueryParams},
-    project_nft::error::*,
+    project_token::error::*,
 };
 use concordium_cis2::*;
 

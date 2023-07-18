@@ -1,6 +1,6 @@
 use concordium_std::{Address, ContractAddress, Amount, SchemaType, Serial};
 
-use crate::project_fractionalizer::contract_types::{ContractTokenAmount, ContractTokenId};
+use crate::carbon_credits::contract_types::{ContractTokenAmount, ContractTokenId};
 
 #[derive(Serial, SchemaType)]
 pub struct TokenTokenReceivedEvent {

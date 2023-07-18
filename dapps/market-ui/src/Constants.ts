@@ -11,18 +11,18 @@ export const MARKET_CONTRACT_ADDRESS = {
   index: BigInt(process.env.REACT_APP_DEFAULT_MARKET_ADDRESS_INDEX!),
   subindex: BigInt(process.env.REACT_APP_DEFAULT_MARKET_ADDRESS_SUBINDEX!),
 };
-export const FRACTIONALIZER_CONTRACT_ADDRESS = {
-  index: BigInt(process.env.REACT_APP_DEFAULT_FRACTIONALIZER_ADDRESS_INDEX!),
-  subindex: BigInt(process.env.REACT_APP_DEFAULT_FRACTIONALIZER_ADDRESS_SUBINDEX!),
+export const CARBON_CREDIT_CONTRACT_ADDRESS = {
+  index: BigInt(process.env.REACT_APP_DEFAULT_CARBON_CREDIT_ADDRESS_INDEX!),
+  subindex: BigInt(process.env.REACT_APP_DEFAULT_CARBON_CREDIT_ADDRESS_SUBINDEX!),
 };
 const MODULE_REF = process.env.REACT_APP_MODULE_REF!;
 const MODULE_SCHEMA = process.env.REACT_APP_MODULE_SCHEMA!;
 const FRACTIONALIZER_MODULE_REF = MODULE_REF;
-const FRACTIONALIZER_CONTRACT_SCHEMA = MODULE_SCHEMA;
-export const FRACTIONALIZER_CONTRACT_INFO = {
-  contractName: process.env.REACT_APP_FRACTIONALIZER_CONTRACT_NAME!,
+const CARBON_CREDIT_CONTRACT_SCHEMA = MODULE_SCHEMA;
+export const CARBON_CREDIT_CONTRACT_INFO = {
+  contractName: process.env.REACT_APP_CARBON_CREDIT_CONTRACT_NAME!,
   moduleRef: new ModuleReference(FRACTIONALIZER_MODULE_REF),
-  schemaBuffer: Buffer.from(FRACTIONALIZER_CONTRACT_SCHEMA, "base64"),
+  schemaBuffer: Buffer.from(CARBON_CREDIT_CONTRACT_SCHEMA, "base64"),
 };
 /**
  * Marketplace Contract Schema.
@@ -43,7 +43,7 @@ export const MARKETPLACE_CONTRACT_INFO: ContractInfo = {
 const MULTI_CONTRACT_MODULE_REF = MODULE_REF;
 const MULTI_CONTRACT_SCHEMA = MODULE_SCHEMA;
 export const CIS2_MULTI_CONTRACT_INFO: Cis2ContractInfo = {
-  contractName: process.env.REACT_APP_PROJECT_NFT_CONTRACT_NAME!,
+  contractName: process.env.REACT_APP_PROJECT_TOKEN_CONTRACT_NAME!,
   moduleRef: new ModuleReference(MULTI_CONTRACT_MODULE_REF),
   schemaBuffer: Buffer.from(MULTI_CONTRACT_SCHEMA, "base64"),
   tokenIdByteSize: 1,

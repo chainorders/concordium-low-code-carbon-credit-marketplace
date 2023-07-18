@@ -5,7 +5,7 @@ use super::state::State;
 // Contract functions
 /// Initialize contract instance with a no token types.
 #[init(
-    contract = "project_fractionalizer",
+    contract = "carbon_credits",
     event = "super::events::ContractEvent",
     error = "super::error::ContractError"
 )]

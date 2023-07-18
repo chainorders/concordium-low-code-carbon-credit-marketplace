@@ -40,7 +40,7 @@ pub struct MintParams {
 /// Note: Can at most mint 32 token types in one call due to the limit on the
 /// number of logs a smart contract can produce on each function call.
 #[receive(
-    contract = "project_fractionalizer",
+    contract = "carbon_credits",
     name = "mint",
     parameter = "MintParams",
     error = "super::error::ContractError",

@@ -9,16 +9,24 @@ use super::{contract_types::*, state::*};
 /// It rejects if:
 /// - It fails to parse the parameter.
 #[receive(
-    contract = "project_nft",
+    contract = "carbon_credits",
     name = "operatorOf",
     parameter = "OperatorOfQueryParams",
     return_value = "OperatorOfQueryResponse",
     error = "super::error::ContractError"
 )]
-pub fn operator_of<S: HasStateApi>(
+fn operator_of<S: HasStateApi>(
     ctx: &impl HasReceiveContext,
     _host: &impl HasHost<State<S>, StateApiType = S>,
 ) -> ContractResult<OperatorOfQueryResponse> {
+    // Parse the parameter.
     let params: OperatorOfQueryParams = ctx.parameter_cursor().get()?;
-    Ok(OperatorOfQueryResponse(vec![false; params.queries.len()]))
+    // Build the response.
+    let mut response = Vec::with_capacity(params.queries.len());
+    for _query in params.queries {
+        // Query the state for address being an operator of owner.
+        response.push(false);
+    }
+    let result = OperatorOfQueryResponse::from(response);
+    Ok(result)
 }

@@ -1,6 +1,15 @@
+use concordium_cis2::*;
 use concordium_std::*;
 
-use super::{contract_types::*, state::*};
+use crate::project_token::{contract_types::*, state::*};
+
+/// Parameter type for the CIS-2 function `balanceOf` specialized to the subset
+/// of TokenIDs used by this contract.
+pub type ContractBalanceOfQueryParams = BalanceOfQueryParams<ContractTokenId>;
+
+/// Response type for the CIS-2 function `balanceOf` specialized to the subset
+/// of TokenAmounts used by this contract.
+pub type ContractBalanceOfQueryResponse = BalanceOfQueryResponse<ContractTokenAmount>;
 
 /// Get the balance of given token IDs and addresses.
 ///
@@ -8,11 +17,10 @@ use super::{contract_types::*, state::*};
 /// - It fails to parse the parameter.
 /// - Any of the queried `token_id` does not exist.
 #[receive(
-    contract = "project_fractionalizer",
+    contract = "project_token",
     name = "balanceOf",
     parameter = "ContractBalanceOfQueryParams",
     return_value = "ContractBalanceOfQueryResponse",
-    error = "super::error::ContractError"
 )]
 pub fn balance_of<S: HasStateApi>(
     ctx: &impl HasReceiveContext,

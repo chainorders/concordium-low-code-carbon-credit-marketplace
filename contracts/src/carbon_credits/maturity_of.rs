@@ -10,7 +10,7 @@ use super::{
 
 /// Returns the maturity time of the given tokens.
 #[receive(
-    contract = "project_fractionalizer",
+    contract = "carbon_credits",
     name = "maturityOf",
     parameter = "ContractMaturityOfQueryParams",
     return_value = "MaturityOfQueryResponse"

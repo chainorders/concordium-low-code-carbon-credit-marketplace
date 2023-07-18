@@ -17,7 +17,7 @@ use super::{contract_types::*, error::*, events::*, state::*};
 /// - Contract name part of the parameter is invalid.
 /// - Calling back `transfer` to sender contract rejects.
 #[receive(
-    contract = "project_fractionalizer",
+    contract = "carbon_credits",
     name = "onCis2Recieved",
     error = "ContractError",
     enable_logger,

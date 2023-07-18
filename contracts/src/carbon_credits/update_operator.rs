@@ -8,7 +8,7 @@ use concordium_std::*;
 /// - It fails to parse the parameter.
 /// - Fails to log event.
 #[receive(
-    contract = "project_fractionalizer",
+    contract = "carbon_credits",
     name = "updateOperator",
     parameter = "concordium_cis2::UpdateOperatorParams",
     error = "ContractError",

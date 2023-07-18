@@ -9,7 +9,7 @@ use super::{contract_types::ContractResult, error::ContractError, state::State};
 /// - It fails to parse the parameter.
 /// - Fails to log event.
 #[receive(
-    contract = "project_nft",
+    contract = "project_token",
     name = "updateOperator",
     parameter = "concordium_cis2::UpdateOperatorParams",
     error = "ContractError",

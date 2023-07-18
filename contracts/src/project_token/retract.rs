@@ -8,7 +8,7 @@ struct RetractParams {
 }
 
 #[receive(
-    contract = "project_nft",
+    contract = "project_token",
     name = "retract",
     parameter = "RetractParams",
     error = "ContractError",

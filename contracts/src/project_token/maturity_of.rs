@@ -2,12 +2,12 @@ use concordium_std::*;
 
 use crate::{
     client_utils::types::MaturityOfQueryResponse,
-    project_nft::{contract_types::*, state::*},
+    project_token::{contract_types::*, state::*},
 };
 
 /// Returns the maturity time of the given tokens.
 #[receive(
-    contract = "project_nft",
+    contract = "project_token",
     name = "maturityOf",
     parameter = "ContractMaturityOfQueryParams",
     return_value = "MaturityOfQueryResponse"

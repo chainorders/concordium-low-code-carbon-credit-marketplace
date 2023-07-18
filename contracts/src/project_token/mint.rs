@@ -1,6 +1,6 @@
 use crate::{
     client_utils::types::ContractMetadataUrl,
-    project_nft::{contract_types::*, error::*, events::*, state::*},
+    project_token::{contract_types::*, error::*, events::*, state::*},
 };
 use concordium_std::*;
 
@@ -39,7 +39,7 @@ pub struct MintResponse(Vec<ContractTokenId>);
 /// Note: Can at most mint 32 token types in one call due to the limit on the
 /// number of logs a smart contract can produce on each function call.
 #[receive(
-    contract = "project_nft",
+    contract = "project_token",
     name = "mint",
     parameter = "MintParams",
     error = "ContractError",

@@ -3,7 +3,7 @@ import { FormEvent, useState } from 'react';
 import { ContractAddress, TransactionStatusEnum } from '@concordium/web-sdk';
 import { Alert, AlertColor, Button, Container, Stack, TextField, Typography } from '@mui/material';
 
-import { FRACTIONALIZER_CONTRACT_INFO } from '../../Constants';
+import { CARBON_CREDIT_CONTRACT_INFO } from '../../Constants';
 import { connectToWallet } from '../../models/ConcordiumContractClient';
 import { mint, MintParams } from '../../models/ProjectFractionalizerClient';
 import { ModuleEvent } from '../../models/web/Events';
@@ -72,7 +72,7 @@ export default function FractionalizerMint(props: {
           wallet.account,
           props.fracContractAddress,
           paramsJson,
-          FRACTIONALIZER_CONTRACT_INFO,
+          CARBON_CREDIT_CONTRACT_INFO,
           BigInt(9999),
           (status, hash) => setTxn({ hash, status }),
         );

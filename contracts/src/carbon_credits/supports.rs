@@ -1,6 +1,7 @@
-use super::{contract_types::*, state::*};
 use concordium_cis2::*;
 use concordium_std::*;
+
+use super::{contract_types::*, state::*};
 
 /// List of supported standards by this contract address.
 const SUPPORTS_STANDARDS: [StandardIdentifier<'static>; 2] =
@@ -12,13 +13,13 @@ const SUPPORTS_STANDARDS: [StandardIdentifier<'static>; 2] =
 /// It rejects if:
 /// - It fails to parse the parameter.
 #[receive(
-    contract = "project_nft",
+    contract = "carbon_credits",
     name = "supports",
     parameter = "SupportsQueryParams",
     return_value = "SupportsQueryResponse",
     error = "super::error::ContractError"
 )]
-pub fn supports<S: HasStateApi>(
+fn supports<S: HasStateApi>(
     ctx: &impl HasReceiveContext,
     _host: &impl HasHost<State<S>, StateApiType = S>,
 ) -> ContractResult<SupportsQueryResponse> {
@@ -30,8 +31,6 @@ pub fn supports<S: HasStateApi>(
     for std_id in params.queries {
         if SUPPORTS_STANDARDS.contains(&std_id.as_standard_identifier()) {
             response.push(SupportResult::Support);
-        } else {
-            response.push(SupportResult::NoSupport);
         }
     }
     let result = SupportsQueryResponse::from(response);
