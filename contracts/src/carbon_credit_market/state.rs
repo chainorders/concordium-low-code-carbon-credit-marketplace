@@ -6,7 +6,7 @@ use std::ops::Sub;
 
 use concordium_std::*;
 
-use crate::cis2_utils::cis2_types::*;
+use crate::client_utils::types::*;
 
 use super::error::*;
 

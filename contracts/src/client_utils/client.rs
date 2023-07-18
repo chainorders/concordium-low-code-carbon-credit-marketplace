@@ -12,20 +12,25 @@
 use concordium_cis2::*;
 use concordium_std::*;
 
-use super::errors::Cis2ClientError;
+use super::{
+    errors::Cis2ClientError,
+    types::{IsVerifiedQueryParams, MaturityOfQueryParams, MaturityOfQueryResponse, IsVerifiedQueryResponse},
+};
 
 pub const CIS2_STANDARD_IDENTIFIER_STR: &str = "CIS-2";
 pub const SUPPORTS_ENTRYPOINT_NAME: EntrypointName = EntrypointName::new_unchecked("supports");
 pub const OPERATOR_OF_ENTRYPOINT_NAME: EntrypointName = EntrypointName::new_unchecked("operatorOf");
 pub const BALANCE_OF_ENTRYPOINT_NAME: EntrypointName = EntrypointName::new_unchecked("balanceOf");
 pub const TRANSFER_ENTRYPOINT_NAME: EntrypointName = EntrypointName::new_unchecked("transfer");
+pub const MATURITY_OF_ENTRYPOINT_NAME: EntrypointName = EntrypointName::new_unchecked("maturityOf");
+pub const IS_VERIFIED_ENTRYPOINT_NAME: EntrypointName = EntrypointName::new_unchecked("isVerified");
 
-pub struct Cis2Client;
+pub struct Client;
 
-impl Cis2Client {
+impl Client {
     // calls the `supports` entrypoint of the CIS2 contract to check if the given contract supports CIS2 standard.
     // If the contract supports CIS2 standard, it returns the contract address, else it returns None.
-    pub fn supports_cis2<State, S: HasStateApi>(
+    pub fn cis2_supports<State, S: HasStateApi>(
         host: &mut impl HasHost<State, StateApiType = S>,
         cis_contract_address: &ContractAddress,
     ) -> Result<Option<ContractAddress>, Cis2ClientError> {
@@ -61,7 +66,7 @@ impl Cis2Client {
 
     // calls the `operatorOf` entrypoint of the CIS2 contract to check if the given owner is an operator of the given contract.
     // If the owner is an operator of the given contract, it returns true, else it returns false.
-    pub fn is_operator_of<State, S: HasStateApi>(
+    pub fn cis2_is_operator_of<State, S: HasStateApi>(
         host: &mut impl HasHost<State, StateApiType = S>,
         owner: Address,
         current_contract_address: ContractAddress,
@@ -96,7 +101,7 @@ impl Cis2Client {
 
     // calls the `balanceOf` entrypoint of the CIS2 contract to get the balance of the given owner for the given token.
     // Returns the balance of the owner for the given token.
-    pub fn get_balance<State, S: HasStateApi, T: IsTokenId, A: IsTokenAmount + Copy>(
+    pub fn cis2_get_balance<State, S: HasStateApi, T: IsTokenId, A: IsTokenAmount + Copy>(
         host: &mut impl HasHost<State, StateApiType = S>,
         token_id: T,
         cis_contract_address: &ContractAddress,
@@ -131,7 +136,7 @@ impl Cis2Client {
 
     // calls the `transfer` entrypoint of the CIS2 contract to transfer the given amount of tokens from the given owner to the given receiver.
     // If the transfer is successful, it returns `Ok(())`, else it returns an `Err`.
-    pub fn transfer<State, S: HasStateApi, T: IsTokenId, A: IsTokenAmount + Copy>(
+    pub fn cis2_transfer<State, S: HasStateApi, T: IsTokenId, A: IsTokenAmount + Copy>(
         host: &mut impl HasHost<State, StateApiType = S>,
         token_id: T,
         cis_contract_address: ContractAddress,
@@ -140,11 +145,10 @@ impl Cis2Client {
         to: Receiver,
     ) -> Result<(), Cis2ClientError> {
         // Checks if the CIS2 contract supports the CIS2 interface.
-        let cis_contract_address =
-            match Cis2Client::supports_cis2(host, &cis_contract_address)? {
-                None => bail!(Cis2ClientError::CollectionNotCis2),
-                Some(address) => address,
-            };
+        let cis_contract_address = match Client::cis2_supports(host, &cis_contract_address)? {
+            None => bail!(Cis2ClientError::CIS2NotSupported),
+            Some(address) => address,
+        };
 
         let params = TransferParams(vec![Transfer {
             token_id,
@@ -162,5 +166,61 @@ impl Cis2Client {
         )?;
 
         Ok(())
+    }
+
+    pub fn maturity_of<State, S: HasStateApi, T: IsTokenId>(
+        host: &impl HasHost<State, StateApiType = S>,
+        token_id: T,
+        contract_address: ContractAddress,
+    ) -> Result<Timestamp, Cis2ClientError> {
+        let params = MaturityOfQueryParams {
+            queries: vec![token_id],
+        };
+
+        let res = host.invoke_contract_read_only(
+            &contract_address,
+            &params,
+            MATURITY_OF_ENTRYPOINT_NAME,
+            Amount::from_ccd(0),
+        );
+
+        let parsed_res = match res {
+            Ok(Some(mut res)) => MaturityOfQueryResponse::deserial(&mut res).unwrap(),
+            _ => bail!(Cis2ClientError::InvokeContractError),
+        };
+
+        let maturity_time = *parsed_res
+            .first()
+            .ok_or(Cis2ClientError::InvokeContractError)?;
+
+        Ok(maturity_time)
+    }
+
+    pub fn is_verified<State, S: HasStateApi, T: IsTokenId>(
+        host: &impl HasHost<State, StateApiType = S>,
+        token_id: T,
+        contract_address: ContractAddress,
+    ) -> Result<bool, Cis2ClientError> {
+        let params = IsVerifiedQueryParams {
+            queries: vec![token_id],
+        };
+
+        let res = host.invoke_contract_read_only(
+            &contract_address,
+            &params,
+            IS_VERIFIED_ENTRYPOINT_NAME,
+            Amount::from_ccd(0),
+        );
+
+        let parsed_res = match res {
+            Ok(Some(mut res)) => IsVerifiedQueryResponse::deserial(&mut res).unwrap(),
+            _ => bail!(Cis2ClientError::InvokeContractError),
+        };
+
+        let is_verified = *parsed_res
+            .first()
+            .ok_or(Cis2ClientError::InvokeContractError)?;
+
+        Ok(is_verified)
     }
 }

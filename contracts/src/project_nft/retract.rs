@@ -35,9 +35,9 @@ fn retract<S: HasStateApi>(
             !token.is_mature(&ctx.metadata().slot_time()),
             ContractError::Custom(CustomContractError::TokenNotMature)
         );
-        // Ensure that the sender has token balance.
+        // Ensure that the sender has token balance or is a verifier.
         ensure!(
-            state.balance(&token_id, &sender)?.cmp(&0.into()).is_gt(),
+            state.balance(&token_id, &sender)?.cmp(&0.into()).is_gt() || state.is_verifier(&sender),
             ContractError::Unauthorized
         );
 

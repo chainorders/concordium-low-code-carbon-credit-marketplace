@@ -53,11 +53,7 @@ pub fn transfer<S: HasStateApi>(
             amount.cmp(&1.into()).is_eq(),
             ContractError::Custom(CustomContractError::InvalidAmount)
         );
-        // Ensure token is verified
-        ensure!(
-            state.is_verified(&token_id),
-            ContractError::Custom(CustomContractError::TokenNotVerified)
-        );
+
         let to_address = to.address();
         // Update the contract state
         state.transfer(&token_id, &from, &to_address, builder)?;
@@ -70,29 +66,20 @@ pub fn transfer<S: HasStateApi>(
             to: to_address,
         }))?;
 
-        // Get the token from the state.
-        // its safe to unwrap here since we just transferred it.
-        let token = state.get_token(&token_id).unwrap();
-
-        let maturity_time_millis: Vec<u8> =
-            token.maturity_time.timestamp_millis().to_le_bytes().into();
         // If the receiver is a contract we invoke it.
         if let Receiver::Contract(address, entrypoint_name) = to {
             let parameter = OnReceivingCis2Params {
                 token_id,
                 amount,
                 from,
-                // The data field is used to pass the maturity time of the token.
-                // Recipient contract can use this to check if the token is mature.
-                // Ex. if the token is not mature yet, fractionalizer will not accept it.
-                data: AdditionalData::from(maturity_time_millis),
+                data: AdditionalData::empty()
             };
             host.invoke_contract(
                 &address,
                 &parameter,
                 entrypoint_name.as_entrypoint_name(),
                 Amount::zero(),
-            )?;
+            )?;  
         }
     }
     Ok(())

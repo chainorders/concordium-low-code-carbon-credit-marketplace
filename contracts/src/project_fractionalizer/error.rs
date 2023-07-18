@@ -1,7 +1,7 @@
 use concordium_cis2::Cis2Error;
 use concordium_std::*;
 
-use crate::cis2_utils::errors::Cis2ClientError;
+use crate::client_utils::errors::Cis2ClientError;
 
 pub type ContractError = Cis2Error<CustomContractError>;
 
@@ -62,5 +62,11 @@ impl From<NewReceiveNameError> for CustomContractError {
 impl From<NewContractNameError> for CustomContractError {
     fn from(_: NewContractNameError) -> Self {
         Self::InvalidContractName
+    }
+}
+
+impl From<Cis2ClientError> for ContractError {
+    fn from(cce: Cis2ClientError) -> Self {
+        Cis2Error::Custom(CustomContractError::Cis2ClientError(cce))
     }
 }

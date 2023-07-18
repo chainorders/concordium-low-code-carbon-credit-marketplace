@@ -3,7 +3,7 @@ use core::ops::{AddAssign, SubAssign};
 use concordium_cis2::*;
 use concordium_std::*;
 
-use crate::cis2_utils::cis2_types::{ContractMetadataUrl, ContractTokenAmount, ContractTokenId};
+use crate::client_utils::types::{ContractMetadataUrl, ContractTokenAmount, ContractTokenId};
 
 use super::{contract_types::*, error::*};
 
@@ -32,21 +32,6 @@ pub struct CollateralToken {
     pub owner: AccountAddress,
 }
 
-#[derive(Serial, Deserial, Clone, Copy, SchemaType)]
-pub struct CollateralState {
-    pub received_token_amount: ContractCollateralTokenAmount,
-    pub minted_token_id: Option<ContractTokenId>,
-}
-
-impl CollateralState {
-    fn new() -> Self {
-        CollateralState {
-            received_token_amount: ContractCollateralTokenAmount::from(0),
-            minted_token_id: Option::None,
-        }
-    }
-}
-
 /// The contract state,
 ///
 /// Note: The specification does not specify how to structure the contract state
@@ -59,7 +44,8 @@ pub struct State<S> {
     /// All of the token IDs
     pub tokens: StateMap<ContractTokenId, MetadataUrl, S>,
     pub token_supply: StateMap<ContractTokenId, ContractTokenAmount, S>,
-    pub tokens_owned: StateMap<CollateralToken, CollateralState, S>,
+    pub collaterals: StateMap<CollateralToken, ContractCollateralTokenAmount, S>,
+    pub used_collaterals: StateMap<ContractTokenId, CollateralToken, S>,
     pub last_token_id: ContractTokenId,
 }
 
@@ -69,9 +55,10 @@ impl<S: HasStateApi> State<S> {
         State {
             state: state_builder.new_map(),
             tokens: state_builder.new_map(),
-            tokens_owned: state_builder.new_map(),
             token_supply: state_builder.new_map(),
             last_token_id: 0.into(),
+            collaterals: state_builder.new_map(),
+            used_collaterals: state_builder.new_map(),
         }
     }
 
@@ -199,7 +186,7 @@ impl<S: HasStateApi> State<S> {
         Ok(())
     }
 
-    pub fn add_owned_token(
+    pub fn add_collateral(
         &mut self,
         contract: ContractAddress,
         token_id: ContractTokenId,
@@ -212,61 +199,59 @@ impl<S: HasStateApi> State<S> {
             owner,
         };
 
-        let mut cs = match self.tokens_owned.get(&key) {
-            Some(v) => *v,
-            None => CollateralState::new(),
-        };
-
-        cs.received_token_amount += received_token_amount;
-
-        self.tokens_owned.insert(key, cs);
+        self.collaterals
+            .entry(key)
+            .and_modify(|c| {
+                c.add_assign(received_token_amount);
+            })
+            .or_insert(received_token_amount);
     }
 
     /// Returns false if the owned token is used for any token Id other than the token being minted.
-    pub fn has_unsed_owned_token(&self, collateral_key: &CollateralToken) -> bool {
-        match self.tokens_owned.get(collateral_key) {
-            Some(c) => match c.minted_token_id {
-                Some(_) => false,
-                None => true,
-            },
-            None => false,
-        }
+    pub fn has_unused_collateral(&self, collateral_key: &CollateralToken) -> bool {
+        self.collaterals.get(collateral_key).is_some()
+            && self
+                .used_collaterals
+                .get(&collateral_key.token_id)
+                .is_none()
     }
 
-    pub fn find_owned_token_from_minted_token_id(
+    pub fn find_collateral(
         &self,
         token_id: &ContractTokenId,
     ) -> Option<(CollateralToken, ContractCollateralTokenAmount)> {
-        for c in self.tokens_owned.iter() {
-            match c.1.minted_token_id {
-                Some(t) => {
-                    if t.eq(token_id) {
-                        return Some((*c.0, c.1.received_token_amount));
-                    }
-                }
-                None => continue,
-            };
-        }
-
-        None
+        self.used_collaterals
+            .get(token_id)
+            .and_then(|collateral_key| {
+                self.collaterals
+                    .get(&*collateral_key)
+                    .map(|amount| (*collateral_key, *amount))
+            })
     }
 
-    pub fn remove_owned_token(&mut self, collateral_key: &CollateralToken) {
-        self.tokens_owned.remove(collateral_key);
+    pub fn remove_collateral(&mut self, collateral_key: &CollateralToken) {
+        self.collaterals.remove(collateral_key);
     }
 
     /// Updates the owned token to attached a Minted Token Id
-    pub fn use_owned_token(
+    pub fn use_collateral(
         &mut self,
         owned_token: &CollateralToken,
         minted_token_id: &ContractTokenId,
     ) -> ContractResult<ContractCollateralTokenAmount> {
-        match self.tokens_owned.entry(owned_token.to_owned()) {
-            Entry::Vacant(_) => bail!(Cis2Error::Custom(CustomContractError::InvalidCollateral)),
-            Entry::Occupied(mut e) => {
-                e.modify(|s| s.minted_token_id = Some(minted_token_id.to_owned()));
-                Ok(e.received_token_amount)
-            }
-        }
+        ensure!(
+            self.has_unused_collateral(owned_token),
+            ContractError::Custom(CustomContractError::InvalidCollateral)
+        );
+
+        self.used_collaterals
+            .insert(*minted_token_id, owned_token.to_owned());
+
+        self.collaterals.get(owned_token).map_or(
+            Err(ContractError::Custom(
+                CustomContractError::InvalidCollateral,
+            )),
+            |c| Ok(c.to_owned()),
+        )
     }
 }

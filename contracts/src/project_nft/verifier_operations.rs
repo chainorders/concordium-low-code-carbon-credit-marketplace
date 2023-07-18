@@ -20,7 +20,7 @@ pub struct AddVerifierParams {
     enable_logger,
     mutable
 )]
-fn add_verifier<S: HasStateApi>(
+pub fn add_verifier<S: HasStateApi>(
     ctx: &impl HasReceiveContext,
     host: &mut impl HasHost<State<S>, StateApiType = S>,
     logger: &mut impl HasLogger,
@@ -55,7 +55,7 @@ pub struct RemoveVerifierParams {
     enable_logger,
     mutable
 )]
-fn remove_verifier<S: HasStateApi>(
+pub fn remove_verifier<S: HasStateApi>(
     ctx: &impl HasReceiveContext,
     host: &mut impl HasHost<State<S>, StateApiType = S>,
     logger: &mut impl HasLogger,
@@ -111,28 +111,4 @@ fn verify<S: HasStateApi>(
     }))?;
 
     return Ok(());
-}
-
-#[derive(Deserial, Serial, SchemaType)]
-pub struct IsVerifiedParams {
-    token_id: ContractTokenId,
-}
-
-#[receive(
-    contract = "project_nft",
-    name = "isVerified",
-    parameter = "IsVerifiedParams",
-    error = "ContractError",
-    mutable
-)]
-fn is_verified<S: HasStateApi>(
-    ctx: &impl HasReceiveContext,
-    host: &mut impl HasHost<State<S>, StateApiType = S>,
-) -> ContractResult<bool> {
-    // Parse the parameter.
-    let IsVerifiedParams { token_id } = ctx.parameter_cursor().get()?;
-    // Get the sender who invoked this contract function.
-    let state = host.state();
-    // Update the contract state
-    return Ok(state.is_verified(&token_id));
 }

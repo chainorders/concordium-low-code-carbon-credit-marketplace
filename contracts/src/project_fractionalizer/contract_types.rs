@@ -2,7 +2,8 @@ use concordium_cis2::{
     BalanceOfQueryParams, BalanceOfQueryResponse, TokenAmountU64, TokenAmountU8, TransferParams,
 };
 
-pub use crate::cis2_utils::cis2_types::ContractTokenId;
+pub use crate::client_utils::types::ContractTokenId;
+use crate::client_utils::types::{MaturityOfQueryParams, IsVerifiedQueryParams};
 
 use super::error::ContractError;
 
@@ -18,3 +19,5 @@ pub type ContractBalanceOfQueryParams = BalanceOfQueryParams<ContractTokenId>;
 pub type ContractBalanceOfQueryResponse = BalanceOfQueryResponse<ContractTokenAmount>;
 
 pub type TransferParameter = TransferParams<ContractTokenId, ContractTokenAmount>;
+pub type ContractMaturityOfQueryParams = MaturityOfQueryParams<ContractTokenId>;
+pub type ContractIsVerifiedQueryParams = IsVerifiedQueryParams<ContractTokenId>;

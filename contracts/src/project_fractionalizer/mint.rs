@@ -1,6 +1,6 @@
 use concordium_std::*;
 
-use crate::cis2_utils::cis2_types::{ContractMetadataUrl, ContractTokenAmount, ContractTokenId};
+use crate::client_utils::types::{ContractMetadataUrl, ContractTokenAmount, ContractTokenId};
 
 use super::{contract_types::ContractResult, error::CustomContractError, events::*, state::*};
 
@@ -63,7 +63,7 @@ pub fn mint<S: HasStateApi>(
     let (state, builder) = host.state_and_builder();
     for token_info in params.tokens {
         ensure!(
-            state.has_unsed_owned_token(&CollateralToken {
+            state.has_unused_collateral(&CollateralToken {
                 contract: token_info.contract,
                 token_id: token_info.token_id,
                 owner: sender,
@@ -79,7 +79,7 @@ pub fn mint<S: HasStateApi>(
             builder,
         );
 
-        let collateral_amount = state.use_owned_token(
+        let collateral_amount = state.use_collateral(
             &CollateralToken {
                 contract: token_info.contract,
                 token_id: token_info.token_id,

@@ -5,7 +5,7 @@ pub enum Cis2ClientError {
     InvokeContractError,
     ParseParams,
     ParseResult,
-    CollectionNotCis2
+    CIS2NotSupported
 }
 
 impl<T> From<CallContractError<T>> for Cis2ClientError {

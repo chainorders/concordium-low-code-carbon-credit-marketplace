@@ -1,7 +1,7 @@
 use concordium_cis2::*;
 use concordium_std::*;
 
-use crate::cis2_utils::cis2_types::*;
+use crate::client_utils::types::*;
 use super::{state::*, contract_types::*, error::*};
 
 /// Parameter type for the CIS-2 function `tokenMetadata` specialized to the

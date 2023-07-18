@@ -1,7 +1,7 @@
 use concordium_std::*;
 
 use super::{contract_types::*, state::*};
-use crate::cis2_utils::cis2_types::ContractTokenAmount;
+use crate::client_utils::types::ContractTokenAmount;
 
 #[derive(Debug, Serialize, SchemaType)]
 pub struct TokenList(pub Vec<TokenListItem>);
@@ -30,7 +30,7 @@ fn list<S: HasStateApi>(
 #[concordium_cfg_test]
 mod test {
     use super::*;
-    use crate::cis2_utils::cis2_types::*;
+    use crate::client_utils::types::*;
     use concordium_std::test_infrastructure::*;
     const ACCOUNT_0: AccountAddress = AccountAddress([0u8; 32]);
     const ADDRESS_0: Address = Address::Account(ACCOUNT_0);

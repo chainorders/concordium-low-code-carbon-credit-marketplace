@@ -1,26 +1,34 @@
-import './MarketplaceTokenListItem.css';
+import "./MarketplaceTokenListItem.css";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
+import { ConcordiumGRPCClient, ContractAddress, InstanceInfo } from "@concordium/web-sdk";
+import { Dangerous, Expand, Info, ShoppingCartCheckout, WrongLocation } from "@mui/icons-material";
+import CheckIcon from "@mui/icons-material/Check";
 import {
-    CIS2Contract, ConcordiumGRPCClient, ContractAddress, InstanceInfo
-} from '@concordium/web-sdk';
-import { Expand, Info, ShoppingCartCheckout } from '@mui/icons-material';
-import CheckIcon from '@mui/icons-material/Check';
-import {
-    Accordion, AccordionDetails, AccordionSummary, Card, CardContent, CardMedia, Chip, Grid,
-    Tooltip, Typography
-} from '@mui/material';
-import IconButton from '@mui/material/IconButton';
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Card,
+  CardContent,
+  CardMedia,
+  Chip,
+  Grid,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import IconButton from "@mui/material/IconButton";
 
-import { TokenListItem } from '../models/CarbonCreditMarketClient';
-import { getContractInformation } from '../models/ConcordiumContractClient';
-import { Metadata } from '../models/ProjectNFTClient';
-import { fetchJson } from '../models/Utils';
-import { User } from '../types/user';
-import Cis2MetadataImageLazy from './cis2/Cis2MetadataImageLazy';
+import { TokenListItem } from "../models/CarbonCreditMarketClient";
+import { getContractInformation } from "../models/ConcordiumContractClient";
+import { Metadata } from "../models/ProjectNFTClient";
+import { fetchJson } from "../models/Utils";
+import { User } from "../types/user";
+import Cis2MetadataImageLazy from "./cis2/Cis2MetadataImageLazy";
+import CCContract from "../models/CCContract";
+import moment from "moment";
 
-type ListItem = TokenListItem & { cis2Contract: CIS2Contract };
+type ListItem = TokenListItem & { cis2Contract: CCContract };
 
 const ActionButton = (props: {
   onBuyClicked: (token: ListItem) => void;
@@ -93,9 +101,13 @@ function MarketplaceTokensListItem(props: {
   const { item, user } = props;
   const [metadata, setMetadata] = useState<Metadata>();
   const [contractInfo, setContractInfo] = useState<InstanceInfo>();
+  const [maturityTime, setMaturityTime] = useState<Date>();
+  const [isVerified, setIsVerified] = useState<boolean>(false);
 
   useEffect(() => {
     getContractInformation(props.grpcClient, props.item.contract).then(setContractInfo);
+    props.item.cis2Contract.maturityOf(props.item.tokenId).then(setMaturityTime);
+    props.item.cis2Contract.isVerified(props.item.tokenId).then(setIsVerified);
   }, [props.item.contract]);
 
   useEffect(() => {
@@ -110,9 +122,12 @@ function MarketplaceTokensListItem(props: {
   }, [props.item.cis2Contract, props.item.tokenId]);
 
   return (
-    <Grid item xs={3}
+    <Grid
+      item
+      xs={3}
       key={item.tokenId + item.contract.index + item.contract.subindex}
-      className={contractInfo?.name.replace("init_", "")}>
+      className={contractInfo?.name.replace("init_", "")}
+    >
       <Card variant="elevation">
         <CardMedia>
           <Cis2MetadataImageLazy cis2Contract={props.item.cis2Contract} tokenId={item.tokenId} />
@@ -128,9 +143,6 @@ function MarketplaceTokensListItem(props: {
                 </Typography>
               </Typography>
               <Typography textAlign={"left"}>{metadata?.name}</Typography>
-              <Typography variant="body2" textAlign={"left"}>
-                {metadata?.description}
-              </Typography>
             </Grid>
             <Grid item xs={6} textAlign={"right"} key="right">
               <Tooltip title={"Token Id"}>
@@ -154,6 +166,27 @@ function MarketplaceTokensListItem(props: {
                 onBuyClicked={props.onBuyClicked}
                 onReturnClicked={props.onReturnClicked}
               />
+            </Grid>
+            <Grid item xs={12} key="middle">
+              <Typography variant="body2" textAlign={"left"}>
+                {metadata?.description}
+              </Typography>
+              <Typography variant="caption" component={"div"} textAlign={"left"}>
+                {moment(maturityTime).isBefore(new Date()) ? (
+                  <CheckIcon fontSize="inherit" color="success" />
+                ) : (
+                  <Dangerous fontSize="inherit" color="error" />
+                )}
+                Maturity: {maturityTime?.toLocaleString()}
+              </Typography>
+              <Typography variant="caption" component={"div"} textAlign={"left"}>
+                {isVerified ? (
+                  <CheckIcon fontSize="inherit" color="success" />
+                ) : (
+                  <Dangerous fontSize="inherit" color="error" />
+                )}
+                {isVerified ? "Verified" : "Not verified"}
+              </Typography>
             </Grid>
             <Grid item xs={12} mt={"1em"} key="bottom">
               <Accordion variant="outlined" className="attributes">

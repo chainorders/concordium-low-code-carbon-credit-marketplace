@@ -196,7 +196,7 @@ export default function Cis2Transfer(props: {
       payload,
       parameter: { json },
       schema,
-    } = cis2Contract.createTransfer({ energy: BigInt(10000) }, transfer);
+    } = cis2Contract.createTransfer({ energy: BigInt(20000) }, transfer);
 
     return provider.sendTransaction(account, type, payload, json, schema as SchemaWithContext);
   }

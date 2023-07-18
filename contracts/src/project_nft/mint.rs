@@ -1,5 +1,5 @@
 use crate::{
-    cis2_utils::cis2_types::ContractMetadataUrl,
+    client_utils::types::ContractMetadataUrl,
     project_nft::{contract_types::*, error::*, events::*, state::*},
 };
 use concordium_std::*;

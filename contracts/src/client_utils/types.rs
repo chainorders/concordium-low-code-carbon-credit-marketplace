@@ -32,3 +32,17 @@ impl Into<MetadataUrl> for ContractMetadataUrl {
         }
     }
 }
+
+#[derive(Deserial, Serial, SchemaType)]
+pub struct MaturityOfQueryParams<T: IsTokenId> {
+    pub queries: Vec<T>,
+}
+
+pub type MaturityOfQueryResponse = Vec<Timestamp>;
+
+#[derive(Deserial, Serial, SchemaType)]
+pub struct IsVerifiedQueryParams<T: IsTokenId> {
+    pub queries: Vec<T>,
+}
+
+pub type IsVerifiedQueryResponse = Vec<bool>;

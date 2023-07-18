@@ -1,7 +1,7 @@
 use concordium_std::{ops::Add, *};
 
 use super::{contract_types::*, error::*, events::*};
-use crate::{carbon_credit_market::state::*, cis2_utils::cis2_types::*};
+use crate::{carbon_credit_market::state::*, client_utils::types::*};
 
 /// Parameters for the `add` method for Market Contract.
 #[derive(Serial, Deserial, SchemaType)]

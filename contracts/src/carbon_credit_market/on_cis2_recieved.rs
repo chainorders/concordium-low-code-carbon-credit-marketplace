@@ -1,7 +1,7 @@
 use concordium_std::*;
 
 use super::{contract_types::*, error::*, events::*, state::*};
-use crate::cis2_utils::cis2_types::*;
+use crate::client_utils::types::*;
 
 /// This functions should be invoked by any CIS2 Contract whose token is being transferred.
 /// TO this contract

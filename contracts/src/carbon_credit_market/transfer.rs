@@ -2,7 +2,7 @@ use concordium_std::{ops::Mul, *};
 
 use crate::{
     carbon_credit_market::{state::*, utils::distribute_amounts},
-    cis2_utils::{cis2_client::*, cis2_types::*},
+    client_utils::{client::*, types::*},
 };
 
 use super::{contract_types::*, error::*, events::*};
@@ -82,7 +82,7 @@ fn transfer<S: HasStateApi>(
         )?;
     };
 
-    Cis2Client::transfer(
+    Client::cis2_transfer(
         host,
         params.token_id,
         params.cis_contract_address,

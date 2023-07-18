@@ -73,11 +73,11 @@ fn contract_transfer<S: HasStateApi>(
                 // Everything has been burned
                 // Transfer collateral back to the original owner
                 let (collateral_key, _collateral_amount) = state
-                    .find_owned_token_from_minted_token_id(&token_id)
+                    .find_collateral(&token_id)
                     .ok_or(Cis2Error::Custom(CustomContractError::InvalidCollateral))?;
 
                 // Remove the collateral from the state
-                state.remove_owned_token(&collateral_key);
+                state.remove_collateral(&collateral_key);
                 logger.log(&ContractEvent::CollateralRemoved(CollateralUpdatedEvent {
                     amount: _collateral_amount,
                     contract: collateral_key.contract,

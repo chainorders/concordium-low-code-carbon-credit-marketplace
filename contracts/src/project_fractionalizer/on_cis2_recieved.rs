@@ -1,7 +1,7 @@
 use concordium_cis2::*;
 use concordium_std::*;
 
-use crate::cis2_utils::cis2_types::*;
+use crate::client_utils::{client::Client, types::*};
 
 use super::{contract_types::*, error::*, events::*, state::*};
 
@@ -41,15 +41,11 @@ fn on_cis2_received<S: HasStateApi>(
 
     let from_account = match params.from {
         Address::Account(a) => a,
-        Address::Contract(_) => bail!(CustomContractError::ContractOnly.into()),
+        Address::Contract(_) => bail!(CustomContractError::AccountsOnly.into()),
     };
 
     // Parse the Maturity time from the first 8 bytes of the data field.
-    let maturity_time = Timestamp::from_timestamp_millis(u64::from_le_bytes(
-        params.data.as_ref()[0..8]
-            .try_into()
-            .or(Err(Cis2Error::Custom(CustomContractError::ParseParams)))?,
-    ));
+    let maturity_time: Timestamp = Client::maturity_of(host, params.token_id, sender)?;
 
     // Ensure the maturity time is in past. ie the project NFT is mature.
     ensure!(
@@ -57,8 +53,12 @@ fn on_cis2_received<S: HasStateApi>(
         CustomContractError::InvalidCollateral.into()
     );
 
+    let is_verified: bool =  Client::is_verified(host, params.token_id, sender)?;
+    // Ensure the token is verified.
+    ensure!(is_verified, CustomContractError::InvalidCollateral.into());
+
     host.state_mut()
-        .add_owned_token(sender, params.token_id, from_account, params.amount);
+        .add_collateral(sender, params.token_id, from_account, params.amount);
     logger.log(&ContractEvent::CollateralAdded(CollateralUpdatedEvent {
         amount: params.amount,
         contract: sender,

@@ -3,7 +3,7 @@
 
 use concordium_std::*;
 
-use crate::cis2_utils::errors::Cis2ClientError;
+use crate::client_utils::errors::Cis2ClientError;
 
 #[derive(Serialize, Debug, PartialEq, Eq, Reject, SchemaType)]
 pub enum MarketplaceError {
