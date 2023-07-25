@@ -24,7 +24,7 @@ pub fn maturity_of<S: HasStateApi>(
         .iter()
         .map(|token_id| {
             let state = host.state();
-            let token = state.get_token(&token_id).unwrap();
+            let token = state.get_token(token_id).unwrap();
             Ok(token.maturity_time)
         })
         .collect()

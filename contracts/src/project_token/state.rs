@@ -71,7 +71,7 @@ impl<S: HasStateApi> State<S> {
 
     /// Adds a verifier to the contract state.
     pub fn add_verifier(&mut self, verifier: &Address) {
-        self.verifiers.insert(verifier.clone());
+        self.verifiers.insert(*verifier);
     }
 
     /// Removes a verifier from the contract state.
@@ -100,14 +100,14 @@ impl<S: HasStateApi> State<S> {
             .verified_tokens
             .entry(*token_id)
             .or_insert_with(|| state_builder.new_set());
-        verified_token.insert(verifier.clone());
+        verified_token.insert(*verifier);
     }
 
     /// Get the set of verifiers for a given token.
     pub fn get_verifiers(&self, token_id: &ContractTokenId) -> Option<Vec<Address>> {
         self.verified_tokens
             .get(token_id)
-            .map(|x| x.iter().map(|a| a.clone()).collect())
+            .map(|x| x.iter().map(|a| *a).collect())
     }
 
     /// Mints an amount of tokens with a given address as the owner.

@@ -25,6 +25,6 @@ pub fn is_verified<S: HasStateApi>(
     let state = host.state();
     queries
         .iter()
-        .map(|token_id| Ok(state.is_verified(&token_id)))
+        .map(|token_id| Ok(state.is_verified(token_id)))
         .collect()
 }

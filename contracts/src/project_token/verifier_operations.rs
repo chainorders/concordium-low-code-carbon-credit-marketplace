@@ -39,7 +39,7 @@ pub fn add_verifier<S: HasStateApi>(
         verifier,
     }))?;
 
-    return Ok(());
+    Ok(())
 }
 
 #[derive(Deserial, Serial, SchemaType)]
@@ -74,7 +74,7 @@ pub fn remove_verifier<S: HasStateApi>(
         verifier,
     }))?;
 
-    return Ok(());
+    Ok(())
 }
 
 #[derive(Deserial, Serial, SchemaType)]
@@ -110,5 +110,5 @@ fn verify<S: HasStateApi>(
         verifier,
     }))?;
 
-    return Ok(());
+    Ok(())
 }
