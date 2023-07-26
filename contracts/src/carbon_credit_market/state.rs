@@ -96,9 +96,7 @@ pub struct TokenOwnedListItem {
 
 #[derive(Serial, DeserialWithState, StateClone)]
 #[concordium(state_parameter = "S")]
-pub struct TokenListState<S>
-where
-    S: HasStateApi,
+pub struct TokenListState<S: HasStateApi>
 {
     pub token_royalty: TokenRoyaltyState,
     pub token_prices: StateMap<AccountAddress, Amount, S>,
@@ -127,9 +125,7 @@ impl<S: HasStateApi> TokenListState<S> {
 
 #[derive(Serial, DeserialWithState, StateClone)]
 #[concordium(state_parameter = "S")]
-pub struct State<S>
-where
-    S: HasStateApi,
+pub struct State<S: HasStateApi>
 {
     pub commission: Commission,
     pub tokens_owned: StateMap<TokenOwnerInfo, ContractTokenAmount, S>,
