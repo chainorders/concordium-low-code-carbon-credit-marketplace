@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 
 import { Grid, Typography } from '@mui/material';
 
-import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
-import { TokenInfo, toTokenId } from '../../models/ProjectNFTClient';
+import { ContractInfo } from '../../models/ConcordiumContractClient';
+import { TokenInfo } from '../../models/ProjectNFTClient';
 import Cis2BatchItemMetadataPrepare from './Cis2BatchItemMetadataPrepare';
 
 interface Tokens {
@@ -13,7 +13,7 @@ interface Tokens {
 function Cis2BatchMetadataPrepare(props: {
   files: File[];
   pinataJwt: string;
-  contractInfo: Cis2ContractInfo;
+  contractInfo: ContractInfo;
   onDone: (tokens: Tokens) => void;
 }) {
   const filesMap: {
@@ -71,7 +71,7 @@ function Cis2BatchMetadataPrepare(props: {
           <Grid item xs={4} key={file.name}>
             <Cis2BatchItemMetadataPrepare
               file={file}
-              tokenId={toTokenId(index + 1, props.contractInfo)}
+              tokenId={(index + 1).toString()}
               pinataJwtKey={props.pinataJwt}
               onDone={(data) => onMetadataPrepared(file.name, data.tokenId, data.tokenInfo)}
             />

@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 
 import { Button, ButtonGroup, Grid, Typography } from '@mui/material';
 
-import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
-import { TokenInfo, toTokenId } from '../../models/ProjectNFTClient';
+import { ContractInfo } from '../../models/ConcordiumContractClient';
+import { TokenInfo } from '../../models/ProjectNFTClient';
 import Cis2BatchItemMetadataAdd from './Cis2BatchItemMetadataAdd';
 
 interface Tokens {
@@ -11,7 +11,7 @@ interface Tokens {
 }
 
 function Cis2BatchMetadataAdd(props: {
-  contractInfo: Cis2ContractInfo;
+  contractInfo: ContractInfo;
   onDone: (tokens: Tokens) => void;
   startingTokenId: number;
 }) {
@@ -32,7 +32,7 @@ function Cis2BatchMetadataAdd(props: {
   function onAdd() {
     const tokens = [...state.tokens];
     tokens.push({
-      tokenId: toTokenId(tokens.length + 1 + props.startingTokenId, props.contractInfo),
+      tokenId: (tokens.length + 1 + props.startingTokenId).toString(),
     });
 
     setState({ ...state, tokens });

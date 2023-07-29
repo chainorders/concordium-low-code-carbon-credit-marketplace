@@ -17,15 +17,15 @@ export default function Cis2Transfer(props: {
   onDone: (address: ContractAddress, tokenId: string, contractName: string, quantity: string) => void;
   grpcClient: ConcordiumGRPCClient;
   to: CIS2.Receiver;
+  defaultContractAddress: ContractAddress;
 }) {
+  const address = props.defaultContractAddress;
   const [state, setState] = useState({
     error: "",
     inProgress: false,
   });
   const [form, setForm] = useState({
-    index: "",
-    subindex: "0",
-    tokenId: "01",
+    tokenId: "",
     quantity: props.defaultQuantity || "1",
   });
   const [txn, setTxn] = useState<{ hash?: string; status?: TransactionStatusEnum }>({});
@@ -37,7 +37,7 @@ export default function Cis2Transfer(props: {
 
   function onSkipClicked() {
     setTxn({});
-    if (!form.index || !form.subindex || !form.tokenId || !form.quantity) {
+    if (!form.tokenId || !form.quantity) {
       setState({ ...state, error: "Please fill out all fields" });
       return;
     }
@@ -46,7 +46,7 @@ export default function Cis2Transfer(props: {
       setState({ ...state, error: "To is an account address cannot be skipped" });
     }
 
-    const address = { index: BigInt(form.index), subindex: BigInt(form.subindex) };
+    const address = props.defaultContractAddress;
     setState({ ...state, error: "", inProgress: true });
     getContractName(address)
       .then(async ({ contractName }) => {
@@ -75,7 +75,6 @@ export default function Cis2Transfer(props: {
     event.preventDefault();
     setTxn({});
 
-    const address = { index: BigInt(form.index), subindex: BigInt(form.subindex) };
     setState({ ...state, error: "", inProgress: true });
     getContractName(address)
       .then(async ({ contractName }) => {
@@ -98,26 +97,6 @@ export default function Cis2Transfer(props: {
 
   return (
     <Stack component={"form"} onSubmit={submit} spacing={2}>
-      <TextField
-        id="contract-index"
-        name="index"
-        label="Contract Index"
-        variant="standard"
-        type={"number"}
-        value={form.index.toString()}
-        onChange={(e) => setFormValue("index", e.target.value)}
-        disabled={state.inProgress}
-      />
-      <TextField
-        id="contract-subindex"
-        name="subindex"
-        label="Contract Sub Index"
-        variant="standard"
-        type={"number"}
-        disabled={state.inProgress}
-        value={form.subindex.toString()}
-        onChange={(e) => setFormValue("subindex", e.target.value)}
-      />
       <TextField
         id="token-id"
         name="tokenId"

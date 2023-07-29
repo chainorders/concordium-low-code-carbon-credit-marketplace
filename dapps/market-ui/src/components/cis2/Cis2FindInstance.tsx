@@ -3,12 +3,9 @@ import React, { FormEvent, useState } from 'react';
 import { CIS0, cis0Supports, ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
 import { Button, Stack, TextField, Typography } from '@mui/material';
 
-import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
-
 function Cis2FindInstance(props: {
   grpcClient: ConcordiumGRPCClient;
-  contractInfo: Cis2ContractInfo;
-  address?: ContractAddress;
+  defaultContract?: ContractAddress;
   onDone: (address: ContractAddress) => void;
 }) {
   const [state, setState] = useState({
@@ -16,8 +13,8 @@ function Cis2FindInstance(props: {
     checking: false,
   });
   const [form, setForm] = useState({
-    index: props.address?.index.toString() || "0",
-    subindex: props.address?.subindex.toString() || "0",
+    index: props.defaultContract?.index.toString() || "0",
+    subindex: props.defaultContract?.subindex.toString() || "0",
   });
 
   function setFormValue(key: string, value: string) {

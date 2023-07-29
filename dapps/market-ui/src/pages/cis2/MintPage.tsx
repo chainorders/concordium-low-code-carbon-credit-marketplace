@@ -7,18 +7,16 @@ import { Container } from '@mui/system';
 
 import Cis2BatchMetadataPrepareOrAdd from '../../components/cis2/Cis2BatchMetadataPrepareOrAdd';
 import Cis2BatchMint from '../../components/cis2/Cis2BatchMint';
-import Cis2FindInstanceOrInit from '../../components/cis2/Cis2FindInstanceOrInit';
 import Cis2TokensDisplay from '../../components/cis2/Cis2TokensDisplay';
 import ConnectPinata from '../../components/ConnectPinata';
 import UploadFiles from '../../components/ui/UploadFiles';
-import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
+import { ContractInfo } from '../../models/ConcordiumContractClient';
 import { TokenInfo } from '../../models/ProjectNFTClient';
 import {
     Cis2MintEvent, Cis2TokenMetadataEvent, ModuleEvent, ProjectNftEvent, ProjectNftMaturityTimeEvent
 } from '../../models/web/Events';
 
 enum Steps {
-  GetOrInitCis2,
   ConnectPinata,
   UploadFiles,
   PrepareMetadata,
@@ -33,12 +31,9 @@ type MintMethodEvents = {
   maturityTime: ProjectNftMaturityTimeEvent;
 };
 
-function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2ContractInfo }) {
+function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: ContractInfo, tokenContract: ContractAddress }) {
+  const { tokenContract } = props;
   const steps: StepType[] = [
-    {
-      step: Steps.GetOrInitCis2,
-      title: "Create New or Find Existing NFT Collection",
-    },
     {
       step: Steps.ConnectPinata,
       title: "Connect Pinata",
@@ -57,7 +52,6 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
 
   const [state, setState] = useState<{
     activeStep: StepType;
-    nftContract?: ContractAddress;
     tokens: TokenInfo[];
     pinataJwt: string;
     files: File[];
@@ -69,14 +63,6 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
   });
 
   const [mintedTokens, setMintedTokens] = useState<MintMethodEvents[]>([]);
-
-  function onGetCollectionAddress(address: ContractAddress) {
-    setState({
-      ...state,
-      activeStep: steps[1],
-      nftContract: address,
-    });
-  }
 
   function onPinataConnected(pinataJwt: string) {
     setState({
@@ -138,15 +124,6 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
 
   function StepContent() {
     switch (state.activeStep.step) {
-      case Steps.GetOrInitCis2:
-        return (
-          <Cis2FindInstanceOrInit
-            grpcClient={props.grpcClient}
-            contractInfo={props.contractInfo}
-            address={state.nftContract}
-            onDone={(address) => onGetCollectionAddress(address)}
-          />
-        );
       case Steps.ConnectPinata:
         return <ConnectPinata onDone={onPinataConnected} onSkip={onPinataSkipped} jwt={state.pinataJwt} />;
       case Steps.UploadFiles:
@@ -164,7 +141,7 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
         return (
           <Cis2BatchMint
             contractInfo={props.contractInfo}
-            tokenContractAddress={state.nftContract!}
+            tokenContractAddress={tokenContract!}
             tokenMetadataMap={state.tokens}
             onDone={onTokensMinted}
           />

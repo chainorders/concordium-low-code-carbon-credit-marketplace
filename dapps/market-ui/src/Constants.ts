@@ -1,8 +1,8 @@
-import { Buffer } from 'buffer/';
+import { Buffer } from "buffer/";
 
-import { ModuleReference } from '@concordium/web-sdk';
+import { ModuleReference } from "@concordium/web-sdk";
 
-import { Cis2ContractInfo, ContractInfo } from './models/ConcordiumContractClient';
+import { ContractInfo, ContractName } from "./models/ConcordiumContractClient";
 
 /**
  * Contract Address for Marketplace. You should specify your contract's index when you initialized it.
@@ -15,12 +15,16 @@ export const CARBON_CREDIT_CONTRACT_ADDRESS = {
   index: BigInt(process.env.REACT_APP_DEFAULT_CARBON_CREDIT_ADDRESS_INDEX!),
   subindex: BigInt(process.env.REACT_APP_DEFAULT_CARBON_CREDIT_ADDRESS_SUBINDEX!),
 };
+export const PROJECT_TOKEN_CONTRACT_ADDRESS = {
+  index: BigInt(process.env.REACT_APP_DEFAULT_PROJECT_TOKEN_ADDRESS_INDEX!),
+  subindex: BigInt(process.env.REACT_APP_DEFAULT_PROJECT_TOKEN_ADDRESS_SUBINDEX!),
+};
 const MODULE_REF = process.env.REACT_APP_MODULE_REF!;
 const MODULE_SCHEMA = process.env.REACT_APP_MODULE_SCHEMA!;
 const FRACTIONALIZER_MODULE_REF = MODULE_REF;
 const CARBON_CREDIT_CONTRACT_SCHEMA = MODULE_SCHEMA;
-export const CARBON_CREDIT_CONTRACT_INFO = {
-  contractName: process.env.REACT_APP_CARBON_CREDIT_CONTRACT_NAME!,
+export const CARBON_CREDIT_CONTRACT_INFO: ContractInfo = {
+  contractName: process.env.REACT_APP_CARBON_CREDIT_CONTRACT_NAME! as ContractName,
   moduleRef: new ModuleReference(FRACTIONALIZER_MODULE_REF),
   schemaBuffer: Buffer.from(CARBON_CREDIT_CONTRACT_SCHEMA, "base64"),
 };
@@ -34,19 +38,18 @@ const MARKET_CONTRACT_SCHEMA = MODULE_SCHEMA;
 const MARKET_MODULE_REF = MODULE_REF;
 
 export const MARKETPLACE_CONTRACT_INFO: ContractInfo = {
-  contractName: process.env.REACT_APP_MARKET_CONTRACT_NAME!,
+  contractName: process.env.REACT_APP_MARKET_CONTRACT_NAME! as ContractName,
   schemaBuffer: Buffer.from(MARKET_CONTRACT_SCHEMA, "base64"),
   moduleRef: new ModuleReference(MARKET_MODULE_REF),
 };
 // Module Reference and Contract Schema for the CIS2-Multi
 // Both module ref and the contract schema should be changed after a new contract deployed (if there are changes)
-const MULTI_CONTRACT_MODULE_REF = MODULE_REF;
-const MULTI_CONTRACT_SCHEMA = MODULE_SCHEMA;
-export const CIS2_MULTI_CONTRACT_INFO: Cis2ContractInfo = {
-  contractName: process.env.REACT_APP_PROJECT_TOKEN_CONTRACT_NAME!,
-  moduleRef: new ModuleReference(MULTI_CONTRACT_MODULE_REF),
-  schemaBuffer: Buffer.from(MULTI_CONTRACT_SCHEMA, "base64"),
-  tokenIdByteSize: 1,
+const PROJECT_TOKEN_CONTRACT_MODULE_REF = MODULE_REF;
+const PROJECT_TOKEN_CONTRACT_SCHEMA = MODULE_SCHEMA;
+export const PROJECT_TOKEN_CONTRACT_INFO: ContractInfo = {
+  contractName: process.env.REACT_APP_PROJECT_TOKEN_CONTRACT_NAME! as ContractName,
+  moduleRef: new ModuleReference(PROJECT_TOKEN_CONTRACT_MODULE_REF),
+  schemaBuffer: Buffer.from(PROJECT_TOKEN_CONTRACT_SCHEMA, "base64"),
 };
 export const IPFS_GATEWAY_URL = process.env.REACT_APP_IPFS_GATEWAY_URL!;
 

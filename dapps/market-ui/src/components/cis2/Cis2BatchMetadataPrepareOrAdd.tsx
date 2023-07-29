@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 import { Stack, Typography } from '@mui/material';
 
-import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
+import { ContractInfo } from '../../models/ConcordiumContractClient';
 import { TokenInfo } from '../../models/ProjectNFTClient';
 import Cis2BatchMetadataAdd from './Cis2BatchMetadataAdd';
 import Cis2BatchMetadataPrepare from './Cis2BatchMetadataPrepare';
@@ -12,7 +12,7 @@ interface Tokens {
 }
 
 function Cis2BatchMetadataPrepareOrAdd(props: {
-  contractInfo: Cis2ContractInfo;
+  contractInfo: ContractInfo;
   files?: File[];
   pinataJwt?: string;
   onDone: (tokens: TokenInfo[]) => void;

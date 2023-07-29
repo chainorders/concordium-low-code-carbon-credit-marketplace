@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { TransactionStatusEnum } from '@concordium/web-sdk';
+import { ContractAddress, TransactionStatusEnum } from '@concordium/web-sdk';
 import { AlertColor, Button, Stack, TextField, Typography } from '@mui/material';
 
 import { connectToWallet, ContractInfo } from '../../../models/ConcordiumContractClient';
@@ -9,10 +9,11 @@ import Alert from '../../ui/Alert';
 import DisplayError from '../../ui/DisplayError';
 import TransactionProgress from '../../ui/TransactionProgress';
 
-export default function RemoveVerifier(props: { contractInfo: ContractInfo }) {
+export default function RemoveVerifier(props: {
+  contractInfo: ContractInfo,
+  projectContract: ContractAddress,
+}) {
   const [form, setForm] = useState({
-    index: "",
-    subindex: "0",
     verifier: "",
   });
   const [state, setState] = useState({
@@ -31,7 +32,7 @@ export default function RemoveVerifier(props: { contractInfo: ContractInfo }) {
 
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!form.index || !form.subindex || !form.verifier) {
+    if (!form.verifier) {
       setState({ ...state, error: "Please fill out all fields." });
     }
 
@@ -41,7 +42,7 @@ export default function RemoveVerifier(props: { contractInfo: ContractInfo }) {
         removeVerifier(
           wallet.provider,
           wallet.account,
-          { index: BigInt(form.index), subindex: BigInt(form.subindex) },
+          props.projectContract,
           props.contractInfo,
           form.verifier,
           BigInt(9999),
@@ -67,23 +68,10 @@ export default function RemoveVerifier(props: { contractInfo: ContractInfo }) {
         Remove Verifier
       </Typography>
       <TextField
-        label="Contract Index"
-        variant="standard"
-        name="index"
-        value={form.index}
-        onChange={(event) => setForm({ ...form, index: event.target.value })}
-      />
-      <TextField
-        label="Contract Subindex"
-        variant="standard"
-        name="subindex"
-        value={form.subindex}
-        onChange={(event) => setForm({ ...form, subindex: event.target.value })}
-      />
-      <TextField
         label="Verifier (Account Address)"
         variant="standard"
-        name="verifier"
+        id='verifier'
+        name='verifier'
         value={form.verifier}
         onChange={(event) => setForm({ ...form, verifier: event.target.value })}
       />

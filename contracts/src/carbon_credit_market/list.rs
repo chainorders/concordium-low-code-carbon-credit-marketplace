@@ -50,7 +50,7 @@ mod test {
         ctx.set_self_address(MARKET_CONTRACT_ADDRESS);
 
         let mut state_builder = TestStateBuilder::new();
-        let mut state = State::new(&mut state_builder, 250);
+        let mut state = State::new(&mut state_builder, 250, vec![]);
         state.add_owned_token(
             &TokenOwnerInfo {
                 id: ContractTokenId::from(1),

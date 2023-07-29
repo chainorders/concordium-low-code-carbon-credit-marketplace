@@ -11,6 +11,8 @@ pub struct InitParams {
     /// This can me atmost equal to 100*100 = 10000(MAX_BASIS_POINTS)
     /// This is the commission charged by the marketplace on every sale.
     pub commission: u16,
+    /// Contracts from which incoming CIS2 transfers will be accepted
+    pub verifier_contracts: Vec<ContractAddress>,
 }
 
 /// Initializes a new Marketplace Contract
@@ -35,7 +37,11 @@ fn init<S: HasStateApi>(
         MarketplaceError::InvalidCommission
     );
 
-    Ok(State::new(state_builder, params.commission))
+    Ok(State::new(
+        state_builder,
+        params.commission,
+        params.verifier_contracts,
+    ))
 }
 
 #[concordium_cfg_test]
@@ -48,10 +54,23 @@ mod test {
         let mut ctx = TestInitContext::default();
         let mut state_builder = TestStateBuilder::new();
 
-        let state = State::new(&mut state_builder, 250);
+        let state = State::new(
+            &mut state_builder,
+            250,
+            vec![ContractAddress {
+                index: 1,
+                subindex: 1,
+            }],
+        );
         let host = TestHost::new(state, state_builder);
 
-        let init_params = InitParams { commission: 250 };
+        let init_params = InitParams {
+            commission: 250,
+            verifier_contracts: vec![ContractAddress {
+                index: 1,
+                subindex: 1,
+            }],
+        };
 
         let parameter_bytes = to_bytes(&init_params);
         ctx.set_parameter(&parameter_bytes);

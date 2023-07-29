@@ -119,7 +119,7 @@ mod test {
         ctx.set_parameter(&parameter_bytes);
 
         let mut state_builder = TestStateBuilder::new();
-        let mut state = State::new(&mut state_builder, 250);
+        let mut state = State::new(&mut state_builder, 250, vec![]);
         state.add_owned_token(
             &TokenOwnerInfo {
                 id: token_id_1,
@@ -188,7 +188,7 @@ mod test {
         ctx.set_parameter(&parameter_bytes);
 
         let mut state_builder = TestStateBuilder::new();
-        let state = State::new(&mut state_builder, 250);
+        let state = State::new(&mut state_builder, 250, vec![]);
         let mut host = TestHost::new(state, state_builder);
 
         let mut logger = TestLogger::init();

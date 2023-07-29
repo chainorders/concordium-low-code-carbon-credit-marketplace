@@ -9,7 +9,7 @@ import {
     SxProps, TextField, Typography
 } from '@mui/material';
 
-import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
+import { ContractInfo } from '../../models/ConcordiumContractClient';
 import { Metadata, TokenInfo } from '../../models/ProjectNFTClient';
 import DisplayError from '../ui/DisplayError';
 import LazyCis2Metadata from './LazyCis2Metadata';
@@ -123,7 +123,7 @@ function GetMetadataUrlCardStep(props: {
 }
 
 function Cis2BatchItemMetadataAdd(props: {
-  contractInfo: Cis2ContractInfo;
+  contractInfo: ContractInfo;
   index: number;
   tokenId: string;
   onDone: (data: { tokenId: string; tokenInfo: TokenInfo }) => void;

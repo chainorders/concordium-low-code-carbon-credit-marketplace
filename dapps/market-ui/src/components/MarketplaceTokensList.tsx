@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from "react";
 
-import { ConcordiumGRPCClient } from "@concordium/web-sdk";
+import { ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk";
 import { AlertColor, Grid } from "@mui/material";
 
-import { MARKET_CONTRACT_ADDRESS, MARKETPLACE_CONTRACT_INFO } from "../Constants";
+import { MARKETPLACE_CONTRACT_INFO } from "../Constants";
 import { list, TokenListItem } from "../models/CarbonCreditMarketClient";
 import { User } from "../types/user";
 import MarketplaceReturnDialog from "./MarketplaceReturnDialog";
 import MarketplaceTokensListItem from "./MarketplaceTokensListItem";
 import MarketplaceTransferDialog from "./MarketplaceTransferDialog";
 import Alert from "./ui/Alert";
-import { useParamsContractAddress } from "./utils";
 import CCContract from "../models/CCContract";
 
 type ListItem = TokenListItem & { cis2Contract: CCContract };
@@ -18,12 +17,15 @@ type ListItem = TokenListItem & { cis2Contract: CCContract };
 /**
  * Gets the List of buyable tokens from Marketplace contract and displays them.
  */
-function MarketplaceTokensList(props: { grpcClient: ConcordiumGRPCClient; user: User }) {
-  const { grpcClient, user } = props;
+function MarketplaceTokensList(props: {
+  grpcClient: ConcordiumGRPCClient;
+  user: User;
+  marketContract: ContractAddress
+}) {
+  const { grpcClient, user, marketContract } = props;
   const [selectedToken, setSelectedToken] = useState<ListItem>();
   const [returnToken, setReturnToken] = useState<ListItem>();
   const [tokens, setTokens] = useState<Array<ListItem>>([]);
-  const marketContractAddress = useParamsContractAddress() || MARKET_CONTRACT_ADDRESS;
   const [alertState, setAlertState] = useState({
     open: false,
     message: "",
@@ -31,7 +33,7 @@ function MarketplaceTokensList(props: { grpcClient: ConcordiumGRPCClient; user: 
   });
   useEffect(() => {
     (async () => {
-      const tokens = await list(grpcClient, marketContractAddress, MARKETPLACE_CONTRACT_INFO);
+      const tokens = await list(grpcClient, marketContract, MARKETPLACE_CONTRACT_INFO);
       return Promise.all(
         tokens.map(async (t) => {
           return {
@@ -67,7 +69,7 @@ function MarketplaceTokensList(props: { grpcClient: ConcordiumGRPCClient; user: 
         {tokens.map((t) => (
           <MarketplaceTokensListItem
             grpcClient={grpcClient}
-            marketContractAddress={marketContractAddress}
+            marketContractAddress={marketContract}
             item={t}
             key={t.tokenId + t.contract.index + t.contract.subindex + t.owner}
             onBuyClicked={setSelectedToken}
@@ -78,7 +80,7 @@ function MarketplaceTokensList(props: { grpcClient: ConcordiumGRPCClient; user: 
       </Grid>
       {selectedToken && (
         <MarketplaceTransferDialog
-          marketContractAddress={marketContractAddress}
+          marketContractAddress={marketContract}
           isOpen={!!selectedToken}
           token={selectedToken}
           onClose={() => setSelectedToken(undefined)}
@@ -87,7 +89,7 @@ function MarketplaceTokensList(props: { grpcClient: ConcordiumGRPCClient; user: 
       )}
       {returnToken && (
         <MarketplaceReturnDialog
-          marketContractAddress={marketContractAddress}
+          marketContractAddress={marketContract}
           isOpen={!!returnToken}
           token={returnToken}
           onClose={(res) => handleReturnClose(res)}

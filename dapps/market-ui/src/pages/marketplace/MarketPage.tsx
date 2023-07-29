@@ -1,16 +1,13 @@
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate } from "react-router-dom";
 
-import { AddCircleOutline } from '@mui/icons-material';
-import { AppBar, Button, Stack, Toolbar, Typography } from '@mui/material';
+import { AppBar, Button, Stack, Toolbar, Typography } from "@mui/material";
 
-import { useParamsContractAddress } from '../../components/utils';
-import { MARKET_CONTRACT_ADDRESS } from '../../Constants';
-import { User } from '../../types/user';
+import { User } from "../../types/user";
+import { ContractAddress } from "@concordium/web-sdk";
 
-export default function MarketPage(props: { user: User }) {
-  const { user } = props;
+export default function MarketPage(props: { user: User; marketContract: ContractAddress }) {
+  const { user, marketContract } = props;
   const navigate = useNavigate();
-  const marketContractAddress = useParamsContractAddress() || MARKET_CONTRACT_ADDRESS;
   const isWalletUser = () => {
     return user && user.accountType === "wallet" && user.account;
   };
@@ -19,14 +16,9 @@ export default function MarketPage(props: { user: User }) {
       <AppBar position="static" color="secondary">
         <Toolbar>
           <Typography textAlign={"left"} variant="h5" component={"div"} sx={{ flexGrow: 1 }}>
-            Market ({marketContractAddress.index.toString()}/{marketContractAddress.subindex.toString()})
+            Market ({marketContract.index.toString()}/{marketContract.subindex.toString()})
           </Typography>
-          <Button
-            color="inherit"
-            onClick={() =>
-              navigate(`buy/${marketContractAddress.index.toString()}/${marketContractAddress.subindex.toString()}`)
-            }
-          >
+          <Button color="inherit" onClick={() => navigate(`buy`)}>
             Buy
           </Button>
           <Button color="inherit" onClick={() => navigate("sell")} disabled={!isWalletUser()}>
@@ -34,9 +26,6 @@ export default function MarketPage(props: { user: User }) {
           </Button>
           <Button color="inherit" onClick={() => navigate("events")} disabled={!isWalletUser()}>
             Events
-          </Button>
-          <Button color="inherit" onClick={() => navigate("create")} disabled={!isWalletUser()}>
-            <AddCircleOutline sx={{ mr: 1 }} />
           </Button>
         </Toolbar>
       </AppBar>

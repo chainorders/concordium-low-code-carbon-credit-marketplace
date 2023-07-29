@@ -3,14 +3,16 @@ import React from 'react';
 import { ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
 import { Container, Paper, Stack, Typography } from '@mui/material';
 
-import ContractFindInstance from '../../components/ContractFindInstance';
-import MarketplaceContractInit from '../../components/MarketplaceContractInit';
+import ContractFindInstance from '../ContractFindInstance';
+import MarketplaceContractInit from '../MarketplaceContractInit';
 import { ContractInfo } from '../../models/ConcordiumContractClient';
 
 function MarketFindOrInit(props: {
   grpcClient: ConcordiumGRPCClient;
   contractInfo: ContractInfo;
-  defaultContractAddress: ContractAddress;
+  tokenContract: ContractAddress;
+  fracContract: ContractAddress;
+  defaultContractAddress?: ContractAddress;
   onDone: (address: ContractAddress) => void;
 }) {
   return (

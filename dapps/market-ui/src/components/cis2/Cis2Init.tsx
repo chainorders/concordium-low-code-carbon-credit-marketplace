@@ -1,31 +1,42 @@
-import React, { FormEvent, useState } from 'react';
+import React, { FormEvent, useState } from "react";
 
-import { ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
-import { Button, Stack, Typography } from '@mui/material';
+import { ConcordiumGRPCClient, ContractAddress, TransactionStatusEnum } from "@concordium/web-sdk";
+import { Button, Stack, Typography } from "@mui/material";
 
-import {
-    Cis2ContractInfo, connectToWallet, initContract
-} from '../../models/ConcordiumContractClient';
+import { ContractInfo, connectToWallet, initContract } from "../../models/ConcordiumContractClient";
+import TransactionProgress from "../ui/TransactionProgress";
 
 function Cis2Init(props: {
   grpcClient: ConcordiumGRPCClient;
-  contractInfo: Cis2ContractInfo;
-  onDone: (address: ContractAddress, contractInfo: Cis2ContractInfo) => void;
+  contractInfo: ContractInfo;
+  onDone: (address: ContractAddress) => void;
 }) {
   const [state, setState] = useState({
     error: "",
     processing: false,
   });
+  const [txn, setTxn] = useState<{ status: TransactionStatusEnum; hash: string }>();
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setState({ ...state, processing: true });
+    setState({ ...state, processing: true, error: "" });
+    setTxn(undefined);
 
     connectToWallet()
-      .then((wallet) => initContract(wallet.provider, props.contractInfo, wallet.account))
+      .then((wallet) =>
+        initContract(
+          wallet.provider,
+          props.contractInfo,
+          wallet.account,
+          undefined,
+          BigInt(9999),
+          BigInt(0),
+          (status, hash) => setTxn({ status, hash }),
+        ),
+      )
       .then((address) => {
         setState({ ...state, processing: false });
-        props.onDone(address, props.contractInfo);
+        props.onDone(address);
       })
       .catch((err: Error) => {
         setState({ ...state, processing: false, error: err.message });
@@ -39,11 +50,7 @@ function Cis2Init(props: {
           {state.error}
         </Typography>
       )}
-      {state.processing && (
-        <Typography component="div" variant="body1">
-          Deploying..
-        </Typography>
-      )}
+      {state.processing && txn && <TransactionProgress {...txn} />}
       <Button variant="contained" disabled={state.processing} type="submit">
         Deploy New
       </Button>

@@ -270,7 +270,3 @@ export async function verify(
 
   return outcomes;
 }
-
-export const toTokenId = (integer: number, contractInfo: connClient.Cis2ContractInfo) => {
-  return integer.toString(16).padStart(contractInfo.tokenIdByteSize * 2, "0");
-};

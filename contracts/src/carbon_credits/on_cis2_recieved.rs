@@ -28,11 +28,15 @@ fn on_cis2_received<S: HasStateApi>(
     host: &mut impl HasHost<State<S>, StateApiType = S>,
     logger: &mut impl HasLogger,
 ) -> ContractResult<()> {
-    // Ensure the sender is a contract.
-    let sender = if let Address::Contract(contract) = ctx.sender() {
-        contract
-    } else {
-        bail!(CustomContractError::ContractOnly.into())
+    let sender = match ctx.sender() {
+        Address::Account(_) => bail!(CustomContractError::ContractOnly.into()),
+        Address::Contract(contract) => {
+            ensure!(
+                host.state().is_verifier_contract(&contract),
+                CustomContractError::InvalidVerifierContract.into()
+            );
+            contract
+        }
     };
 
     // Parse the parameter.
@@ -44,16 +48,7 @@ fn on_cis2_received<S: HasStateApi>(
         Address::Contract(_) => bail!(CustomContractError::AccountsOnly.into()),
     };
 
-    // Parse the Maturity time from the first 8 bytes of the data field.
-    let maturity_time: Timestamp = Client::maturity_of(host, params.token_id, sender)?;
-
-    // Ensure the maturity time is in past. ie the project NFT is mature.
-    ensure!(
-        maturity_time <= ctx.metadata().slot_time(),
-        CustomContractError::InvalidCollateral.into()
-    );
-
-    let is_verified: bool =  Client::is_verified(host, params.token_id, sender)?;
+    let is_verified: bool = Client::is_verified(host, params.token_id, sender)?;
     // Ensure the token is verified.
     ensure!(is_verified, CustomContractError::InvalidCollateral.into());
 

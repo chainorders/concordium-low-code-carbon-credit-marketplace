@@ -11,7 +11,7 @@ import TransactionProgress from '../ui/TransactionProgress';
 export function ProjectRetract(props: {
   grpcClient: ConcordiumGRPCClient;
   contractInfo: ContractInfo;
-  address: ContractAddress;
+  projectContract: ContractAddress;
   onDone: (output: { tokenIds: string[] }) => void;
 }) {
   const [form, setForm] = useState({
@@ -38,7 +38,7 @@ export function ProjectRetract(props: {
         retract(
           wallet.provider,
           wallet.account,
-          props.address,
+          props.projectContract,
           props.contractInfo,
           [form.tokenId],
           BigInt(9999),
@@ -59,8 +59,10 @@ export function ProjectRetract(props: {
     <>
       <Stack spacing={2} component={"form"} onSubmit={onsubmit}>
         <TextField
+          id="tokenId"
+          name="tokenId"
           label="Token ID"
-          variant="outlined"
+          variant="standard"
           fullWidth
           onChange={(e) => setForm({ ...form, tokenId: e.target.value })}
         />

@@ -59,6 +59,8 @@ export function ProjectRetire(props: {
     <>
       <Stack spacing={2} component={"form"} onSubmit={onsubmit}>
         <TextField
+          name='tokenId'
+          id='tokenId'
           label="Token ID"
           variant="outlined"
           fullWidth
