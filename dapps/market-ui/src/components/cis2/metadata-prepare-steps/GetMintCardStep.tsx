@@ -10,7 +10,7 @@ function GetMintCardStep(props: {
   tokenId: string;
   imageIpfsUrl?: string;
   metadataUrl: CIS2.MetadataUrl;
-  quantity?: string;
+  maturityTime: Date;
 }) {
   return (
     <Card variant="outlined">
@@ -18,13 +18,8 @@ function GetMintCardStep(props: {
       <CardContent>
         <Typography>Ready to be Minted</Typography>
         <Typography variant="caption" component="div">
-          Token Id: {props.tokenId}
+          Maturity Time: {props.maturityTime.toLocaleString()}
         </Typography>
-        {props.quantity && (
-          <Typography variant="caption" component="div">
-            Quantity: {props.quantity}
-          </Typography>
-        )}
         <Link href={props.imageIpfsUrl} variant="caption" component="div">
           Image IPFS Url
         </Link>

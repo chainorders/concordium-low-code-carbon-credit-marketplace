@@ -3,9 +3,10 @@ import { FormEvent, useState } from 'react';
 import { ContractAddress, TransactionStatusEnum } from '@concordium/web-sdk';
 import { Alert, AlertColor, Button, Container, Stack, TextField, Typography } from '@mui/material';
 
-import { FRACTIONALIZER_CONTRACT_INFO } from '../../Constants';
+import { CARBON_CREDIT_CONTRACT_INFO } from '../../Constants';
 import { connectToWallet } from '../../models/ConcordiumContractClient';
-import { mint, MintParams } from '../../models/FractionalizerClient';
+import { mint, MintParams } from '../../models/ProjectFractionalizerClient';
+import { ModuleEvent } from '../../models/web/Events';
 import { default as SnackbarAlert } from '../ui/Alert';
 import DisplayError from '../ui/DisplayError';
 import TransactionProgress from '../ui/TransactionProgress';
@@ -21,7 +22,7 @@ export default function FractionalizerMint(props: {
   disableMetadataUrlUpdate?: boolean;
   disableQuantityUpdate?: boolean;
   disableMetadataHashUpdate?: boolean;
-  onDone: (tokenId: string, quantity: string) => void;
+  onDone: (events: ModuleEvent[]) => void;
 }) {
   const [txn, setTxn] = useState<{ hash?: string; status?: TransactionStatusEnum }>({});
   const [state, setState] = useState({
@@ -29,7 +30,6 @@ export default function FractionalizerMint(props: {
     inProgress: false,
   });
   const [form, setForm] = useState({
-    tokenId: props.defaultTokenId || "01",
     quantity: props.defaultTokenQuantity,
     metadataUrl: props.defaultMetadataUrl,
     metadataHash: props.defaultMetadataHash,
@@ -52,21 +52,18 @@ export default function FractionalizerMint(props: {
         const paramsJson = {
           owner: { Account: [wallet.account] },
           tokens: [
-            [
-              form.tokenId,
-              {
-                amount: form.quantity,
-                contract: {
-                  index: Number(props.collateralContractAddress.index),
-                  subindex: Number(props.collateralContractAddress.subindex),
-                },
-                token_id: props.collateralTokenId,
-                metadata: {
-                  url: form.metadataUrl,
-                  hash: form.metadataHash,
-                },
+            {
+              amount: form.quantity,
+              contract: {
+                index: Number(props.collateralContractAddress.index),
+                subindex: Number(props.collateralContractAddress.subindex),
               },
-            ],
+              token_id: props.collateralTokenId,
+              metadata: {
+                url: form.metadataUrl,
+                hash: form.metadataHash ? { Some: [form.metadataHash] } : { None: [] },
+              },
+            },
           ],
         } as MintParams;
 
@@ -75,19 +72,14 @@ export default function FractionalizerMint(props: {
           wallet.account,
           props.fracContractAddress,
           paramsJson,
-          FRACTIONALIZER_CONTRACT_INFO,
+          CARBON_CREDIT_CONTRACT_INFO,
           BigInt(9999),
           (status, hash) => setTxn({ hash, status }),
         );
       })
-      .then(() => {
+      .then((mintEvents) => {
         setState({ ...state, inProgress: false });
-        setAlertState({
-          open: true,
-          message: `Minted token: ${form.tokenId}, quantity: ${form.quantity}`,
-          severity: "success",
-        });
-        props.onDone(form.tokenId, form.quantity);
+        props.onDone(mintEvents);
       })
       .catch((e: Error) => {
         console.error(e);
@@ -104,23 +96,13 @@ export default function FractionalizerMint(props: {
         </Typography>
       </Alert>
       <TextField
-        id="token-id"
-        name="tokenId"
-        label="Token Id"
-        variant="standard"
-        type={"text"}
-        disabled={state.inProgress}
-        value={form.tokenId.toString()}
-        onChange={(e) => setFormValue("tokenId", e.target.value)}
-      />
-      <TextField
         id="quantity"
         name="quantity"
         label="Token Quantity"
         variant="standard"
         type={"number"}
         disabled={props.disableQuantityUpdate || state.inProgress}
-        value={form.quantity.toString()}
+        value={form.quantity}
         onChange={(e) => setFormValue("quantity", e.target.value)}
       />
       <TextField
@@ -130,7 +112,7 @@ export default function FractionalizerMint(props: {
         variant="standard"
         type={"text"}
         disabled={props.disableMetadataUrlUpdate || state.inProgress}
-        value={form.metadataUrl.toString()}
+        value={form.metadataUrl}
         onChange={(e) => setFormValue("metadataUrl", e.target.value)}
       />
       <TextField
@@ -140,7 +122,7 @@ export default function FractionalizerMint(props: {
         variant="standard"
         type={"text"}
         disabled={props.disableMetadataHashUpdate || state.inProgress}
-        value={form.metadataHash.toString()}
+        value={form.metadataHash}
         onChange={(e) => setFormValue("metadataHash", e.target.value)}
       />
       <DisplayError error={state.error} />

@@ -9,19 +9,18 @@ import {
     SxProps, TextField, Typography
 } from '@mui/material';
 
-import { Metadata } from '../../models/Cis2Client';
 import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
+import { Metadata, TokenInfo } from '../../models/ProjectNFTClient';
 import DisplayError from '../ui/DisplayError';
 import LazyCis2Metadata from './LazyCis2Metadata';
+import GetMaturityTimeCardStep from './metadata-prepare-steps/GetMaturityTimeCardStep';
 import GetMintCardStep from './metadata-prepare-steps/GetMintCardStep';
-import GetTokenIdCardStep from './metadata-prepare-steps/GetTokenIdCardStep';
 
 const cardMediaSx: SxProps<Theme> = { maxHeight: "200px" };
 
 enum Steps {
   GetMetadataUrl = 0,
-  GetTokenId = 1,
-  GetQuantity = 2,
+  GetMaturityTime = 2,
   Mint = 3,
 }
 
@@ -127,33 +126,28 @@ function Cis2BatchItemMetadataAdd(props: {
   contractInfo: Cis2ContractInfo;
   index: number;
   tokenId: string;
-  onDone: (data: { tokenId: string; tokenInfo: [CIS2.MetadataUrl, string] }) => void;
+  onDone: (data: { tokenId: string; tokenInfo: TokenInfo }) => void;
   onCancel: (index: number) => void;
 }) {
-  const [state, setState] = useState<{
-    step: Steps;
-    tokenId: string;
-    metadata?: Metadata;
-    metadataUrl?: CIS2.MetadataUrl;
-    quantity?: string;
-  }>({ step: Steps.GetMetadataUrl, tokenId: props.tokenId });
+  const { tokenId } = props;
+  const [metadataUrl, setMetadataUrl] = useState<CIS2.MetadataUrl>();
+  const [maturityTime, setMaturityTime] = useState<Date>();
+  const [metadata, setMetadata] = useState<Metadata>();
+  const [step, setStep] = useState<Steps>(Steps.GetMetadataUrl);
 
   function metadataUrlUpdated(metadataUrl: CIS2.MetadataUrl, metadata: Metadata) {
-    setState({
-      ...state,
-      metadataUrl: metadataUrl,
-      metadata,
-      step: Steps.GetTokenId,
-    });
+    setMetadataUrl(metadataUrl);
+    setMetadata(metadata);
+    setStep(Steps.GetMaturityTime);
   }
 
-  function tokenIdUpdated(tokenId: string) {
-    const quantity = "1";
-    setState({ ...state, step: Steps.Mint, tokenId, quantity });
-    props.onDone({ tokenId, tokenInfo: [state.metadataUrl!, quantity] });
+  function maturityTimeUpdated(maturityTime: Date) {
+    setMaturityTime(maturityTime);
+    setStep(Steps.Mint);
+    props.onDone({ tokenId, tokenInfo: { metadataUrl: metadataUrl!, maturityTime } });
   }
 
-  switch (state.step) {
+  switch (step) {
     case Steps.GetMetadataUrl:
       return (
         <GetMetadataUrlCardStep
@@ -162,23 +156,22 @@ function Cis2BatchItemMetadataAdd(props: {
           onCancel={() => props.onCancel(props.index)}
         />
       );
-    case Steps.GetTokenId:
+    case Steps.GetMaturityTime:
       return (
-        <GetTokenIdCardStep
-          tokenId={props.tokenId}
-          key={props.index}
-          imageUrl={state.metadata?.display?.url}
-          onDone={(data) => tokenIdUpdated(data.tokenId)}
+        <GetMaturityTimeCardStep
+          tokenId={tokenId}
+          imageUrl={metadata?.display?.url}
+          onDone={({ maturityTime }) => maturityTimeUpdated(maturityTime)}
         />
       );
     case Steps.Mint:
       return (
         <GetMintCardStep
-          imageUrl={state.metadata?.display?.url}
-          imageIpfsUrl={state.metadata?.display?.url}
-          tokenId={state.tokenId}
-          metadataUrl={state.metadataUrl!}
-          quantity={state.quantity}
+          imageUrl={metadata?.display?.url}
+          imageIpfsUrl={metadata?.display?.url}
+          tokenId={tokenId}
+          metadataUrl={metadataUrl!}
+          maturityTime={maturityTime!}
         />
       );
     default:

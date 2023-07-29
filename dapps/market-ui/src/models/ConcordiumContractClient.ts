@@ -11,7 +11,7 @@ import {
 
 export interface ContractInfo {
   schemaBuffer: Buffer;
-  contractName: "cis2_multi" | "Market-NFT" | string;
+  contractName: "project_token" | "Market-NFT" | string;
   moduleRef?: ModuleReference;
 }
 
@@ -149,7 +149,7 @@ export async function updateContract(
   amount = BigInt(0),
   onStatusUpdate: (status: TransactionStatusEnum, txnHash: string) => void = (status, txnHash) =>
     console.log(`txn #${txnHash}, status:${status}`),
-): Promise<Record<string, TransactionSummary>> {
+): Promise<{ txnHash: string; outcomes: Record<string, TransactionSummary> }> {
   const { schemaBuffer, contractName } = contractInfo;
   const txnHash = await provider.sendTransaction(
     account,
@@ -164,7 +164,13 @@ export async function updateContract(
     schemaBuffer.toString("base64"),
   );
 
-  return await waitAndThrowError(provider, txnHash, onStatusUpdate);
+  const outcomes = await waitAndThrowError(provider, txnHash, onStatusUpdate);
+
+  return { txnHash, outcomes };
+}
+
+export async function getContractInformation(grpcClient: ConcordiumGRPCClient, contractAddress: ContractAddress) {
+  return grpcClient.getInstanceInfo(contractAddress);
 }
 
 export async function waitAndThrowError(
@@ -205,9 +211,13 @@ function ensureValidOutcome(outcomes?: Record<string, TransactionSummary>): Reco
       case "reject":
         switch (result.rejectReason.tag) {
           case "InvalidReceiveMethod":
-            throw Error(`Invalid Receive Method: ${result.rejectReason.contents.join(",")}`, { cause: result.rejectReason });
+            throw Error(`Invalid Receive Method: ${result.rejectReason.contents.join(",")}`, {
+              cause: result.rejectReason,
+            });
           case "InvalidInitMethod":
-            throw Error(`Invalid Init Method: ${result.rejectReason.contents.join(",")}`, { cause: result.rejectReason });
+            throw Error(`Invalid Init Method: ${result.rejectReason.contents.join(",")}`, {
+              cause: result.rejectReason,
+            });
           case "AmountTooLarge":
             throw Error(`Amount Too Large: ${result.rejectReason.contents.join(",")}`, { cause: result.rejectReason });
           case "InvalidContractAddress": {

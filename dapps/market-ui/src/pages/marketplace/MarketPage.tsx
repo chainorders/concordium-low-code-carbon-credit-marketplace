@@ -32,6 +32,9 @@ export default function MarketPage(props: { user: User }) {
           <Button color="inherit" onClick={() => navigate("sell")} disabled={!isWalletUser()}>
             Sell
           </Button>
+          <Button color="inherit" onClick={() => navigate("events")} disabled={!isWalletUser()}>
+            Events
+          </Button>
           <Button color="inherit" onClick={() => navigate("create")} disabled={!isWalletUser()}>
             <AddCircleOutline sx={{ mr: 1 }} />
           </Button>

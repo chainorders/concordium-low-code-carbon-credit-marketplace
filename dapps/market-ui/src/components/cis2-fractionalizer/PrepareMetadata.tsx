@@ -3,18 +3,18 @@ import { useEffectOnce } from 'usehooks-ts';
 
 import { CIS2Contract } from '@concordium/web-sdk';
 
-import { Metadata } from '../../models/Cis2Client';
-import { getDefaultAttributes } from '../../models/FractionalizerClient';
+import { getDefaultAttributes } from '../../models/ProjectFractionalizerClient';
+import { Metadata } from '../../models/ProjectNFTClient';
 import { fetchJson } from '../../models/Utils';
 import Cis2TokenMetadataForm from '../cis2/Cis2TokenMetadataForm';
 import Alert from '../ui/Alert';
 
 export default function PrepareMetadata(props: {
-  cis2Contract: CIS2Contract;
-  cis2TokenId: string;
+  collateralTokenContract: CIS2Contract;
+  collateralTokenId: string;
   onMetadataPrepared: (metadata: Metadata) => void;
 }) {
-  const { cis2Contract, cis2TokenId, onMetadataPrepared } = props;
+  const { collateralTokenContract: cis2Contract, collateralTokenId: cis2TokenId, onMetadataPrepared } = props;
   const [cis2TokenMetadata, setCis2TokenMetadata] = useState<Metadata>({});
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
   const [state, setState] = useState({
@@ -40,7 +40,7 @@ export default function PrepareMetadata(props: {
       .tokenMetadata(cis2TokenId)
       .then((m) => fetchJson<Metadata>(m.url))
       .then((metadata) => {
-        const mergedMetadata = mergeMetadata(metadata, { attributes: getDefaultAttributes(metadata.attributes) });
+        const mergedMetadata = mergeMetadata({ attributes: getDefaultAttributes(metadata.attributes) }, metadata);
         setCis2TokenMetadata(mergedMetadata);
         setIsLoadingMetadata(false);
       })
@@ -57,10 +57,7 @@ export default function PrepareMetadata(props: {
 
   return (
     <>
-      <Cis2TokenMetadataForm
-        defaultFormData={cis2TokenMetadata}
-        onSubmit={onMetadataPrepared}
-      />
+      <Cis2TokenMetadataForm defaultFormData={cis2TokenMetadata} onSubmit={onMetadataPrepared} />
     </>
   );
 }

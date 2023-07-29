@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { CIS2, ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
+import { ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
 import { ArrowBackRounded } from '@mui/icons-material';
 import { Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography } from '@mui/material';
 import { Container } from '@mui/system';
@@ -8,9 +8,14 @@ import { Container } from '@mui/system';
 import Cis2BatchMetadataPrepareOrAdd from '../../components/cis2/Cis2BatchMetadataPrepareOrAdd';
 import Cis2BatchMint from '../../components/cis2/Cis2BatchMint';
 import Cis2FindInstanceOrInit from '../../components/cis2/Cis2FindInstanceOrInit';
+import Cis2TokensDisplay from '../../components/cis2/Cis2TokensDisplay';
 import ConnectPinata from '../../components/ConnectPinata';
 import UploadFiles from '../../components/ui/UploadFiles';
 import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
+import { TokenInfo } from '../../models/ProjectNFTClient';
+import {
+    Cis2MintEvent, Cis2TokenMetadataEvent, ModuleEvent, ProjectNftEvent, ProjectNftMaturityTimeEvent
+} from '../../models/web/Events';
 
 enum Steps {
   GetOrInitCis2,
@@ -18,9 +23,15 @@ enum Steps {
   UploadFiles,
   PrepareMetadata,
   Mint,
+  Minted,
 }
 
 type StepType = { step: Steps; title: string };
+type MintMethodEvents = {
+  mint: Cis2MintEvent;
+  tokenMetadata: Cis2TokenMetadataEvent;
+  maturityTime: ProjectNftMaturityTimeEvent;
+};
 
 function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2ContractInfo }) {
   const steps: StepType[] = [
@@ -41,21 +52,23 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
       title: "Prepare Metadata",
     },
     { step: Steps.Mint, title: "Mint" },
+    { step: Steps.Minted, title: "Minted" },
   ];
 
   const [state, setState] = useState<{
     activeStep: StepType;
     nftContract?: ContractAddress;
-    tokenMetadataMap?: {
-      [tokenId: string]: [CIS2.MetadataUrl, string];
-    };
+    tokens: TokenInfo[];
     pinataJwt: string;
     files: File[];
   }>({
     activeStep: steps[0],
     pinataJwt: "",
     files: [],
+    tokens: [],
   });
+
+  const [mintedTokens, setMintedTokens] = useState<MintMethodEvents[]>([]);
 
   function onGetCollectionAddress(address: ContractAddress) {
     setState({
@@ -89,11 +102,37 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
     });
   }
 
-  function onMetadataPrepared(tokenMetadataMap: { [tokenId: string]: [CIS2.MetadataUrl, string] }) {
+  function onMetadataPrepared(tokens: TokenInfo[]) {
+    console.log("MintPage: onMetadataPrepared", tokens);
     setState({
       ...state,
       activeStep: steps[4],
-      tokenMetadataMap,
+      tokens,
+    });
+  }
+
+  function onTokensMinted(mintedEvents: ModuleEvent[]) {
+    const mintedTokens: { [tokenId: string]: MintMethodEvents } = {};
+    (mintedEvents as ProjectNftEvent[]).forEach((event) => {
+      if (event.Mint) {
+        const token = mintedTokens[event.Mint.token_id] || {};
+        token.mint = event.Mint;
+        mintedTokens[event.Mint.token_id] = token;
+      } else if (event.TokenMetadata) {
+        const token = mintedTokens[event.TokenMetadata.token_id] || {};
+        token.tokenMetadata = event.TokenMetadata;
+        mintedTokens[event.TokenMetadata.token_id] = token;
+      } else if (event.MaturityTime) {
+        const token = mintedTokens[event.MaturityTime.token_id] || {};
+        token.maturityTime = event.MaturityTime;
+        mintedTokens[event.MaturityTime.token_id] = token;
+      }
+    });
+
+    setMintedTokens(Object.values(mintedTokens));
+    setState({
+      ...state,
+      activeStep: steps[5],
     });
   }
 
@@ -126,10 +165,12 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
           <Cis2BatchMint
             contractInfo={props.contractInfo}
             tokenContractAddress={state.nftContract!}
-            tokenMetadataMap={state.tokenMetadataMap!}
-            onDone={(tokens) => console.info("tokens minted:", tokens)}
+            tokenMetadataMap={state.tokens}
+            onDone={onTokensMinted}
           />
         );
+      case Steps.Minted:
+        return <Cis2TokensDisplay tokens={mintedTokens} />;
       default:
         return <>Invalid Step</>;
     }

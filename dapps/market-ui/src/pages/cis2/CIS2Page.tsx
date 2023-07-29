@@ -10,10 +10,22 @@ export default function CIS2Page() {
       <AppBar position="static" color="secondary">
         <Toolbar>
           <Typography textAlign={"left"} variant="h5" component={"div"} sx={{ flexGrow: 1 }}>
-            CIS2 Tokens
+            Project NFT
           </Typography>
-          <Button color="inherit" onClick={(_) => navigate(`mint`)}>
+          <Button color="inherit" onClick={() => navigate(`mint`)}>
             Mint
+          </Button>
+          <Button color="inherit" onClick={() => navigate(`retire`)}>
+            Retire
+          </Button>
+          <Button color="inherit" onClick={() => navigate(`retract`)}>
+            Retract
+          </Button>
+          <Button color="inherit" onClick={() => navigate(`events`)}>
+            Events
+          </Button>
+          <Button color="inherit" onClick={() => navigate(`balanceOf`)}>
+            Balance
           </Button>
         </Toolbar>
       </AppBar>

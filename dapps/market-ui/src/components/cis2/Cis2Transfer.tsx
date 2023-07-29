@@ -35,22 +35,49 @@ export default function Cis2Transfer(props: {
     setForm({ ...form, [key]: value });
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function onSkipClicked() {
+    setTxn({});
+    if (!form.index || !form.subindex || !form.tokenId || !form.quantity) {
+      setState({ ...state, error: "Please fill out all fields" });
+      return;
+    }
+
+    if (typeof props.to === "string") {
+      setState({ ...state, error: "To is an account address cannot be skipped" });
+    }
 
     const address = { index: BigInt(form.index), subindex: BigInt(form.subindex) };
     setState({ ...state, error: "", inProgress: true });
-    props.grpcClient
-      // Get Instance Information
-      .getInstanceInfo(address)
-      // Check CIS-2 support, and get contract name
-      .then(async (instanceInfo) => {
-        const supports = await cis0Supports(props.grpcClient, address, "CIS-2");
-        validateSupportsCis2(supports);
-        const contractName = instanceInfo.name.replace("init_", "");
+    getContractName(address)
+      .then(async ({ contractName }) => {
+        const cis2Contract = new CIS2Contract(props.grpcClient, address, contractName);
+        const balance = await cis2Contract.balanceOf({
+          tokenId: form.tokenId,
+          address: (props.to as CIS2.ContractReceiver).address,
+        });
 
-        return { contractName };
+        return { contractName, balance };
       })
+      .then(({ contractName, balance }) => {
+        if (balance < BigInt(form.quantity)) {
+          setState({ ...state, error: "Insufficient balance" });
+        } else {
+          setState({ ...state, error: "", inProgress: false });
+          props.onDone(address, form.tokenId, contractName, form.quantity);
+        }
+      })
+      .catch((e: Error) => {
+        setState({ ...state, error: e.message, inProgress: false });
+      });
+  }
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setTxn({});
+
+    const address = { index: BigInt(form.index), subindex: BigInt(form.subindex) };
+    setState({ ...state, error: "", inProgress: true });
+    getContractName(address)
       .then(async ({ contractName }) => {
         const cis2Contract = new CIS2Contract(props.grpcClient, address, contractName);
         const wallet = await connectToWallet();
@@ -73,7 +100,7 @@ export default function Cis2Transfer(props: {
     <Stack component={"form"} onSubmit={submit} spacing={2}>
       <TextField
         id="contract-index"
-        name="contractIndex"
+        name="index"
         label="Contract Index"
         variant="standard"
         type={"number"}
@@ -83,7 +110,7 @@ export default function Cis2Transfer(props: {
       />
       <TextField
         id="contract-subindex"
-        name="contractSubindex"
+        name="subindex"
         label="Contract Sub Index"
         variant="standard"
         type={"number"}
@@ -118,11 +145,32 @@ export default function Cis2Transfer(props: {
         </Container>
       )}
 
-      <Button type="submit" variant="contained" disabled={state.inProgress}>
-        Transfer
-      </Button>
+      <Stack direction={"row"} spacing={2}>
+        <Button type="submit" variant="contained" disabled={state.inProgress} fullWidth>
+          Transfer
+        </Button>
+        <Button type="button" variant="outlined" disabled={state.inProgress} fullWidth onClick={onSkipClicked}>
+          Skip
+        </Button>
+      </Stack>
     </Stack>
   );
+
+  function getContractName(address: { index: bigint; subindex: bigint }) {
+    return (
+      props.grpcClient
+        // Get Instance Information
+        .getInstanceInfo(address)
+        // Check CIS-2 support, and get contract name
+        .then(async (instanceInfo) => {
+          const supports = await cis0Supports(props.grpcClient, address, "CIS-2");
+          validateSupportsCis2(supports);
+          const contractName = instanceInfo.name.replace("init_", "");
+
+          return { contractName };
+        })
+    );
+  }
 
   function validateSupportsCis2(supports: CIS0.SupportResult | undefined) {
     if (!supports) {
@@ -148,7 +196,7 @@ export default function Cis2Transfer(props: {
       payload,
       parameter: { json },
       schema,
-    } = cis2Contract.createTransfer({ energy: BigInt(10000) }, transfer);
+    } = cis2Contract.createTransfer({ energy: BigInt(20000) }, transfer);
 
     return provider.sendTransaction(account, type, payload, json, schema as SchemaWithContext);
   }

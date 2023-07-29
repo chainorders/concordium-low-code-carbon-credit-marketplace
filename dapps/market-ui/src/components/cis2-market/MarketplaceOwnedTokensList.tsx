@@ -4,7 +4,7 @@ import { CIS2Contract, ConcordiumGRPCClient } from '@concordium/web-sdk';
 import { ImageList, Typography } from '@mui/material';
 
 import { MARKET_CONTRACT_ADDRESS, MARKETPLACE_CONTRACT_INFO } from '../../Constants';
-import { listOwned, OwnedTokenListItem } from '../../models/MarketplaceClient';
+import { listOwned, OwnedTokenListItem } from '../../models/CarbonCreditMarketClient';
 import MarketplaceOwnedTokensListItem from '../MarketplaceOwnedTokensListItem';
 import { useParamsContractAddress } from '../utils';
 

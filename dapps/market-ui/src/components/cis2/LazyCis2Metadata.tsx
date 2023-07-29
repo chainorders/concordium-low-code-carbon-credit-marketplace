@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 import { CIS2 } from '@concordium/web-sdk';
 
-import { Metadata } from '../../models/Cis2Client';
+import { Metadata } from '../../models/ProjectNFTClient';
 import { fetchJsonString } from '../../models/Utils';
 
 function LazyCis2Metadata(props: {

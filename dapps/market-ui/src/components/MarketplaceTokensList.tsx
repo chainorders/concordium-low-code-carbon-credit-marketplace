@@ -1,23 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
-import { CIS2Contract, ConcordiumGRPCClient } from '@concordium/web-sdk';
-import { AlertColor, Grid } from '@mui/material';
+import { ConcordiumGRPCClient } from "@concordium/web-sdk";
+import { AlertColor, Grid } from "@mui/material";
 
-import { MARKET_CONTRACT_ADDRESS, MARKETPLACE_CONTRACT_INFO } from '../Constants';
-import { list, TokenListItem } from '../models/MarketplaceClient';
-import { User } from '../types/user';
-import MarketplaceReturnDialog from './MarketplaceReturnDialog';
-import MarketplaceTokensListItem from './MarketplaceTokensListItem';
-import MarketplaceTransferDialog from './MarketplaceTransferDialog';
-import Alert from './ui/Alert';
-import { useParamsContractAddress } from './utils';
+import { MARKET_CONTRACT_ADDRESS, MARKETPLACE_CONTRACT_INFO } from "../Constants";
+import { list, TokenListItem } from "../models/CarbonCreditMarketClient";
+import { User } from "../types/user";
+import MarketplaceReturnDialog from "./MarketplaceReturnDialog";
+import MarketplaceTokensListItem from "./MarketplaceTokensListItem";
+import MarketplaceTransferDialog from "./MarketplaceTransferDialog";
+import Alert from "./ui/Alert";
+import { useParamsContractAddress } from "./utils";
+import CCContract from "../models/CCContract";
 
-type ListItem = TokenListItem & { cis2Contract: CIS2Contract };
+type ListItem = TokenListItem & { cis2Contract: CCContract };
 
 /**
  * Gets the List of buyable tokens from Marketplace contract and displays them.
  */
-function MarketplaceTokensList(props: { grpcClient: ConcordiumGRPCClient, user: User }) {
+function MarketplaceTokensList(props: { grpcClient: ConcordiumGRPCClient; user: User }) {
   const { grpcClient, user } = props;
   const [selectedToken, setSelectedToken] = useState<ListItem>();
   const [returnToken, setReturnToken] = useState<ListItem>();
@@ -35,7 +36,7 @@ function MarketplaceTokensList(props: { grpcClient: ConcordiumGRPCClient, user: 
         tokens.map(async (t) => {
           return {
             ...t,
-            cis2Contract: await CIS2Contract.create(grpcClient, t.contract),
+            cis2Contract: await CCContract.create(grpcClient, t.contract),
           };
         }),
       );
@@ -65,6 +66,7 @@ function MarketplaceTokensList(props: { grpcClient: ConcordiumGRPCClient, user: 
       <Grid key="nft-image-list" container spacing={1}>
         {tokens.map((t) => (
           <MarketplaceTokensListItem
+            grpcClient={grpcClient}
             marketContractAddress={marketContractAddress}
             item={t}
             key={t.tokenId + t.contract.index + t.contract.subindex + t.owner}
