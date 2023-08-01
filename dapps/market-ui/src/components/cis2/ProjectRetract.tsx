@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useState } from "react";
 
-import { ConcordiumGRPCClient, ContractAddress, TransactionStatusEnum } from '@concordium/web-sdk';
-import { Button, Stack, TextField } from '@mui/material';
+import { ConcordiumGRPCClient, ContractAddress, TransactionStatusEnum } from "@concordium/web-sdk";
+import { Button, Stack, TextField } from "@mui/material";
 
-import { connectToWallet, ContractInfo } from '../../models/ConcordiumContractClient';
-import { retract } from '../../models/ProjectNFTClient';
-import DisplayError from '../ui/DisplayError';
-import TransactionProgress from '../ui/TransactionProgress';
+import { connectToWallet, ContractInfo } from "../../models/ConcordiumContractClient";
+import { retract } from "../../models/ProjectNFTClient";
+import DisplayError from "../ui/DisplayError";
+import TransactionProgress from "../ui/TransactionProgress";
 
 export function ProjectRetract(props: {
   grpcClient: ConcordiumGRPCClient;
@@ -16,6 +16,7 @@ export function ProjectRetract(props: {
 }) {
   const [form, setForm] = useState({
     tokenId: "",
+    owner: "",
   });
   const [txn, setTxn] = useState<{ hash: string; status: TransactionStatusEnum }>();
 
@@ -41,6 +42,7 @@ export function ProjectRetract(props: {
           props.projectContract,
           props.contractInfo,
           [form.tokenId],
+          form.owner,
           BigInt(9999),
           (status, hash) => setTxn({ status, hash }),
         ),
@@ -65,6 +67,14 @@ export function ProjectRetract(props: {
           variant="standard"
           fullWidth
           onChange={(e) => setForm({ ...form, tokenId: e.target.value })}
+        />
+        <TextField
+          id="account"
+          name="account"
+          label="Owner's Account Address"
+          variant="standard"
+          fullWidth
+          onChange={(e) => setForm({ ...form, owner: e.target.value })}
         />
         <DisplayError error={state.error} />
         <Button type="submit" variant="contained" color="primary">

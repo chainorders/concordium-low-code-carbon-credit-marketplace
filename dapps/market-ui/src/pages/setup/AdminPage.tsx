@@ -1,9 +1,8 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet } from "react-router-dom";
 
 import { AppBar, Button, Stack, Toolbar, Typography } from "@mui/material";
 
 export default function AdminPage() {
-  const navigate = useNavigate();
   return (
     <Stack spacing={2} mt={1}>
       <AppBar position="static" color="secondary">
@@ -11,13 +10,13 @@ export default function AdminPage() {
           <Typography textAlign={"left"} variant="h5" component={"div"} sx={{ flexGrow: 1 }}>
             Admin
           </Typography>
-          <Button color="inherit" onClick={() => navigate(`contracts-setup`)}>
+          <Button color="inherit" component={NavLink} className="subnav-link" to="contracts-setup">
             Contracts Setup
           </Button>
-          <Button color="inherit" onClick={() => navigate(`add-verifier`)}>
+          <Button color="inherit" component={NavLink} className="subnav-link" to="add-verifier">
             Add Verifier
           </Button>
-          <Button color="inherit" onClick={() => navigate(`remove-verifier`)}>
+          <Button color="inherit" component={NavLink} className="subnav-link" to="remove-verifier">
             Remove Verifier
           </Button>
         </Toolbar>

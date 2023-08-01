@@ -13,6 +13,7 @@ import {
 } from '../../models/web/Events';
 import { getContractEventsByContractAddress } from '../../models/web/WebClient';
 import DisplayError from '../ui/DisplayError';
+import { v4 as uuid } from 'uuid';
 
 const eventTypes = [
   "Mint",
@@ -123,6 +124,10 @@ function RetireEvent(props: { event: Cis2BurnEvent }) {
 
 function Event(props: { event: FractionalizerEvent }) {
   const { event } = props;
+  if (!event) { 
+    return <></>
+  }
+
   const eventType = Object.keys(event)[0];
 
   switch (eventType) {
@@ -234,10 +239,7 @@ export default function FractionalizerEvents({ defaultContractAddress }: { defau
       <Container>
         <List sx={{ width: "100%", bgcolor: "background.paper" }}>
           {events.map((contractEvent) => (
-            <>
-              <Event event={contractEvent as FractionalizerEvent} />
-              <Divider variant="inset" component="li" />
-            </>
+              <Event event={contractEvent as FractionalizerEvent} key={uuid()} />
           ))}
         </List>
         {pageCount > 1 && <Pagination count={pageCount} onChange={(_, v) => onFormSubmitted(v - 1)} />}

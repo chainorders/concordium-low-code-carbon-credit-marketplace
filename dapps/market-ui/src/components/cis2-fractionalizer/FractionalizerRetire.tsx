@@ -69,7 +69,7 @@ export function FractionalizerRetire(props: {
         <TextField
           label="Token ID"
           name="tokenId"
-          variant="outlined"
+          variant="standard"
           fullWidth
           onChange={(e) => setForm({ ...form, tokenId: e.target.value })}
           value={form.tokenId}
@@ -77,7 +77,7 @@ export function FractionalizerRetire(props: {
         <TextField
           label="Quantity"
           name="amount"
-          variant="outlined"
+          variant="standard"
           fullWidth
           type="number"
           onChange={(e) => setForm({ ...form, amount: e.target.value })}

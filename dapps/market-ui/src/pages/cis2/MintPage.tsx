@@ -1,20 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
-import { ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
-import { ArrowBackRounded } from '@mui/icons-material';
-import { Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography } from '@mui/material';
-import { Container } from '@mui/system';
+import { ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk";
+import { ArrowBackOutlined } from "@mui/icons-material";
+import { Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography } from "@mui/material";
+import { Container } from "@mui/system";
 
-import Cis2BatchMetadataPrepareOrAdd from '../../components/cis2/Cis2BatchMetadataPrepareOrAdd';
-import Cis2BatchMint from '../../components/cis2/Cis2BatchMint';
-import Cis2TokensDisplay from '../../components/cis2/Cis2TokensDisplay';
-import ConnectPinata from '../../components/ConnectPinata';
-import UploadFiles from '../../components/ui/UploadFiles';
-import { ContractInfo } from '../../models/ConcordiumContractClient';
-import { TokenInfo } from '../../models/ProjectNFTClient';
+import Cis2BatchMetadataPrepareOrAdd from "../../components/cis2/Cis2BatchMetadataPrepareOrAdd";
+import Cis2BatchMint from "../../components/cis2/Cis2BatchMint";
+import Cis2TokensDisplay from "../../components/cis2/Cis2TokensDisplay";
+import ConnectPinata from "../../components/ConnectPinata";
+import UploadFiles from "../../components/ui/UploadFiles";
+import { ContractInfo } from "../../models/ConcordiumContractClient";
+import { TokenInfo } from "../../models/ProjectNFTClient";
 import {
-    Cis2MintEvent, Cis2TokenMetadataEvent, ModuleEvent, ProjectNftEvent, ProjectNftMaturityTimeEvent
-} from '../../models/web/Events';
+  Cis2MintEvent,
+  Cis2TokenMetadataEvent,
+  ModuleEvent,
+  ProjectNftEvent,
+  ProjectNftMaturityTimeEvent,
+} from "../../models/web/Events";
 
 enum Steps {
   ConnectPinata,
@@ -31,7 +35,11 @@ type MintMethodEvents = {
   maturityTime: ProjectNftMaturityTimeEvent;
 };
 
-function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: ContractInfo, tokenContract: ContractAddress }) {
+function MintPage(props: {
+  grpcClient: ConcordiumGRPCClient;
+  contractInfo: ContractInfo;
+  tokenContract: ContractAddress;
+}) {
   const { tokenContract } = props;
   const steps: StepType[] = [
     {
@@ -50,13 +58,12 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Contr
     { step: Steps.Minted, title: "Minted" },
   ];
 
+  const [step, setStep] = useState<Steps>(Steps.ConnectPinata);
   const [state, setState] = useState<{
-    activeStep: StepType;
     tokens: TokenInfo[];
     pinataJwt: string;
     files: File[];
   }>({
-    activeStep: steps[0],
     pinataJwt: "",
     files: [],
     tokens: [],
@@ -68,33 +75,32 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Contr
     setState({
       ...state,
       pinataJwt,
-      activeStep: steps[2],
     });
+    goForward();
   }
 
   function onPinataSkipped() {
     setState({
       ...state,
       pinataJwt: "",
-      activeStep: steps[3],
     });
+    goForward(2);
   }
 
   function onFilesUploaded(files: File[]) {
     setState({
       ...state,
       files,
-      activeStep: steps[3],
     });
+    goForward();
   }
 
   function onMetadataPrepared(tokens: TokenInfo[]) {
-    console.log("MintPage: onMetadataPrepared", tokens);
     setState({
       ...state,
-      activeStep: steps[4],
       tokens,
     });
+    goForward();
   }
 
   function onTokensMinted(mintedEvents: ModuleEvent[]) {
@@ -116,14 +122,11 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Contr
     });
 
     setMintedTokens(Object.values(mintedTokens));
-    setState({
-      ...state,
-      activeStep: steps[5],
-    });
+    goForward();
   }
 
   function StepContent() {
-    switch (state.activeStep.step) {
+    switch (step) {
       case Steps.ConnectPinata:
         return <ConnectPinata onDone={onPinataConnected} onSkip={onPinataSkipped} jwt={state.pinataJwt} />;
       case Steps.UploadFiles:
@@ -154,15 +157,18 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Contr
   }
 
   function goBack(): void {
-    const activeStepIndex = steps.findIndex((s) => s.step === state.activeStep.step);
-    const previousStepIndex = Math.max(activeStepIndex - 1, 0);
+    const previousStepIndex = Math.max(step - 1, 0);
+    setStep(previousStepIndex);
+  }
 
-    setState({ ...state, activeStep: steps[previousStepIndex] });
+  function goForward(skip = 1): void {
+    const nextStepIndex = Math.min(step + skip, steps.length - 1);
+    setStep(nextStepIndex);
   }
 
   return (
     <Container sx={{ maxWidth: "xl", pt: "10px" }}>
-      <Stepper activeStep={state.activeStep.step} alternativeLabel sx={{ padding: "20px" }}>
+      <Stepper activeStep={step} alternativeLabel sx={{ padding: "20px" }}>
         {steps.map((step) => (
           <Step key={step.step}>
             <StepLabel>{step.title}</StepLabel>
@@ -170,15 +176,20 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Contr
         ))}
       </Stepper>
       <Paper sx={{ padding: "20px" }} variant="outlined">
-        <Grid container>
+        <Grid container justifyContent="center">
           <Grid item xs={1}>
-            <IconButton sx={{ border: "1px solid black", borderRadius: "100px" }} onClick={() => goBack()}>
-              <ArrowBackRounded></ArrowBackRounded>
+            <IconButton
+              onClick={() => goBack()}
+              disabled={step == 0}
+              size="large"
+              sx={{ display: "flex", alignItems: "center", margin: "auto", padding: "auto" }}
+            >
+              <ArrowBackOutlined sx={{padding: "auto", margin: "auto"}} />
             </IconButton>
           </Grid>
           <Grid item xs={11}>
             <Typography variant="h4" gutterBottom sx={{ pt: "20px", width: "100%" }} textAlign="center">
-              {state.activeStep.title}
+              {steps[step].title}
             </Typography>
           </Grid>
         </Grid>

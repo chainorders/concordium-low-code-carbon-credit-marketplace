@@ -5,6 +5,7 @@ use super::{contract_types::*, error::*, events::*, state::*};
 #[derive(Serial, Deserial, SchemaType)]
 struct RetractParams {
     tokens: Vec<ContractTokenId>,
+    owner: Address,
 }
 
 #[receive(
@@ -20,36 +21,36 @@ fn retract<S: HasStateApi>(
     host: &mut impl HasHost<State<S>, StateApiType = S>,
     logger: &mut impl HasLogger,
 ) -> ContractResult<()> {
-    let sender = ctx.sender();
     let params: RetractParams = ctx.parameter_cursor().get()?;
-
     let state = host.state_mut();
+    let sender = ctx.sender();
+    ensure!(
+        sender == params.owner || state.is_verifier(&sender),
+        ContractError::Unauthorized
+    );
+
     for token_id in params.tokens {
         let token = state.get_token(&token_id);
         // Ensure that the token exists.
         ensure!(token.is_some(), ContractError::InvalidTokenId);
-        let token = token.unwrap();
 
-        // Ensure that the token is NOT mature.
+        // Ensure token is NOT verified
         ensure!(
-            !token.is_mature(&ctx.metadata().slot_time()),
-            ContractError::Custom(CustomContractError::TokenNotMature)
+            !state.is_verified(&token_id),
+            ContractError::Custom(CustomContractError::TokenVerified)
         );
 
         // Ensure that the sender has token balance or is a verifier.
-        let senders_balance = state.balance(&token_id, &sender)?;
-        ensure!(
-            senders_balance.cmp(&0.into()).is_gt() || state.is_verifier(&sender),
-            ContractError::Unauthorized
-        );
+        let balance = state.balance(&token_id, &params.owner)?;
+        ensure!(balance.cmp(&0.into()).is_gt(), ContractError::Unauthorized);
 
         // Retire token.
-        state.burn(&token_id, &sender)?;
+        state.burn(&token_id, &params.owner)?;
 
         //log token retire event.
         logger.log(&ContractEvent::Retract(BurnEvent {
             token_id,
-            owner: sender,
+            owner: params.owner,
             amount: 1.into(),
         }))?;
     }

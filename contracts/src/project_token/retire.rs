@@ -5,6 +5,7 @@ use super::{contract_types::*, error::*, state::*, events::*};
 #[derive(Serial, Deserial, SchemaType)]
 struct RetireParams {
     tokens: Vec<ContractTokenId>,
+    owner: Address,
 }
 
 #[receive(
@@ -20,8 +21,8 @@ fn retire<S: HasStateApi>(
     host: &mut impl HasHost<State<S>, StateApiType = S>,
     logger: &mut impl HasLogger,
 ) -> ContractResult<()> {
-    let sender = ctx.sender();
     let params: RetireParams = ctx.parameter_cursor().get()?;
+    ensure!(ctx.sender() == params.owner, ContractError::Unauthorized);
 
     let state = host.state_mut();
     for token_id in params.tokens {
@@ -42,17 +43,17 @@ fn retire<S: HasStateApi>(
         );
         // Ensure that the sender has token balance.
         ensure!(
-            state.balance(&token_id, &sender)?.cmp(&0.into()).is_gt(),
+            state.balance(&token_id, &params.owner)?.cmp(&0.into()).is_gt(),
             ContractError::Unauthorized
         );
 
         // Retire token.
-        state.burn(&token_id, &sender)?;
+        state.burn(&token_id, &params.owner)?;
 
         //log token retire event.
         logger.log(&ContractEvent::Retire(BurnEvent {
             token_id,
-            owner: sender,
+            owner: params.owner,
             amount: 1.into()
         }))?;
     }

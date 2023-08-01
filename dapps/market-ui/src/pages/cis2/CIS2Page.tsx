@@ -1,10 +1,9 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet } from "react-router-dom";
 
 import { AppBar, Button, Stack, Toolbar, Typography } from "@mui/material";
 import { ContractAddress } from "@concordium/web-sdk";
 
 export default function CIS2Page(props: { tokenContract: ContractAddress }) {
-  const navigate = useNavigate();
   const { tokenContract } = props;
 
   return (
@@ -14,19 +13,19 @@ export default function CIS2Page(props: { tokenContract: ContractAddress }) {
           <Typography textAlign={"left"} variant="h5" component={"div"} sx={{ flexGrow: 1 }}>
             Project Token ({tokenContract.index.toString()}/{tokenContract.subindex.toString()})
           </Typography>
-          <Button color="inherit" onClick={() => navigate(`mint`)}>
+          <Button color="inherit" component={NavLink} className="subnav-link" to="mint">
             Mint
           </Button>
-          <Button color="inherit" onClick={() => navigate(`retire`)}>
+          <Button color="inherit" component={NavLink} className="subnav-link" to="retire">
             Retire
           </Button>
-          <Button color="inherit" onClick={() => navigate(`retract`)}>
+          <Button color="inherit" component={NavLink} className="subnav-link" to="retract">
             Retract
           </Button>
-          <Button color="inherit" onClick={() => navigate(`events`)}>
+          <Button color="inherit" component={NavLink} className="subnav-link" to="events">
             Events
           </Button>
-          <Button color="inherit" onClick={() => navigate(`balanceOf`)}>
+          <Button color="inherit" component={NavLink} className="subnav-link" to="balanceOf">
             Balance
           </Button>
         </Toolbar>

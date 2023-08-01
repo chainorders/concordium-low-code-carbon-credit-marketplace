@@ -1,7 +1,7 @@
 import "./App.css";
 
 import { useState } from "react";
-import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { NavLink, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 
 import { ContractAddress, createConcordiumClient } from "@concordium/web-sdk";
 import {
@@ -11,7 +11,6 @@ import {
   Container,
   createTheme,
   Link,
-  styled,
   ThemeProvider,
   Toolbar,
   Typography,
@@ -63,12 +62,6 @@ const theme = createTheme({
   },
 });
 
-const HeaderButton = styled(Button)({
-  "&&[disabled]": {
-    color: "grey",
-  },
-});
-
 const loggedOutUser: User = { account: "", accountType: "", email: "" };
 
 function App() {
@@ -98,21 +91,21 @@ function App() {
                   Concordium
                 </Typography>
               </Box>
-              <HeaderButton color="inherit" onClick={() => navigate("/market")}>
+              <Button component={NavLink} className="nav-link" to="/market" color="inherit">
                 Market
-              </HeaderButton>
-              <HeaderButton color="inherit" onClick={() => navigate("/fractionalizer")} disabled={!isWalletUser()}>
+              </Button>
+              <Button component={NavLink} className="nav-link" to="/fractionalizer" color="inherit" disabled={!isWalletUser()}>
                 Carbon Credits
-              </HeaderButton>
-              <HeaderButton color="inherit" onClick={() => navigate("/cis2")} disabled={!isWalletUser()}>
+              </Button>
+              <Button component={NavLink} className="nav-link" to="/cis2" color="inherit" disabled={!isWalletUser()}>
                 Projects
-              </HeaderButton>
-              <HeaderButton color="inherit" onClick={() => navigate("/verifier")} disabled={!isWalletUser()}>
+              </Button>
+              <Button component={NavLink} className="nav-link" to="/verifier" color="inherit" disabled={!isWalletUser()}>
                 verifier
-              </HeaderButton>
-              <HeaderButton color="inherit" onClick={() => navigate("/admin")} disabled={!isWalletUser()}>
+              </Button>
+              <Button component={NavLink} className="nav-link" to="/admin"  color="inherit" disabled={!isWalletUser()}>
                 Admin
-              </HeaderButton>
+              </Button>
               <UserAuth user={user} onLogin={setUser} onLogout={() => setUser(loggedOutUser)} />
             </Toolbar>
           </Container>
@@ -161,7 +154,7 @@ function App() {
                           setMarketContract(contracts.marketContract);
                           setFracContract(contracts.fracContract);
                           setProjectContract(contracts.tokenContract);
-                          navigate(`admin/verifier/add`);
+                          navigate(`admin/add-verifier`);
                         }}
                       />
                     }

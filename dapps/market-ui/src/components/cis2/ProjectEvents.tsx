@@ -13,6 +13,7 @@ import {
 } from '../../models/web/Events';
 import { getContractEventsByContractAddress } from '../../models/web/WebClient';
 import DisplayError from '../ui/DisplayError';
+import { v4 as uuid } from 'uuid';
 
 const eventTypes = [
   "Mint",
@@ -154,6 +155,10 @@ function VerificationEvent(props: { event: ProjectNftVerificationEvent }) {
 
 function Event(props: { event: ProjectNftEvent }) {
   const { event } = props;
+  if (!event) { 
+    return <></>
+  }
+  
   const eventType = Object.keys(event)[0];
 
   switch (eventType) {
@@ -199,7 +204,6 @@ export default function ProjectEvents({ defaultContractAddress }: { defaultContr
     setState({ ...state, error: "", checking: true });
     getContractEventsByContractAddress(form.index, form.subindex, form.account, form.eventType, page)
       .then((res) => {
-        console.log(res);
         setState({ ...state, checking: false, error: "" });
         setEvents(res.events);
         setPageCount(res.pageCount);
@@ -270,10 +274,7 @@ export default function ProjectEvents({ defaultContractAddress }: { defaultContr
       <Container>
         <List sx={{ width: "100%", bgcolor: "background.paper" }}>
           {events.map((contractEvent) => (
-            <>
-              <Event event={contractEvent as ProjectNftEvent} />
-              <Divider variant="inset" component="li" />
-            </>
+              <Event event={contractEvent as ProjectNftEvent} key={uuid()} />
           ))}
         </List>
         {pageCount > 1 && <Pagination count={pageCount} onChange={(_, v) => onFormSubmitted(v - 1)} />}

@@ -1,4 +1,4 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet } from "react-router-dom";
 
 import { AppBar, Button, Stack, Toolbar, Typography } from "@mui/material";
 
@@ -7,7 +7,6 @@ import { ContractAddress } from "@concordium/web-sdk";
 
 export default function MarketPage(props: { user: User; marketContract: ContractAddress }) {
   const { user, marketContract } = props;
-  const navigate = useNavigate();
   const isWalletUser = () => {
     return user && user.accountType === "wallet" && user.account;
   };
@@ -18,13 +17,13 @@ export default function MarketPage(props: { user: User; marketContract: Contract
           <Typography textAlign={"left"} variant="h5" component={"div"} sx={{ flexGrow: 1 }}>
             Market ({marketContract.index.toString()}/{marketContract.subindex.toString()})
           </Typography>
-          <Button color="inherit" onClick={() => navigate(`buy`)}>
+          <Button color="inherit" component={NavLink} className="subnav-link" to="buy">
             Buy
           </Button>
-          <Button color="inherit" onClick={() => navigate("sell")} disabled={!isWalletUser()}>
+          <Button color="inherit" component={NavLink} to="sell" disabled={!isWalletUser()} className="subnav-link">
             Sell
           </Button>
-          <Button color="inherit" onClick={() => navigate("events")} disabled={!isWalletUser()}>
+          <Button color="inherit" component={NavLink} to="events" disabled={!isWalletUser()} className="subnav-link">
             Events
           </Button>
         </Toolbar>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import { ContractAddress, TransactionStatusEnum } from '@concordium/web-sdk';
-import { AlertColor, Button, Stack, TextField, Typography } from '@mui/material';
+import { AlertColor, Button, Stack, TextField } from '@mui/material';
 
 import { connectToWallet, ContractInfo } from '../../../models/ConcordiumContractClient';
 import { removeVerifier } from '../../../models/ProjectNFTClient';
@@ -64,9 +64,6 @@ export default function RemoveVerifier(props: {
 
   return (
     <Stack spacing={2} mt={1} component="form" onSubmit={onSubmit}>
-      <Typography variant="h4" component="h2" textAlign="left">
-        Remove Verifier
-      </Typography>
       <TextField
         label="Verifier (Account Address)"
         variant="standard"

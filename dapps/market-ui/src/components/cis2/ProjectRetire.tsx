@@ -41,6 +41,7 @@ export function ProjectRetire(props: {
           props.address,
           props.contractInfo,
           [form.tokenId],
+          wallet.account,
           BigInt(9999),
           (status, hash) => setTxn({ status, hash }),
         ),
@@ -62,7 +63,7 @@ export function ProjectRetire(props: {
           name='tokenId'
           id='tokenId'
           label="Token ID"
-          variant="outlined"
+          variant="standard"
           fullWidth
           onChange={(e) => setForm({ ...form, tokenId: e.target.value })}
         />

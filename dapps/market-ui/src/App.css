@@ -48,3 +48,13 @@
 	color: white;
 	border-top: 1px solid black;
 }
+
+.subnav-link.active {
+	font-weight: bold;
+}
+.nav-link.active {
+	font-weight: bold;
+}
+.nav-link.Mui-disabled {
+	color: rgb(100, 100, 100) !important;
+}

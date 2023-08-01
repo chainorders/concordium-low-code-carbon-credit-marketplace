@@ -196,7 +196,7 @@ function MarketplaceTokensListItem(props: {
                 <AccordionDetails>
                   <Grid container>
                     {metadata?.attributes?.map((a) => (
-                      <Grid item>
+                      <Grid item key={a.name}>
                         <Chip label={`${a.name}: ${a.value}`} />
                       </Grid>
                     ))}

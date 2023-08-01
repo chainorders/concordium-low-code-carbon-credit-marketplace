@@ -9,7 +9,6 @@ function UploadFiles(props: { files: File[]; onDone: (files: File[]) => void }) 
 
   function onFilesChanged(files: File[]): void {
     setFiles(files);
-    console.log(files.length);
   }
   return (
     <Stack spacing={2}>

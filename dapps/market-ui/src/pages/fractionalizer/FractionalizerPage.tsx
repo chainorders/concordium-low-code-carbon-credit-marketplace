@@ -1,10 +1,9 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet } from "react-router-dom";
 
 import { AppBar, Button, Stack, Toolbar, Typography } from "@mui/material";
 import { ContractAddress } from "@concordium/web-sdk";
 
 export default function FractionalizerPage(props: { fracContract: ContractAddress }) {
-  const navigate = useNavigate();
   const { fracContract } = props;
 
   return (
@@ -14,16 +13,16 @@ export default function FractionalizerPage(props: { fracContract: ContractAddres
           <Typography textAlign={"left"} variant="h5" component={"div"} sx={{ flexGrow: 1 }}>
             Fractionalizer ({fracContract.index.toString()}/{fracContract.subindex.toString()})
           </Typography>
-          <Button color="inherit" onClick={() => navigate(`fractionalize`)}>
+          <Button color="inherit" component={NavLink} className="subnav-link" to="fractionalize">
             Fractionalize
           </Button>
-          <Button color="inherit" onClick={() => navigate(`retire`)}>
+          <Button color="inherit" component={NavLink} className="subnav-link" to="retire">
             Retire
           </Button>
-          <Button color="inherit" onClick={() => navigate(`Events`)}>
+          <Button color="inherit" component={NavLink} className="subnav-link" to="events">
             Events
           </Button>
-          <Button color="inherit" onClick={() => navigate(`balanceOf`)}>
+          <Button color="inherit" component={NavLink} className="subnav-link" to="balanceOf">
             Balance
           </Button>
         </Toolbar>
