@@ -1,8 +1,8 @@
-import { Buffer } from "buffer/";
+import { Buffer } from 'buffer/';
 
-import { ModuleReference } from "@concordium/web-sdk";
+import { ModuleReference } from '@concordium/web-sdk';
 
-import { ContractInfo, ContractName } from "./models/ConcordiumContractClient";
+import { ContractInfo, ContractName } from './models/ConcordiumContractClient';
 
 /**
  * Contract Address for Marketplace. You should specify your contract's index when you initialized it.

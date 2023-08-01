@@ -1,22 +1,15 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { ConcordiumGRPCClient, ContractAddress } from "@concordium/common-sdk";
-import { CIS2Contract } from "@concordium/web-sdk";
+import { ConcordiumGRPCClient, ContractAddress } from '@concordium/common-sdk';
+import { CIS2Contract } from '@concordium/web-sdk';
 import {
-  List,
-  ListItem,
-  ListItemButton,
-  Paper,
-  Step,
-  StepLabel,
-  Stepper,
-  Typography,
-} from "@mui/material";
+    List, ListItem, ListItemButton, Paper, Step, StepLabel, Stepper, Typography
+} from '@mui/material';
 
-import Cis2Transfer from "../../components/cis2/Cis2Transfer";
-import MarketplaceAdd from "../../components/MarketplaceAdd";
-import { ContractInfo } from "../../models/ConcordiumContractClient";
+import Cis2Transfer from '../../components/cis2/Cis2Transfer';
+import MarketplaceAdd from '../../components/MarketplaceAdd';
+import { ContractInfo } from '../../models/ConcordiumContractClient';
 
 enum Steps {
   SelectTokenType,

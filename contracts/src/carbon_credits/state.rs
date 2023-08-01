@@ -3,9 +3,9 @@ use core::ops::{AddAssign, SubAssign};
 use concordium_cis2::*;
 use concordium_std::*;
 
-use crate::client_utils::types::{ContractMetadataUrl, ContractTokenAmount, ContractTokenId};
+use crate::client_utils::types::ContractMetadataUrl;
 
-use super::{contract_types::*, error::*};
+use super::{error::*, contract_types::{ContractTokenId, ContractTokenAmount, ContractCollateralTokenAmount, ContractResult}};
 
 /// The state for each address.
 #[derive(Serial, DeserialWithState, Deletable, StateClone)]

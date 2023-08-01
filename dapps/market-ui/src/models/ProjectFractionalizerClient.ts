@@ -1,12 +1,7 @@
-import {
-    SchemaWithContext, SmartContractParameters, WalletApi
-} from '@concordium/browser-wallet-api-helpers';
-import {
-    CIS2, CIS2Contract, ConcordiumGRPCClient, ContractAddress, RejectReasonTag,
-    TransactionStatusEnum
-} from '@concordium/web-sdk';
+import { SmartContractParameters, WalletApi } from '@concordium/browser-wallet-api-helpers';
+import { ContractAddress, RejectReasonTag, TransactionStatusEnum } from '@concordium/web-sdk';
 
-import { ContractInfo, updateContract, waitAndThrowError } from './ConcordiumContractClient';
+import * as connClient from './ConcordiumContractClient';
 import { Attribute } from './ProjectNFTClient';
 import { ModuleEvent } from './web/Events';
 import { getContractEventsByTransactionHash } from './web/WebClient';
@@ -31,6 +26,11 @@ export interface MintParams {
   tokens: MintParam[];
 }
 
+export interface BurnParams {
+  owner: { Account: [string] } | { Contract: [{ index: number; subindex: number }] };
+  tokens: { token_id: string; amount: string }[];
+}
+
 /**
  * Adds a token to buyable list of tokens in marketplace.
  * @param provider Wallet Provider.
@@ -45,13 +45,13 @@ export async function mint(
   account: string,
   fracContractAddress: ContractAddress,
   paramJson: MintParams,
-  contractInfo: ContractInfo,
+  contractInfo: connClient.ContractInfo,
   maxContractExecutionEnergy = BigInt(9999),
   onStatusUpdate: (status: TransactionStatusEnum, txnHash: string) => void = (status, txnHash) =>
     console.log(`txn #${txnHash}, status:${status}`),
 ): Promise<ModuleEvent[]> {
   try {
-    const { txnHash } = await updateContract(
+    const { txnHash } = await connClient.updateContract(
       provider,
       contractInfo,
       paramJson as unknown as SmartContractParameters,
@@ -74,39 +74,48 @@ export async function mint(
 
 export async function retire(
   provider: WalletApi,
-  grpcClient: ConcordiumGRPCClient,
-  fracContractAddress: ContractAddress,
-  contractInfo: ContractInfo,
   account: string,
-  tokenId: string,
-  quantity: string,
-  onStatusUpdate: (status: TransactionStatusEnum, txnHash: string) => void = (status, txnHash) =>
-    console.log(`txn #${txnHash}, status:${status}`),
+  contractAddress: ContractAddress,
+  contractInfo: connClient.ContractInfo,
+  params: BurnParams,
+  maxContractExecutionEnergy = BigInt(9999),
+  onStatusUpdate: (status: TransactionStatusEnum, hash: string) => void = (status, hash) => console.log(status, hash),
 ) {
-  const contract = new CIS2Contract(grpcClient, fracContractAddress, contractInfo.contractName);
-  const transfer = {
-    from: account,
-    to: {
-      address: fracContractAddress,
-      hookName: "",
-    },
-    tokenAmount: BigInt(quantity),
-    tokenId: tokenId,
-  } as CIS2.Transfer;
-  const {
-    type,
-    payload,
-    parameter: { json },
-    schema,
-  } = contract.createTransfer({ energy: BigInt(10000) }, transfer);
-  const res = await provider.sendTransaction(account, type, payload, json, schema as SchemaWithContext);
-  const outcomes = await waitAndThrowError(provider, res, onStatusUpdate).catch((err) => {
-    console.error(err);
-    if (err.cause && err.cause.tag === RejectReasonTag.RejectedReceive) {
-      throw new Error(getErrorString(err.cause.rejectReason));
-    }
-    throw err;
-  });
+  const outcomes = await connClient.updateContract(
+    provider,
+    contractInfo,
+    params as unknown as SmartContractParameters,
+    account,
+    contractAddress,
+    "retire",
+    maxContractExecutionEnergy,
+    BigInt(0),
+    onStatusUpdate,
+  );
+
+  return outcomes;
+}
+
+export async function retract(
+  provider: WalletApi,
+  account: string,
+  contractAddress: ContractAddress,
+  contractInfo: connClient.ContractInfo,
+  params: BurnParams,
+  maxContractExecutionEnergy = BigInt(9999),
+  onStatusUpdate: (status: TransactionStatusEnum, hash: string) => void = (status, hash) => console.log(status, hash),
+) {
+  const outcomes = await connClient.updateContract(
+    provider,
+    contractInfo,
+    params as unknown as SmartContractParameters,
+    account,
+    contractAddress,
+    "retract",
+    maxContractExecutionEnergy,
+    BigInt(0),
+    onStatusUpdate,
+  );
 
   return outcomes;
 }

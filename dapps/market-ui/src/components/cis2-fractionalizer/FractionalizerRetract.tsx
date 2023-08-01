@@ -4,11 +4,11 @@ import { ConcordiumGRPCClient, ContractAddress, TransactionStatusEnum } from '@c
 import { Button, Stack, TextField } from '@mui/material';
 
 import { connectToWallet, ContractInfo } from '../../models/ConcordiumContractClient';
-import { retire } from '../../models/ProjectFractionalizerClient';
+import { retract } from '../../models/ProjectFractionalizerClient';
 import DisplayError from '../ui/DisplayError';
 import TransactionProgress from '../ui/TransactionProgress';
 
-export function FractionalizerRetire(props: {
+export function FractionalizerRetract(props: {
   grpcClient: ConcordiumGRPCClient;
   contractInfo: ContractInfo;
   address: ContractAddress;
@@ -44,18 +44,18 @@ export function FractionalizerRetire(props: {
     setTxn(undefined);
     connectToWallet()
       .then((wallet) =>
-        retire(
+        retract(
           wallet.provider,
           wallet.account,
           props.address,
           props.contractInfo,
           { owner: { Account: [wallet.account] }, tokens: [{ token_id: form.tokenId, amount: form.amount }] },
-          BigInt(9999),
+          BigInt(19999),
           (status, hash) => setTxn({ status, hash }),
         ),
       )
       .then(() => {
-        setState({ ...state, isProcessing: false });
+        setState({ ...state, isProcessing: false, error: "" });
         props.onDone({ tokenIds: [form.tokenId] });
       })
       .catch((e: Error) => {
@@ -86,7 +86,7 @@ export function FractionalizerRetire(props: {
         />
         <DisplayError error={state.error} />
         <Button type="submit" variant="contained" color="primary">
-          Retire
+          Retract
         </Button>
         {txn && <TransactionProgress hash={txn.hash} status={txn.status} />}
       </Stack>

@@ -1,8 +1,8 @@
-import { TransactionStatusEnum } from "@concordium/web-sdk";
-import { CheckCircleOutline, OpenInBrowser } from "@mui/icons-material";
-import { CircularProgress, Container, Link, Stack, Tooltip, Typography } from "@mui/material";
+import { TransactionStatusEnum } from '@concordium/web-sdk';
+import { CheckCircleOutline, OpenInBrowser } from '@mui/icons-material';
+import { CircularProgress, Container, Link, Stack, Tooltip, Typography } from '@mui/material';
 
-import { EXPLORER_URL_TXN_HASH } from "../../Constants";
+import { EXPLORER_URL_TXN_HASH } from '../../Constants';
 
 function TransactionInProgress(props: { hash: string; status: TransactionStatusEnum }) {
   return (

@@ -1,10 +1,10 @@
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useState } from 'react';
 
-import { ConcordiumGRPCClient, ContractAddress, TransactionStatusEnum } from "@concordium/web-sdk";
-import { Button, Stack, Typography } from "@mui/material";
+import { ConcordiumGRPCClient, ContractAddress, TransactionStatusEnum } from '@concordium/web-sdk';
+import { Button, Stack, Typography } from '@mui/material';
 
-import { ContractInfo, connectToWallet, initContract } from "../../models/ConcordiumContractClient";
-import TransactionProgress from "../ui/TransactionProgress";
+import { connectToWallet, ContractInfo, initContract } from '../../models/ConcordiumContractClient';
+import TransactionProgress from '../ui/TransactionProgress';
 
 function Cis2Init(props: {
   grpcClient: ConcordiumGRPCClient;

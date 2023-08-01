@@ -46,3 +46,14 @@ pub struct IsVerifiedQueryParams<T: IsTokenId> {
 }
 
 pub type IsVerifiedQueryResponse = Vec<bool>;
+
+#[derive(Deserial, Serial, SchemaType)]
+pub struct BurnParam<T: IsTokenId, A: IsTokenAmount> {
+    pub token_id: T,
+    pub amount: A,
+}
+#[derive(Deserial, Serial, SchemaType)]
+pub struct BurnParams<T: IsTokenId, A: IsTokenAmount> {
+    pub owner: Address,
+    pub tokens: Vec<BurnParam<T, A>>,
+}

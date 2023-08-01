@@ -1,11 +1,11 @@
 use concordium_std::*;
 
-use crate::client_utils::types::BurnParam;
+use crate::client_utils::{client::Client, types::BurnParam};
 
 use super::{contract_types::*, error::*, events::*, state::*};
 
 #[receive(
-    contract = "project_token",
+    contract = "carbon_credits",
     name = "retract",
     parameter = "ContractBurnParams",
     error = "ContractError",
@@ -18,37 +18,48 @@ fn retract<S: HasStateApi>(
     logger: &mut impl HasLogger,
 ) -> ContractResult<()> {
     let ContractBurnParams { owner, tokens } = ctx.parameter_cursor().get()?;
-    let state = host.state_mut();
     let sender = ctx.sender();
-    let is_verifier = state.is_verifier(&sender);
     ensure!(
-        sender == owner || is_verifier,
+        sender == owner, //todo: || state.is_verifier(&sender),
         ContractError::Unauthorized
     );
 
     for BurnParam { token_id, amount } in tokens {
-        ensure!(amount == 1.into(), ContractError::InsufficientFunds);
-
+        let state = host.state();
+        
         // Ensure that the token exists.
-        let token = state
-            .get_token(&token_id)
-            .ok_or(ContractError::InvalidTokenId)?;
+        ensure!(state.contains_token(&token_id), ContractError::InvalidTokenId);
 
-        // Ensure token is NOT verified
+        let (is_mature, is_verified) = {
+            // Get Collateral Token Info
+            let (collateral_key, _) = state
+                .find_collateral(&token_id)
+                .ok_or(CustomContractError::InvalidCollateral)?;
+
+            // Get Maturity Time
+            let maturity_of =
+                Client::maturity_of(host, collateral_key.token_id, collateral_key.contract)?;
+            let is_mature = maturity_of <= ctx.metadata().slot_time();
+            // Get Verification Status
+            let is_verified = Client::is_verified(host, token_id, collateral_key.contract)?;
+
+            (is_mature, is_verified)
+        };
+
         ensure!(
-            !state.is_verified(&token_id) || !token.is_mature(&ctx.metadata().slot_time()),
-            ContractError::Custom(CustomContractError::TokenVerifiedOrMature)
+            !is_mature || !is_verified,
+            CustomContractError::TokenVerifiedOrMature.into()
         );
 
-        // Ensure that the sender has token balance or is a verifier.
+        // Ensure that the sender has token balance
         let balance = state.balance(&token_id, &owner)?;
         ensure!(
-            balance.cmp(&amount).is_gt() || is_verifier,
+            balance.cmp(&amount).is_gt(),
             ContractError::InsufficientFunds
         );
 
         // Retire token.
-        state.burn(&token_id, &owner)?;
+        host.state_mut().burn(&token_id, amount, &owner);
 
         // log token retire event.
         logger.log(&ContractEvent::Retract(BurnEvent {

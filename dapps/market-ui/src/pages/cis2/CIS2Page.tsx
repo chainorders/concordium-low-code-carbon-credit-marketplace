@@ -1,7 +1,7 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet } from 'react-router-dom';
 
-import { AppBar, Button, Stack, Toolbar, Typography } from "@mui/material";
-import { ContractAddress } from "@concordium/web-sdk";
+import { ContractAddress } from '@concordium/web-sdk';
+import { AppBar, Button, Stack, Toolbar, Typography } from '@mui/material';
 
 export default function CIS2Page(props: { tokenContract: ContractAddress }) {
   const { tokenContract } = props;

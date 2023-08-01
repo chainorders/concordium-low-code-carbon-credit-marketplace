@@ -1,35 +1,31 @@
 use concordium_std::*;
 
-use super::{contract_types::*, error::*, state::*, events::*};
-
-#[derive(Serial, Deserial, SchemaType)]
-struct RetireParams {
-    tokens: Vec<ContractTokenId>,
-    owner: Address,
-}
+use super::{contract_types::*, error::*, events::*, state::*};
 
 #[receive(
     contract = "project_token",
     name = "retire",
-    parameter = "RetireParams",
+    parameter = "ContractBurnParams",
     error = "ContractError",
     enable_logger,
-    mutable,
+    mutable
 )]
 fn retire<S: HasStateApi>(
     ctx: &impl HasReceiveContext,
     host: &mut impl HasHost<State<S>, StateApiType = S>,
     logger: &mut impl HasLogger,
 ) -> ContractResult<()> {
-    let params: RetireParams = ctx.parameter_cursor().get()?;
-    ensure!(ctx.sender() == params.owner, ContractError::Unauthorized);
+    let ContractBurnParams { owner, tokens } = ctx.parameter_cursor().get()?;
+    ensure!(ctx.sender() == owner, ContractError::Unauthorized);
 
     let state = host.state_mut();
-    for token_id in params.tokens {
-        let token = state.get_token(&token_id);
+    for ContractBurnParam { token_id, amount } in tokens {
+        ensure!(amount == 1.into(), ContractError::InsufficientFunds);
+
         // Ensure that the token exists.
-        ensure!(token.is_some(), ContractError::InvalidTokenId);
-        let token = token.unwrap();
+        let token = state
+            .get_token(&token_id)
+            .ok_or(ContractError::InvalidTokenId)?;
 
         // Ensure that the token is mature.
         ensure!(
@@ -43,18 +39,25 @@ fn retire<S: HasStateApi>(
         );
         // Ensure that the sender has token balance.
         ensure!(
-            state.balance(&token_id, &params.owner)?.cmp(&0.into()).is_gt(),
-            ContractError::Unauthorized
+            state.balance(&token_id, &owner)?.cmp(&amount).is_gt(),
+            ContractError::InsufficientFunds
         );
 
         // Retire token.
-        state.burn(&token_id, &params.owner)?;
+        state.burn(&token_id, &owner)?;
 
         //log token retire event.
         logger.log(&ContractEvent::Retire(BurnEvent {
             token_id,
-            owner: params.owner,
-            amount: 1.into()
+            owner,
+            amount,
+        }))?;
+
+        // log burn event
+        logger.log(&ContractEvent::Burn(BurnEvent {
+            token_id,
+            owner,
+            amount,
         }))?;
     }
 

@@ -1,6 +1,6 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet } from 'react-router-dom';
 
-import { AppBar, Button, Stack, Toolbar, Typography } from "@mui/material";
+import { AppBar, Button, Stack, Toolbar, Typography } from '@mui/material';
 
 export default function AdminPage() {
   return (

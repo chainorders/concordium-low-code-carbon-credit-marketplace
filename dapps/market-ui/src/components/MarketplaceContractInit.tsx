@@ -1,11 +1,11 @@
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useState } from 'react';
 
-import { ContractAddress, TransactionStatusEnum } from "@concordium/web-sdk";
-import { Button, FormGroup, Stack, TextField } from "@mui/material";
+import { ContractAddress, TransactionStatusEnum } from '@concordium/web-sdk';
+import { Button, FormGroup, Stack, TextField } from '@mui/material';
 
-import { connectToWallet, ContractInfo, initContract } from "../models/ConcordiumContractClient";
-import TransactionProgress from "./ui/TransactionProgress";
-import DisplayError from "./ui/DisplayError";
+import { connectToWallet, ContractInfo, initContract } from '../models/ConcordiumContractClient';
+import DisplayError from './ui/DisplayError';
+import TransactionProgress from './ui/TransactionProgress';
 
 function MarketplaceContractInit(props: {
   contractInfo: ContractInfo;

@@ -1,7 +1,7 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet } from 'react-router-dom';
 
-import { AppBar, Button, Stack, Toolbar, Typography } from "@mui/material";
-import { ContractAddress } from "@concordium/web-sdk";
+import { ContractAddress } from '@concordium/web-sdk';
+import { AppBar, Button, Stack, Toolbar, Typography } from '@mui/material';
 
 export default function FractionalizerPage(props: { fracContract: ContractAddress }) {
   const { fracContract } = props;
@@ -18,6 +18,9 @@ export default function FractionalizerPage(props: { fracContract: ContractAddres
           </Button>
           <Button color="inherit" component={NavLink} className="subnav-link" to="retire">
             Retire
+          </Button>
+          <Button color="inherit" component={NavLink} className="subnav-link" to="retract">
+            Retract
           </Button>
           <Button color="inherit" component={NavLink} className="subnav-link" to="events">
             Events

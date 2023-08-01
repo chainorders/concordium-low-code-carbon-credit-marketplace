@@ -3,9 +3,9 @@ import React from 'react';
 import { ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
 import { Container, Paper, Stack, Typography } from '@mui/material';
 
-import FractionalizerContractInit from './FractionalizerContractInit';
-import ContractFindInstance from '../ContractFindInstance';
 import { ContractInfo } from '../../models/ConcordiumContractClient';
+import ContractFindInstance from '../ContractFindInstance';
+import FractionalizerContractInit from './FractionalizerContractInit';
 
 function FractionalizerFindOrInit(props: {
   grpcClient: ConcordiumGRPCClient;

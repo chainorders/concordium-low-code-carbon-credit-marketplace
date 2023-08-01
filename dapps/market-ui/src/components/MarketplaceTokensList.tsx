@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
-import { ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk";
-import { AlertColor, Grid } from "@mui/material";
+import { ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
+import { AlertColor, Grid } from '@mui/material';
 
-import { MARKETPLACE_CONTRACT_INFO } from "../Constants";
-import { list, TokenListItem } from "../models/CarbonCreditMarketClient";
-import { User } from "../types/user";
-import MarketplaceReturnDialog from "./MarketplaceReturnDialog";
-import MarketplaceTokensListItem from "./MarketplaceTokensListItem";
-import MarketplaceTransferDialog from "./MarketplaceTransferDialog";
-import Alert from "./ui/Alert";
-import CCContract from "../models/CCContract";
+import { MARKETPLACE_CONTRACT_INFO } from '../Constants';
+import { list, TokenListItem } from '../models/CarbonCreditMarketClient';
+import CCContract from '../models/CCContract';
+import { User } from '../types/user';
+import MarketplaceReturnDialog from './MarketplaceReturnDialog';
+import MarketplaceTokensListItem from './MarketplaceTokensListItem';
+import MarketplaceTransferDialog from './MarketplaceTransferDialog';
+import Alert from './ui/Alert';
 
 type ListItem = TokenListItem & { cis2Contract: CCContract };
 

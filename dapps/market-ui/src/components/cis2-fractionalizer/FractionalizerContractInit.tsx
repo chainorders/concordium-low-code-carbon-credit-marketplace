@@ -1,12 +1,12 @@
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useState } from 'react';
 
-import { ContractAddress, TransactionStatusEnum } from "@concordium/web-sdk";
-import { Button, FormGroup, Stack, TextField, Typography } from "@mui/material";
+import { SmartContractParameters } from '@concordium/browser-wallet-api-helpers';
+import { ContractAddress, TransactionStatusEnum } from '@concordium/web-sdk';
+import { Button, FormGroup, Stack, TextField } from '@mui/material';
 
-import { connectToWallet, ContractInfo, initContract } from "../../models/ConcordiumContractClient";
-import DisplayError from "../ui/DisplayError";
-import TransactionProgress from "../ui/TransactionProgress";
-import { SmartContractParameters } from "@concordium/browser-wallet-api-helpers";
+import { connectToWallet, ContractInfo, initContract } from '../../models/ConcordiumContractClient';
+import DisplayError from '../ui/DisplayError';
+import TransactionProgress from '../ui/TransactionProgress';
 
 export default function FractionalizerContractInit(props: {
   contractInfo: ContractInfo;

@@ -1,9 +1,10 @@
 import { useState } from 'react';
+import { v4 as uuid } from 'uuid';
 
 import { ContractAddress } from '@concordium/web-sdk';
 import {
-    Button, Container, Divider, FormControl, InputLabel, List, ListItem, ListItemText, MenuItem,
-    Pagination, Select, Stack, TextField, Typography
+    Button, Container, FormControl, InputLabel, List, ListItem, ListItemText, MenuItem, Pagination,
+    Select, Stack, TextField, Typography
 } from '@mui/material';
 
 import {
@@ -13,13 +14,14 @@ import {
 } from '../../models/web/Events';
 import { getContractEventsByContractAddress } from '../../models/web/WebClient';
 import DisplayError from '../ui/DisplayError';
-import { v4 as uuid } from 'uuid';
 
 const eventTypes = [
   "Mint",
   "TokenMetadata",
   "Transfer",
   "Retire",
+  "Retract",
+  "Burn",
   "CollateralAdded",
   "CollateralRemoved",
   "CollateralUsed",
@@ -82,7 +84,7 @@ function TransferEvent(props: { event: FractionalizerTransferEvent }) {
   );
 }
 
-function CollateralUpdatedEvent(props: { event: FractionalizerCollateralUpdatedEvent, name: string }) {
+function CollateralUpdatedEvent(props: { event: FractionalizerCollateralUpdatedEvent; name: string }) {
   const { event, name } = props;
 
   return (
@@ -103,13 +105,13 @@ function CollateralUpdatedEvent(props: { event: FractionalizerCollateralUpdatedE
   );
 }
 
-function RetireEvent(props: { event: Cis2BurnEvent }) {
+function BurnEvent(props: { event: Cis2BurnEvent; name: string }) {
   const { event } = props;
 
   return (
     <ListItem alignItems="flex-start">
       <ListItemText
-        primary="Retired"
+        primary={props.name}
         secondary={
           <>
             <Typography component="div">Token {event.token_id}</Typography>
@@ -124,8 +126,8 @@ function RetireEvent(props: { event: Cis2BurnEvent }) {
 
 function Event(props: { event: FractionalizerEvent }) {
   const { event } = props;
-  if (!event) { 
-    return <></>
+  if (!event) {
+    return <></>;
   }
 
   const eventType = Object.keys(event)[0];
@@ -144,7 +146,9 @@ function Event(props: { event: FractionalizerEvent }) {
     case "CollateralUsed":
       return <CollateralUpdatedEvent event={event[eventType]!} name="Collateral Used" />;
     case "Retire":
-      return <RetireEvent event={event[eventType]!} />;
+    case "Retract":
+    case "Burn":
+      return <BurnEvent event={event[eventType]!} name={eventType} />;
     default:
       return <div>Unknown event type: {eventType}</div>;
   }
@@ -239,7 +243,7 @@ export default function FractionalizerEvents({ defaultContractAddress }: { defau
       <Container>
         <List sx={{ width: "100%", bgcolor: "background.paper" }}>
           {events.map((contractEvent) => (
-              <Event event={contractEvent as FractionalizerEvent} key={uuid()} />
+            <Event event={contractEvent as FractionalizerEvent} key={uuid()} />
           ))}
         </List>
         {pageCount > 1 && <Pagination count={pageCount} onChange={(_, v) => onFormSubmitted(v - 1)} />}

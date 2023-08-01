@@ -3,9 +3,9 @@ import React from 'react';
 import { ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
 import { Container, Paper, Stack, Typography } from '@mui/material';
 
+import { ContractInfo } from '../../models/ConcordiumContractClient';
 import ContractFindInstance from '../ContractFindInstance';
 import MarketplaceContractInit from '../MarketplaceContractInit';
-import { ContractInfo } from '../../models/ConcordiumContractClient';
 
 function MarketFindOrInit(props: {
   grpcClient: ConcordiumGRPCClient;

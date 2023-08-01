@@ -1,17 +1,17 @@
-import { useState } from "react";
+import { useState } from 'react';
 
-import { ConcordiumGRPCClient, ContractAddress, TransactionStatusEnum } from "@concordium/web-sdk";
-import { Button, Stack, TextField } from "@mui/material";
+import { ConcordiumGRPCClient, ContractAddress, TransactionStatusEnum } from '@concordium/web-sdk';
+import { Button, Stack, TextField } from '@mui/material';
 
-import { connectToWallet, ContractInfo } from "../../models/ConcordiumContractClient";
-import { retract } from "../../models/ProjectNFTClient";
-import DisplayError from "../ui/DisplayError";
-import TransactionProgress from "../ui/TransactionProgress";
+import { connectToWallet, ContractInfo } from '../../models/ConcordiumContractClient';
+import { retract } from '../../models/ProjectNFTClient';
+import DisplayError from '../ui/DisplayError';
+import TransactionProgress from '../ui/TransactionProgress';
 
 export function ProjectRetract(props: {
   grpcClient: ConcordiumGRPCClient;
   contractInfo: ContractInfo;
-  projectContract: ContractAddress;
+  address: ContractAddress;
   onDone: (output: { tokenIds: string[] }) => void;
 }) {
   const [form, setForm] = useState({
@@ -39,10 +39,9 @@ export function ProjectRetract(props: {
         retract(
           wallet.provider,
           wallet.account,
-          props.projectContract,
+          props.address,
           props.contractInfo,
-          [form.tokenId],
-          form.owner,
+          { owner: { Account: [form.owner] }, tokens: [{ token_id: form.tokenId, amount: "1" }] },
           BigInt(9999),
           (status, hash) => setTxn({ status, hash }),
         ),

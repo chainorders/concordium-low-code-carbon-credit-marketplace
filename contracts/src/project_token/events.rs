@@ -1,4 +1,4 @@
-use concordium_cis2::{MetadataUrl, MINT_EVENT_TAG, TOKEN_METADATA_EVENT_TAG, TRANSFER_EVENT_TAG};
+use concordium_cis2::{MetadataUrl, MINT_EVENT_TAG, TOKEN_METADATA_EVENT_TAG, TRANSFER_EVENT_TAG, BURN_EVENT_TAG};
 use concordium_std::{collections::BTreeMap, schema::SchemaType, *};
 
 use super::contract_types::*;
@@ -32,6 +32,7 @@ pub enum ContractEvent {
     Transfer(TransferEvent),
     Retire(BurnEvent),
     Retract(BurnEvent),
+    Burn(BurnEvent),
     VerifierAdded(VerifierUpdatedEvent),
     VerifierRemoved(VerifierUpdatedEvent),
     Verification(VerificationEvent),
@@ -65,6 +66,10 @@ impl Serial for ContractEvent {
             }
             ContractEvent::Retract(event) => {
                 out.write_u8(RETRACT_EVENT_TAG)?;
+                event.serial(out)
+            }
+            ContractEvent::Burn(event) => {
+                out.write_u8(BURN_EVENT_TAG)?;
                 event.serial(out)
             }
             ContractEvent::MaturityTime(event) => {
@@ -128,6 +133,17 @@ impl SchemaType for ContractEvent {
             RETRACT_EVENT_TAG,
             (
                 "Retract".to_string(),
+                schema::Fields::Named(vec![
+                    (String::from("token_id"), ContractTokenId::get_type()),
+                    (String::from("amount"), ContractTokenAmount::get_type()),
+                    (String::from("owner"), Address::get_type()),
+                ]),
+            ),
+        );
+        event_map.insert(
+            BURN_EVENT_TAG,
+            (
+                "Burn".to_string(),
                 schema::Fields::Named(vec![
                     (String::from("token_id"), ContractTokenId::get_type()),
                     (String::from("amount"), ContractTokenAmount::get_type()),

@@ -1,24 +1,20 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk";
-import { ArrowBackOutlined } from "@mui/icons-material";
-import { Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography } from "@mui/material";
-import { Container } from "@mui/system";
+import { ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
+import { ArrowBackOutlined } from '@mui/icons-material';
+import { Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography } from '@mui/material';
+import { Container } from '@mui/system';
 
-import Cis2BatchMetadataPrepareOrAdd from "../../components/cis2/Cis2BatchMetadataPrepareOrAdd";
-import Cis2BatchMint from "../../components/cis2/Cis2BatchMint";
-import Cis2TokensDisplay from "../../components/cis2/Cis2TokensDisplay";
-import ConnectPinata from "../../components/ConnectPinata";
-import UploadFiles from "../../components/ui/UploadFiles";
-import { ContractInfo } from "../../models/ConcordiumContractClient";
-import { TokenInfo } from "../../models/ProjectNFTClient";
+import Cis2BatchMetadataPrepareOrAdd from '../../components/cis2/Cis2BatchMetadataPrepareOrAdd';
+import Cis2BatchMint from '../../components/cis2/Cis2BatchMint';
+import Cis2TokensDisplay from '../../components/cis2/Cis2TokensDisplay';
+import ConnectPinata from '../../components/ConnectPinata';
+import UploadFiles from '../../components/ui/UploadFiles';
+import { ContractInfo } from '../../models/ConcordiumContractClient';
+import { TokenInfo } from '../../models/ProjectNFTClient';
 import {
-  Cis2MintEvent,
-  Cis2TokenMetadataEvent,
-  ModuleEvent,
-  ProjectNftEvent,
-  ProjectNftMaturityTimeEvent,
-} from "../../models/web/Events";
+    Cis2MintEvent, Cis2TokenMetadataEvent, ModuleEvent, ProjectNftEvent, ProjectNftMaturityTimeEvent
+} from '../../models/web/Events';
 
 enum Steps {
   ConnectPinata,
@@ -157,7 +153,10 @@ function MintPage(props: {
   }
 
   function goBack(): void {
-    const previousStepIndex = Math.max(step - 1, 0);
+    let previousStepIndex = Math.max(step - 1, 0);
+    if (previousStepIndex == Steps.UploadFiles && !state.pinataJwt) { 
+      previousStepIndex = Steps.ConnectPinata;
+    }
     setStep(previousStepIndex);
   }
 

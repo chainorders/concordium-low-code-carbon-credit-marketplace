@@ -1,10 +1,14 @@
-import { ConcordiumGRPCClient, ContractAddress } from "@concordium/web-sdk";
-import { Alert, Button, Paper, Stack, Step, StepContent, StepLabel, Stepper, Typography } from "@mui/material";
-import { useState } from "react";
-import Cis2FindInstanceOrInit from "../cis2/Cis2FindInstanceOrInit";
-import { ContractInfo } from "../../models/ConcordiumContractClient";
-import MarketFindOrInit from "../cis2-market/MarketFindOrInit";
-import FractionalizerFindOrInit from "../cis2-fractionalizer/FractionalizerFindOrInit";
+import { useState } from 'react';
+
+import { ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
+import {
+    Alert, Button, Paper, Stack, Step, StepContent, StepLabel, Stepper, Typography
+} from '@mui/material';
+
+import { ContractInfo } from '../../models/ConcordiumContractClient';
+import FractionalizerFindOrInit from '../cis2-fractionalizer/FractionalizerFindOrInit';
+import MarketFindOrInit from '../cis2-market/MarketFindOrInit';
+import Cis2FindInstanceOrInit from '../cis2/Cis2FindInstanceOrInit';
 
 const enum Steps {
   TokenContract,

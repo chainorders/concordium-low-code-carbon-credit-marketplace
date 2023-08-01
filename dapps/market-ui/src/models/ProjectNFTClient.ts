@@ -1,9 +1,9 @@
-import { SmartContractParameters, WalletApi } from "@concordium/browser-wallet-api-helpers";
-import { CIS2, ContractAddress, TransactionStatusEnum } from "@concordium/web-sdk";
+import { SmartContractParameters, WalletApi } from '@concordium/browser-wallet-api-helpers';
+import { CIS2, ContractAddress, TransactionStatusEnum } from '@concordium/web-sdk';
 
-import * as connClient from "./ConcordiumContractClient";
-import { ModuleEvent } from "./web/Events";
-import { getContractEventsByTransactionHash } from "./web/WebClient";
+import * as connClient from './ConcordiumContractClient';
+import { ModuleEvent } from './web/Events';
+import { getContractEventsByTransactionHash } from './web/WebClient';
 
 interface MintParams {
   owner: { Account: [string] };
@@ -46,6 +46,12 @@ export interface TokenInfo {
   metadataUrl: CIS2.MetadataUrl;
   maturityTime: Date;
 }
+
+export interface BurnParams {
+  owner: { Account: [string] } | { Contract: [{ index: number; subindex: number }] };
+  tokens: { token_id: string; amount: string }[];
+}
+
 
 /**
  * Mints multiple NFT in Contract: {@link nftContractAddress}
@@ -100,24 +106,18 @@ export async function mint(
 export async function retire(
   provider: WalletApi,
   account: string,
-  nftContractAddress: ContractAddress,
+  contractAddress: ContractAddress,
   contractInfo: connClient.ContractInfo,
-  tokenIds: string[],
-  owner: string,
+  params: BurnParams,
   maxContractExecutionEnergy = BigInt(9999),
   onStatusUpdate: (status: TransactionStatusEnum, hash: string) => void = (status, hash) => console.log(status, hash),
 ) {
-  const paramsJson = {
-    tokens: tokenIds,
-    owner: { Account: [owner] },
-  };
-
   const outcomes = await connClient.updateContract(
     provider,
     contractInfo,
-    paramsJson as unknown as SmartContractParameters,
+    params as unknown as SmartContractParameters,
     account,
-    nftContractAddress,
+    contractAddress,
     "retire",
     maxContractExecutionEnergy,
     BigInt(0),
@@ -130,24 +130,18 @@ export async function retire(
 export async function retract(
   provider: WalletApi,
   account: string,
-  nftContractAddress: ContractAddress,
+  contractAddress: ContractAddress,
   contractInfo: connClient.ContractInfo,
-  tokenIds: string[],
-  owner: string,
+  params: BurnParams,
   maxContractExecutionEnergy = BigInt(9999),
   onStatusUpdate: (status: TransactionStatusEnum, hash: string) => void = (status, hash) => console.log(status, hash),
 ) {
-  const paramsJson = {
-    tokens: tokenIds,
-    owner: { Account: [owner] },
-  };
-
   const outcomes = await connClient.updateContract(
     provider,
     contractInfo,
-    paramsJson as unknown as SmartContractParameters,
+    params as unknown as SmartContractParameters,
     account,
-    nftContractAddress,
+    contractAddress,
     "retract",
     maxContractExecutionEnergy,
     BigInt(0),

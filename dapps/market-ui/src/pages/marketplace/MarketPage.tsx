@@ -1,9 +1,9 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet } from 'react-router-dom';
 
-import { AppBar, Button, Stack, Toolbar, Typography } from "@mui/material";
+import { ContractAddress } from '@concordium/web-sdk';
+import { AppBar, Button, Stack, Toolbar, Typography } from '@mui/material';
 
-import { User } from "../../types/user";
-import { ContractAddress } from "@concordium/web-sdk";
+import { User } from '../../types/user';
 
 export default function MarketPage(props: { user: User; marketContract: ContractAddress }) {
   const { user, marketContract } = props;

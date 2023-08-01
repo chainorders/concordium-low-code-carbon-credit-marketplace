@@ -1,55 +1,42 @@
-import "./App.css";
+import './App.css';
 
-import { useState } from "react";
-import { NavLink, Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { useState } from 'react';
+import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
 
-import { ContractAddress, createConcordiumClient } from "@concordium/web-sdk";
+import { ContractAddress, createConcordiumClient } from '@concordium/web-sdk';
 import {
-  AppBar,
-  Box,
-  Button,
-  Container,
-  createTheme,
-  Link,
-  ThemeProvider,
-  Toolbar,
-  Typography,
-} from "@mui/material";
+    AppBar, Box, Button, Container, createTheme, Link, ThemeProvider, Toolbar, Typography
+} from '@mui/material';
 
-import GuardedRoute from "./components/auth/GuardedRoute";
-import UserAuth from "./components/auth/UserAuth";
-import FractionalizerEvents from "./components/cis2-fractionalizer/FractionalizerEvents";
-import MarketEvents from "./components/cis2-market/MarketEvents";
-import Cis2BalanceOf from "./components/cis2/Cis2BalanceOf";
-import ProjectEvents from "./components/cis2/ProjectEvents";
-import AddVerifier from "./components/cis2/verifier/AddVerifier";
-import RemoveVerifier from "./components/cis2/verifier/RemoveVerifier";
-import Verify from "./components/cis2/verifier/Verify";
-import MarketplaceTokensList from "./components/MarketplaceTokensList";
+import GuardedRoute from './components/auth/GuardedRoute';
+import UserAuth from './components/auth/UserAuth';
+import FractionalizerEvents from './components/cis2-fractionalizer/FractionalizerEvents';
+import { FractionalizerRetire } from './components/cis2-fractionalizer/FractionalizerRetire';
+import { FractionalizerRetract } from './components/cis2-fractionalizer/FractionalizerRetract';
+import MarketEvents from './components/cis2-market/MarketEvents';
+import Cis2BalanceOf from './components/cis2/Cis2BalanceOf';
+import ProjectEvents from './components/cis2/ProjectEvents';
+import { ProjectRetire } from './components/cis2/ProjectRetire';
+import { ProjectRetract } from './components/cis2/ProjectRetract';
+import AddVerifier from './components/cis2/verifier/AddVerifier';
+import RemoveVerifier from './components/cis2/verifier/RemoveVerifier';
+import Verify from './components/cis2/verifier/Verify';
+import MarketplaceTokensList from './components/MarketplaceTokensList';
+import ContractsSetup from './components/setup/ContractsSetup';
 import {
-  PROJECT_TOKEN_CONTRACT_INFO,
-  CONCORDIUM_NODE_PORT,
-  CONNCORDIUM_NODE_ENDPOINT,
-  CARBON_CREDIT_CONTRACT_ADDRESS,
-  CARBON_CREDIT_CONTRACT_INFO,
-  MARKET_CONTRACT_ADDRESS,
-  MARKETPLACE_CONTRACT_INFO,
-  PROJECT_TOKEN_CONTRACT_ADDRESS,
-} from "./Constants";
-import CIS2Page from "./pages/cis2/CIS2Page";
-import MintPage from "./pages/cis2/MintPage";
-import ProjectRetirePage from "./pages/cis2/ProjectRetirePage";
-import ProjectRetractPage from "./pages/cis2/ProjectRetractPage";
-import FractionalizerPage from "./pages/fractionalizer/FractionalizerPage";
-import FractionalizerRetirePage from "./pages/fractionalizer/FractionalizerRetirePage";
-import FractionalizeTokenPage from "./pages/fractionalizer/FractionalizeTokenPage";
-import MarketPage from "./pages/marketplace/MarketPage";
-import SellPage from "./pages/marketplace/SellPage";
-import VerifyPage from "./pages/verification/VerificationPage";
-import { User } from "./types/user";
-import AdminPage from "./pages/setup/AdminPage";
-import ContractsSetup from "./components/setup/ContractsSetup";
-import { ProjectRetract } from "./components/cis2/ProjectRetract";
+    CARBON_CREDIT_CONTRACT_ADDRESS, CARBON_CREDIT_CONTRACT_INFO, CONCORDIUM_NODE_PORT,
+    CONNCORDIUM_NODE_ENDPOINT, MARKET_CONTRACT_ADDRESS, MARKETPLACE_CONTRACT_INFO,
+    PROJECT_TOKEN_CONTRACT_ADDRESS, PROJECT_TOKEN_CONTRACT_INFO
+} from './Constants';
+import CIS2Page from './pages/cis2/CIS2Page';
+import MintPage from './pages/cis2/MintPage';
+import FractionalizerPage from './pages/fractionalizer/FractionalizerPage';
+import FractionalizeTokenPage from './pages/fractionalizer/FractionalizeTokenPage';
+import MarketPage from './pages/marketplace/MarketPage';
+import SellPage from './pages/marketplace/SellPage';
+import AdminPage from './pages/setup/AdminPage';
+import VerifyPage from './pages/verification/VerificationPage';
+import { User } from './types/user';
 
 const theme = createTheme({
   palette: {
@@ -94,16 +81,28 @@ function App() {
               <Button component={NavLink} className="nav-link" to="/market" color="inherit">
                 Market
               </Button>
-              <Button component={NavLink} className="nav-link" to="/fractionalizer" color="inherit" disabled={!isWalletUser()}>
+              <Button
+                component={NavLink}
+                className="nav-link"
+                to="/fractionalizer"
+                color="inherit"
+                disabled={!isWalletUser()}
+              >
                 Carbon Credits
               </Button>
               <Button component={NavLink} className="nav-link" to="/cis2" color="inherit" disabled={!isWalletUser()}>
                 Projects
               </Button>
-              <Button component={NavLink} className="nav-link" to="/verifier" color="inherit" disabled={!isWalletUser()}>
+              <Button
+                component={NavLink}
+                className="nav-link"
+                to="/verifier"
+                color="inherit"
+                disabled={!isWalletUser()}
+              >
                 verifier
               </Button>
-              <Button component={NavLink} className="nav-link" to="/admin"  color="inherit" disabled={!isWalletUser()}>
+              <Button component={NavLink} className="nav-link" to="/admin" color="inherit" disabled={!isWalletUser()}>
                 Admin
               </Button>
               <UserAuth user={user} onLogin={setUser} onLogout={() => setUser(loggedOutUser)} />
@@ -192,10 +191,10 @@ function App() {
                   <Route
                     path="retire"
                     element={
-                      <ProjectRetirePage
+                      <ProjectRetire
                         grpcClient={state.grpcClient}
                         contractInfo={PROJECT_TOKEN_CONTRACT_INFO}
-                        tokenContract={projectContract}
+                        address={projectContract}
                         onDone={() => alert("tokens retireds")}
                       />
                     }
@@ -203,10 +202,10 @@ function App() {
                   <Route
                     path="retract"
                     element={
-                      <ProjectRetractPage
+                      <ProjectRetract
                         grpcClient={state.grpcClient}
                         contractInfo={PROJECT_TOKEN_CONTRACT_INFO}
-                        tokenContract={projectContract}
+                        address={projectContract}
                         onDone={() => alert("tokens retracted")}
                       />
                     }
@@ -242,11 +241,22 @@ function App() {
                   <Route
                     path="retire"
                     element={
-                      <FractionalizerRetirePage
+                      <FractionalizerRetire
                         onDone={() => alert("tokens retireds")}
                         grpcClient={state.grpcClient!}
                         contractInfo={CARBON_CREDIT_CONTRACT_INFO}
-                        defaultContractAddress={fracContract}
+                        address={fracContract}
+                      />
+                    }
+                  />
+                  <Route
+                    path="retract"
+                    element={
+                      <FractionalizerRetract
+                        onDone={() => alert("tokens retracted")}
+                        grpcClient={state.grpcClient!}
+                        contractInfo={CARBON_CREDIT_CONTRACT_INFO}
+                        address={fracContract}
                       />
                     }
                   />
@@ -276,7 +286,7 @@ function App() {
                     element={
                       <ProjectRetract
                         contractInfo={PROJECT_TOKEN_CONTRACT_INFO}
-                        projectContract={projectContract}
+                        address={projectContract}
                         grpcClient={state.grpcClient}
                         onDone={() => alert("Project(s) Retracted")}
                       />

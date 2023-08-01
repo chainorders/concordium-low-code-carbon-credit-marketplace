@@ -1,5 +1,5 @@
 import { INDEXER_API_URL } from '../../Constants';
-import { ModuleEvent, ProjectNftEvent } from './Events';
+import { ModuleEvent } from './Events';
 
 export const getContractEventsByTransactionHash = async (txnHash: string): Promise<ModuleEvent[]> => {
   const res = await fetchRetry(`${INDEXER_API_URL}/project-nft/contract-events/${txnHash}`, {
