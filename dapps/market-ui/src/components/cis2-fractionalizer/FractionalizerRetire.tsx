@@ -50,12 +50,12 @@ export function FractionalizerRetire(props: {
           props.address,
           props.contractInfo,
           { owner: { Account: [wallet.account] }, tokens: [{ token_id: form.tokenId, amount: form.amount }] },
-          BigInt(9999),
+          BigInt(19999),
           (status, hash) => setTxn({ status, hash }),
         ),
       )
       .then(() => {
-        setState({ ...state, isProcessing: false });
+        setState({ ...state, isProcessing: false, error: "" });
         props.onDone({ tokenIds: [form.tokenId] });
       })
       .catch((e: Error) => {
