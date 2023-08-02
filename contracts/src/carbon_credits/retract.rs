@@ -26,9 +26,12 @@ fn retract<S: HasStateApi>(
 
     for BurnParam { token_id, amount } in tokens {
         let state = host.state();
-        
+
         // Ensure that the token exists.
-        ensure!(state.contains_token(&token_id), ContractError::InvalidTokenId);
+        ensure!(
+            state.contains_token(&token_id),
+            ContractError::InvalidTokenId
+        );
 
         let (is_mature, is_verified) = {
             // Get Collateral Token Info
@@ -53,10 +56,7 @@ fn retract<S: HasStateApi>(
 
         // Ensure that the sender has token balance
         let balance = state.balance(&token_id, &owner)?;
-        ensure!(
-            balance.cmp(&amount).is_gt(),
-            ContractError::InsufficientFunds
-        );
+        ensure!(balance >= amount, ContractError::InsufficientFunds);
 
         // Retire token.
         host.state_mut().burn(&token_id, amount, &owner);

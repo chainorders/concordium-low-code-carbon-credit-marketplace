@@ -38,8 +38,9 @@ fn retire<S: HasStateApi>(
             ContractError::Custom(CustomContractError::TokenNotVerified)
         );
         // Ensure that the sender has token balance.
+        let balance = state.balance(&token_id, &owner)?;
         ensure!(
-            state.balance(&token_id, &owner)?.cmp(&amount).is_gt(),
+            balance >= amount,
             ContractError::InsufficientFunds
         );
 

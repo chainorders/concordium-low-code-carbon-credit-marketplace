@@ -43,7 +43,7 @@ fn retract<S: HasStateApi>(
         // Ensure that the sender has token balance or is a verifier.
         let balance = state.balance(&token_id, &owner)?;
         ensure!(
-            balance.cmp(&amount).is_gt() || is_verifier,
+            balance >= amount || is_verifier,
             ContractError::InsufficientFunds
         );
 
