@@ -30,10 +30,9 @@ export default function PrepareMetadata(props: {
       description: metadata.description || defaultMetadata.description,
       display: metadata.display || defaultMetadata.display,
       artifact: metadata.artifact || defaultMetadata.artifact,
+      unique: true
     };
 
-    delete metadataRes.unique;
-    
     return metadataRes;
   };
 
