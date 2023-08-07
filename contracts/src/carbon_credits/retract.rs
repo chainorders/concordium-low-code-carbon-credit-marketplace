@@ -19,8 +19,14 @@ fn retract<S: HasStateApi>(
 ) -> ContractResult<()> {
     let ContractBurnParams { owner, tokens } = ctx.parameter_cursor().get()?;
     let sender = ctx.sender();
+    let is_verifier = host
+        .state()
+        .verifier_contracts
+        .iter()
+        .any(|vc| Client::is_verifier(host, sender, *vc).unwrap_or(false));
+
     ensure!(
-        sender == owner, //todo: || state.is_verifier(&sender),
+        sender == owner || is_verifier,
         ContractError::Unauthorized
     );
 

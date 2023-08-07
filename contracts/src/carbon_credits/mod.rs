@@ -15,3 +15,4 @@ pub mod maturity_of;
 pub mod is_verified;
 pub mod retire;
 pub mod retract;
+pub mod is_verifier;
