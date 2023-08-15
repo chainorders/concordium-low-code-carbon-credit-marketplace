@@ -10,13 +10,11 @@ import DisplayError from '../ui/DisplayError';
 function Cis2BalanceOf(props: {
   grpcClient: ConcordiumGRPCClient;
   contractName: string;
-  defaultContractAddress?: ContractAddress;
+  contract: ContractAddress;
   defaultAccount?: string;
 }) {
   const [form, setForm] = useState({
     tokenId: "",
-    index: props.defaultContractAddress?.index.toString() || "",
-    subindex: props.defaultContractAddress?.subindex.toString() || "",
     account: props.defaultAccount || "",
     contractName: props.contractName,
   });
@@ -32,7 +30,7 @@ function Cis2BalanceOf(props: {
     setState({ ...state, checking: true, error: "" });
     setBalance("");
 
-    if (!form.index || !form.subindex || !form.account || !form.tokenId) {
+    if (!form.account || !form.tokenId) {
       setState({ ...state, checking: false, error: "Please fill out all fields" });
       return;
     }
@@ -40,8 +38,8 @@ function Cis2BalanceOf(props: {
     const cis2Contract = new CIS2Contract(
       props.grpcClient,
       {
-        index: BigInt(form.index),
-        subindex: BigInt(form.subindex),
+        index: BigInt(props.contract.index),
+        subindex: BigInt(props.contract.subindex),
       },
       form.contractName,
     );
@@ -88,26 +86,6 @@ function Cis2BalanceOf(props: {
   return (
     <Stack component={"form"} spacing={2}>
       <TextField
-        id="contract-index"
-        name="contractIndex"
-        label="Contract Index"
-        variant="standard"
-        type={"number"}
-        disabled={state.checking}
-        value={form.index}
-        onChange={(e) => setForm({ ...form, index: e.target.value })}
-      />
-      <TextField
-        id="contract-subindex"
-        name="contractSubindex"
-        label="Contract Sub Index"
-        variant="standard"
-        type={"number"}
-        disabled={state.checking}
-        value={form.subindex}
-        onChange={(e) => setForm({ ...form, subindex: e.target.value })}
-      />
-      <TextField
         id="account"
         name="account"
         label="Account"
@@ -118,7 +96,8 @@ function Cis2BalanceOf(props: {
         onChange={(e) => setForm({ ...form, account: e.target.value })}
       />
       <TextField
-        id="token-id"
+        id="tokenId"
+        name="tokenId"
         label="Token Id"
         variant="standard"
         value={form.tokenId}

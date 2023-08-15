@@ -1,14 +1,14 @@
-import { useState } from 'react';
+import { useState } from "react";
 
-import { ConcordiumGRPCClient, ContractAddress, TransactionStatusEnum } from '@concordium/web-sdk';
-import { Button, Stack, TextField } from '@mui/material';
+import { ConcordiumGRPCClient, ContractAddress, TransactionStatusEnum } from "@concordium/web-sdk";
+import { Button, Stack, TextField } from "@mui/material";
 
-import { connectToWallet, ContractInfo } from '../../models/ConcordiumContractClient';
-import { retire } from '../../models/ProjectFractionalizerClient';
-import DisplayError from '../ui/DisplayError';
-import TransactionProgress from '../ui/TransactionProgress';
+import { connectToWallet, ContractInfo } from "../../models/ConcordiumContractClient";
+import { retract } from "../../models/ProjectFractionalizerClient";
+import DisplayError from "../ui/DisplayError";
+import TransactionProgress from "../ui/TransactionProgress";
 
-export function FractionalizerRetire(props: {
+export function FractionalizerRetract(props: {
   grpcClient: ConcordiumGRPCClient;
   contractInfo: ContractInfo;
   address: ContractAddress;
@@ -17,6 +17,7 @@ export function FractionalizerRetire(props: {
   const [form, setForm] = useState({
     tokenId: "",
     amount: "1",
+    owner: "",
   });
   const [txn, setTxn] = useState<{ hash: string; status: TransactionStatusEnum }>();
 
@@ -44,12 +45,12 @@ export function FractionalizerRetire(props: {
     setTxn(undefined);
     connectToWallet()
       .then((wallet) =>
-        retire(
+        retract(
           wallet.provider,
           wallet.account,
           props.address,
           props.contractInfo,
-          { owner: { Account: [wallet.account] }, tokens: [{ token_id: form.tokenId, amount: form.amount }] },
+          { owner: { Account: [form.owner] }, tokens: [{ token_id: form.tokenId, amount: form.amount }] },
           BigInt(19999),
           (status, hash) => setTxn({ status, hash }),
         ),
@@ -84,9 +85,17 @@ export function FractionalizerRetire(props: {
           onChange={(e) => setForm({ ...form, amount: e.target.value })}
           value={form.amount}
         />
+        <TextField
+          id="account"
+          name="account"
+          label="Owner's Account Address"
+          variant="standard"
+          fullWidth
+          onChange={(e) => setForm({ ...form, owner: e.target.value })}
+        />
         <DisplayError error={state.error} />
         <Button type="submit" variant="contained" color="primary">
-          Retire
+          Retract
         </Button>
         {txn && <TransactionProgress hash={txn.hash} status={txn.status} />}
       </Stack>

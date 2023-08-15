@@ -17,15 +17,13 @@ import { Metadata } from '../../models/ProjectNFTClient';
 import {
     FractionalizerEvent, FractionalizerMintEvent, FractionalizerTokenMetadataEvent, ModuleEvent
 } from '../../models/web/Events';
-import FractionalizerFindOrInit from './FractionalizerFindOrInit';
 
 enum Steps {
-  GetOrInitContract = 0,
-  TrasferCis2Token = 1,
-  PrepareMetadata = 2,
-  UploadMetadata = 3,
-  Mint = 4,
-  Minted = 5
+  TrasferCis2Token = 0,
+  PrepareMetadata = 1,
+  UploadMetadata = 2,
+  Mint = 3,
+  Minted = 4
 }
 
 type StepType = { step: Steps; title: string };
@@ -38,13 +36,11 @@ type MintMethodEvents = {
 function FractionalizeTokenPage(props: {
   grpcClient: ConcordiumGRPCClient;
   contractInfo: ContractInfo;
-  defaultContractAddress: ContractAddress;
+  fracContract: ContractAddress;
+  tokenContract: ContractAddress;
 }) {
+  const { fracContract: contract } = props;
   const steps: StepType[] = [
-    {
-      step: Steps.GetOrInitContract,
-      title: "Create New or Find Fractionalizer Contract",
-    },
     {
       step: Steps.TrasferCis2Token,
       title: "Transfer the token to be fractionalized",
@@ -62,7 +58,6 @@ function FractionalizeTokenPage(props: {
   ];
 
   const [step, setStep] = useState<StepType>(steps[0]);
-  const [contract, setContract] = useState<ContractAddress>(props.defaultContractAddress);
   const [token, setToken] = useState<{
     address: ContractAddress;
     tokenId: string;
@@ -91,11 +86,6 @@ function FractionalizeTokenPage(props: {
       return;
     }
     setStep(steps[step.step - 1]);
-  }
-
-  function onGetContractAddress(address: ContractAddress) {
-    setContract(address);
-    goForward();
   }
 
   function onTransferred(address: ContractAddress, tokenId: string, contractname: string, quantity: string) {
@@ -140,15 +130,6 @@ function FractionalizeTokenPage(props: {
 
   function StepContent() {
     switch (step.step) {
-      case Steps.GetOrInitContract:
-        return (
-          <FractionalizerFindOrInit
-            grpcClient={props.grpcClient}
-            contractInfo={props.contractInfo}
-            defaultContractAddress={contract}
-            onDone={(address) => onGetContractAddress(address)}
-          />
-        );
       case Steps.TrasferCis2Token:
         return (
           <Cis2Transfer
@@ -162,6 +143,7 @@ function FractionalizeTokenPage(props: {
             }
             defaultQuantity="1"
             quantityDisabled
+            defaultContractAddress={props.tokenContract}
           />
         );
       case Steps.PrepareMetadata:

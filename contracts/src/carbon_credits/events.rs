@@ -1,4 +1,4 @@
-use concordium_cis2::{MetadataUrl, MINT_EVENT_TAG, TOKEN_METADATA_EVENT_TAG, TRANSFER_EVENT_TAG};
+use concordium_cis2::{MetadataUrl, MINT_EVENT_TAG, TOKEN_METADATA_EVENT_TAG, TRANSFER_EVENT_TAG, BURN_EVENT_TAG};
 use concordium_std::{collections::BTreeMap, schema::SchemaType, *};
 
 use super::contract_types::{ContractCollateralTokenAmount, ContractTokenAmount, ContractTokenId};
@@ -20,6 +20,8 @@ pub enum ContractEvent {
     TokenMetadata(TokenMetadataEvent),
     Transfer(TransferEvent),
     Retire(BurnEvent),
+    Retract(BurnEvent),
+    Burn(BurnEvent),
     CollateralAdded(CollateralUpdatedEvent),
     CollateralRemoved(CollateralUpdatedEvent),
     CollateralUsedEvent(CollateralUpdatedEvent)
@@ -29,6 +31,7 @@ const RETIRE_EVENT_TAG: u8 = u8::MIN;
 const COLLATERAL_ADDED_EVENT_TAG: u8 = u8::MIN + 1;
 const COLLATERAL_REMOVED_EVENT_TAG: u8 = u8::MIN + 2;
 const COLLATERAL_USED_EVENT_TAG: u8 = u8::MIN + 3;
+const RETRACT_EVENT_TAG: u8 = u8::MIN + 5;
 
 impl Serial for ContractEvent {
     fn serial<W: Write>(&self, out: &mut W) -> Result<(), W::Err> {
@@ -47,6 +50,14 @@ impl Serial for ContractEvent {
             }
             ContractEvent::Retire(event) => {
                 out.write_u8(RETIRE_EVENT_TAG)?;
+                event.serial(out)
+            }
+            ContractEvent::Retract(event) => {
+                out.write_u8(RETRACT_EVENT_TAG)?;
+                event.serial(out)
+            }
+            ContractEvent::Burn(event) => {
+                out.write_u8(BURN_EVENT_TAG)?;
                 event.serial(out)
             }
             ContractEvent::CollateralAdded(event) => {
@@ -105,6 +116,28 @@ impl SchemaType for ContractEvent {
             RETIRE_EVENT_TAG,
             (
                 "Retire".to_string(),
+                schema::Fields::Named(vec![
+                    (String::from("token_id"), ContractTokenId::get_type()),
+                    (String::from("amount"), ContractTokenAmount::get_type()),
+                    (String::from("owner"), Address::get_type()),
+                ]),
+            ),
+        );
+        event_map.insert(
+            RETRACT_EVENT_TAG,
+            (
+                "Retract".to_string(),
+                schema::Fields::Named(vec![
+                    (String::from("token_id"), ContractTokenId::get_type()),
+                    (String::from("amount"), ContractTokenAmount::get_type()),
+                    (String::from("owner"), Address::get_type()),
+                ]),
+            ),
+        );
+        event_map.insert(
+            BURN_EVENT_TAG,
+            (
+                "Burn".to_string(),
                 schema::Fields::Named(vec![
                     (String::from("token_id"), ContractTokenId::get_type()),
                     (String::from("amount"), ContractTokenAmount::get_type()),

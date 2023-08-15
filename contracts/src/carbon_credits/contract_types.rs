@@ -3,7 +3,7 @@ use concordium_cis2::{
 };
 
 pub use crate::client_utils::types::ContractTokenId;
-use crate::client_utils::types::{MaturityOfQueryParams, IsVerifiedQueryParams};
+use crate::client_utils::types::{MaturityOfQueryParams, IsVerifiedQueryParams, BurnParams, BurnParam};
 
 use super::error::ContractError;
 
@@ -21,3 +21,5 @@ pub type ContractBalanceOfQueryResponse = BalanceOfQueryResponse<ContractTokenAm
 pub type TransferParameter = TransferParams<ContractTokenId, ContractTokenAmount>;
 pub type ContractMaturityOfQueryParams = MaturityOfQueryParams<ContractTokenId>;
 pub type ContractIsVerifiedQueryParams = IsVerifiedQueryParams<ContractTokenId>;
+pub type ContractBurnParams = BurnParams<ContractTokenId, ContractTokenAmount>;
+pub type ContractBurnParam = BurnParam<ContractTokenId, ContractTokenAmount>;

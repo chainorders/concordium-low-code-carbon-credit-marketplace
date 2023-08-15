@@ -19,3 +19,4 @@ pub mod supports;
 pub mod token_metadata;
 pub mod transfer;
 pub mod update_operator;
+pub mod is_verifier;

@@ -1,32 +1,24 @@
-import "./MarketplaceTokenListItem.css";
+import './MarketplaceTokenListItem.css';
 
-import React, { useEffect, useState } from "react";
+import moment from 'moment';
+import React, { useEffect, useState } from 'react';
 
-import { ConcordiumGRPCClient, ContractAddress, InstanceInfo } from "@concordium/web-sdk";
-import { Dangerous, Expand, Info, ShoppingCartCheckout, WrongLocation } from "@mui/icons-material";
-import CheckIcon from "@mui/icons-material/Check";
+import { ConcordiumGRPCClient, ContractAddress, InstanceInfo } from '@concordium/web-sdk';
+import { Dangerous, Expand, Info, ShoppingCartCheckout } from '@mui/icons-material';
+import CheckIcon from '@mui/icons-material/Check';
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Card,
-  CardContent,
-  CardMedia,
-  Chip,
-  Grid,
-  Tooltip,
-  Typography,
-} from "@mui/material";
-import IconButton from "@mui/material/IconButton";
+    Accordion, AccordionDetails, AccordionSummary, Card, CardContent, CardMedia, Chip, Grid,
+    Tooltip, Typography
+} from '@mui/material';
+import IconButton from '@mui/material/IconButton';
 
-import { TokenListItem } from "../models/CarbonCreditMarketClient";
-import { getContractInformation } from "../models/ConcordiumContractClient";
-import { Metadata } from "../models/ProjectNFTClient";
-import { fetchJson } from "../models/Utils";
-import { User } from "../types/user";
-import Cis2MetadataImageLazy from "./cis2/Cis2MetadataImageLazy";
-import CCContract from "../models/CCContract";
-import moment from "moment";
+import { TokenListItem } from '../models/CarbonCreditMarketClient';
+import CCContract from '../models/CCContract';
+import { getContractInformation } from '../models/ConcordiumContractClient';
+import { Metadata } from '../models/ProjectNFTClient';
+import { fetchJson } from '../models/Utils';
+import { User } from '../types/user';
+import Cis2MetadataImageLazy from './cis2/Cis2MetadataImageLazy';
 
 type ListItem = TokenListItem & { cis2Contract: CCContract };
 
@@ -196,7 +188,7 @@ function MarketplaceTokensListItem(props: {
                 <AccordionDetails>
                   <Grid container>
                     {metadata?.attributes?.map((a) => (
-                      <Grid item>
+                      <Grid item key={a.name}>
                         <Chip label={`${a.name}: ${a.value}`} />
                       </Grid>
                     ))}

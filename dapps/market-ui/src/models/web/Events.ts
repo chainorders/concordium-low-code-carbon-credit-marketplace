@@ -55,6 +55,7 @@ export type ProjectNftEvent = {
   TokenMetadata?: Cis2TokenMetadataEvent;
   Retire?: Cis2BurnEvent;
   Retract?: Cis2BurnEvent;
+  Burn?: Cis2BurnEvent;
   MaturityTime?: ProjectNftMaturityTimeEvent;
   VerifierAdded?: ProjectNftVerifierUpdatedEvent;
   VerifierRemoved?: ProjectNftVerifierUpdatedEvent;
@@ -78,6 +79,8 @@ export type FractionalizerEvent = {
   Mint?: FractionalizerMintEvent;
   TokenMetadata?: FractionalizerTokenMetadataEvent;
   Retire?: Cis2BurnEvent;
+  Retract?: Cis2BurnEvent;
+  Burn?: Cis2BurnEvent;
   Transfer?: FractionalizerTransferEvent;
   CollateralAdded?: FractionalizerCollateralUpdatedEvent;
   CollateralRemoved?: FractionalizerCollateralUpdatedEvent;

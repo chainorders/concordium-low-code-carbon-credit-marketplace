@@ -14,7 +14,10 @@ use concordium_std::*;
 
 use super::{
     errors::Cis2ClientError,
-    types::{IsVerifiedQueryParams, MaturityOfQueryParams, MaturityOfQueryResponse, IsVerifiedQueryResponse},
+    types::{
+        IsVerifiedQueryParams, IsVerifiedQueryResponse, IsVerifierQueryParams,
+        MaturityOfQueryParams, MaturityOfQueryResponse, IsVerifierQueryResponse,
+    },
 };
 
 pub const CIS2_STANDARD_IDENTIFIER_STR: &str = "CIS-2";
@@ -24,6 +27,7 @@ pub const BALANCE_OF_ENTRYPOINT_NAME: EntrypointName = EntrypointName::new_unche
 pub const TRANSFER_ENTRYPOINT_NAME: EntrypointName = EntrypointName::new_unchecked("transfer");
 pub const MATURITY_OF_ENTRYPOINT_NAME: EntrypointName = EntrypointName::new_unchecked("maturityOf");
 pub const IS_VERIFIED_ENTRYPOINT_NAME: EntrypointName = EntrypointName::new_unchecked("isVerified");
+pub const IS_VERIFIER_ENTRYPOINT_NAME: EntrypointName = EntrypointName::new_unchecked("isVerifier");
 
 pub struct Client;
 
@@ -222,5 +226,33 @@ impl Client {
             .ok_or(Cis2ClientError::InvokeContractError)?;
 
         Ok(is_verified)
+    }
+
+    pub fn is_verifier<State, S: HasStateApi>(
+        host: &impl HasHost<State, StateApiType = S>,
+        address: Address,
+        contract_address: ContractAddress,
+    ) -> Result<bool, Cis2ClientError> {
+        let params = IsVerifierQueryParams {
+            queries: vec![address],
+        };
+
+        let res = host.invoke_contract_read_only(
+            &contract_address,
+            &params,
+            IS_VERIFIER_ENTRYPOINT_NAME,
+            Amount::from_ccd(0),
+        );
+
+        let parsed_res = match res {
+            Ok(Some(mut res)) => IsVerifierQueryResponse::deserial(&mut res).unwrap(),
+            _ => bail!(Cis2ClientError::InvokeContractError),
+        };
+
+        let is_verifier = *parsed_res
+            .first()
+            .ok_or(Cis2ClientError::InvokeContractError)?;
+
+        Ok(is_verifier)
     }
 }

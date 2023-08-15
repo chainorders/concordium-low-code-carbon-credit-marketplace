@@ -16,6 +16,7 @@ export function ProjectRetract(props: {
 }) {
   const [form, setForm] = useState({
     tokenId: "",
+    owner: "",
   });
   const [txn, setTxn] = useState<{ hash: string; status: TransactionStatusEnum }>();
 
@@ -40,7 +41,7 @@ export function ProjectRetract(props: {
           wallet.account,
           props.address,
           props.contractInfo,
-          [form.tokenId],
+          { owner: { Account: [form.owner] }, tokens: [{ token_id: form.tokenId, amount: "1" }] },
           BigInt(9999),
           (status, hash) => setTxn({ status, hash }),
         ),
@@ -59,10 +60,20 @@ export function ProjectRetract(props: {
     <>
       <Stack spacing={2} component={"form"} onSubmit={onsubmit}>
         <TextField
+          id="tokenId"
+          name="tokenId"
           label="Token ID"
-          variant="outlined"
+          variant="standard"
           fullWidth
           onChange={(e) => setForm({ ...form, tokenId: e.target.value })}
+        />
+        <TextField
+          id="account"
+          name="account"
+          label="Owner's Account Address"
+          variant="standard"
+          fullWidth
+          onChange={(e) => setForm({ ...form, owner: e.target.value })}
         />
         <DisplayError error={state.error} />
         <Button type="submit" variant="contained" color="primary">

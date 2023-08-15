@@ -3,14 +3,15 @@ import React from 'react';
 import { ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
 import { Container, Paper, Stack, Typography } from '@mui/material';
 
-import FractionalizerContractInit from '../../components/cis2-fractionalizer/FractionalizerContractInit';
-import ContractFindInstance from '../../components/ContractFindInstance';
 import { ContractInfo } from '../../models/ConcordiumContractClient';
+import ContractFindInstance from '../ContractFindInstance';
+import FractionalizerContractInit from './FractionalizerContractInit';
 
 function FractionalizerFindOrInit(props: {
   grpcClient: ConcordiumGRPCClient;
   contractInfo: ContractInfo;
-  defaultContractAddress: ContractAddress;
+  tokenContract: ContractAddress;
+  defaultContractAddress?: ContractAddress;
   onDone: (address: ContractAddress) => void;
 }) {
   return (

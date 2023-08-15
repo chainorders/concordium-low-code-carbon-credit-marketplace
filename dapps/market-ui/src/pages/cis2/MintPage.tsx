@@ -1,24 +1,22 @@
 import React, { useState } from 'react';
 
 import { ConcordiumGRPCClient, ContractAddress } from '@concordium/web-sdk';
-import { ArrowBackRounded } from '@mui/icons-material';
+import { ArrowBackOutlined } from '@mui/icons-material';
 import { Grid, IconButton, Paper, Step, StepLabel, Stepper, Typography } from '@mui/material';
 import { Container } from '@mui/system';
 
 import Cis2BatchMetadataPrepareOrAdd from '../../components/cis2/Cis2BatchMetadataPrepareOrAdd';
 import Cis2BatchMint from '../../components/cis2/Cis2BatchMint';
-import Cis2FindInstanceOrInit from '../../components/cis2/Cis2FindInstanceOrInit';
 import Cis2TokensDisplay from '../../components/cis2/Cis2TokensDisplay';
 import ConnectPinata from '../../components/ConnectPinata';
 import UploadFiles from '../../components/ui/UploadFiles';
-import { Cis2ContractInfo } from '../../models/ConcordiumContractClient';
+import { ContractInfo } from '../../models/ConcordiumContractClient';
 import { TokenInfo } from '../../models/ProjectNFTClient';
 import {
     Cis2MintEvent, Cis2TokenMetadataEvent, ModuleEvent, ProjectNftEvent, ProjectNftMaturityTimeEvent
 } from '../../models/web/Events';
 
 enum Steps {
-  GetOrInitCis2,
   ConnectPinata,
   UploadFiles,
   PrepareMetadata,
@@ -33,12 +31,13 @@ type MintMethodEvents = {
   maturityTime: ProjectNftMaturityTimeEvent;
 };
 
-function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2ContractInfo }) {
+function MintPage(props: {
+  grpcClient: ConcordiumGRPCClient;
+  contractInfo: ContractInfo;
+  tokenContract: ContractAddress;
+}) {
+  const { tokenContract } = props;
   const steps: StepType[] = [
-    {
-      step: Steps.GetOrInitCis2,
-      title: "Create New or Find Existing NFT Collection",
-    },
     {
       step: Steps.ConnectPinata,
       title: "Connect Pinata",
@@ -55,14 +54,12 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
     { step: Steps.Minted, title: "Minted" },
   ];
 
+  const [step, setStep] = useState<Steps>(Steps.ConnectPinata);
   const [state, setState] = useState<{
-    activeStep: StepType;
-    nftContract?: ContractAddress;
     tokens: TokenInfo[];
     pinataJwt: string;
     files: File[];
   }>({
-    activeStep: steps[0],
     pinataJwt: "",
     files: [],
     tokens: [],
@@ -70,45 +67,36 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
 
   const [mintedTokens, setMintedTokens] = useState<MintMethodEvents[]>([]);
 
-  function onGetCollectionAddress(address: ContractAddress) {
-    setState({
-      ...state,
-      activeStep: steps[1],
-      nftContract: address,
-    });
-  }
-
   function onPinataConnected(pinataJwt: string) {
     setState({
       ...state,
       pinataJwt,
-      activeStep: steps[2],
     });
+    goForward();
   }
 
   function onPinataSkipped() {
     setState({
       ...state,
       pinataJwt: "",
-      activeStep: steps[3],
     });
+    goForward(2);
   }
 
   function onFilesUploaded(files: File[]) {
     setState({
       ...state,
       files,
-      activeStep: steps[3],
     });
+    goForward();
   }
 
   function onMetadataPrepared(tokens: TokenInfo[]) {
-    console.log("MintPage: onMetadataPrepared", tokens);
     setState({
       ...state,
-      activeStep: steps[4],
       tokens,
     });
+    goForward();
   }
 
   function onTokensMinted(mintedEvents: ModuleEvent[]) {
@@ -130,23 +118,11 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
     });
 
     setMintedTokens(Object.values(mintedTokens));
-    setState({
-      ...state,
-      activeStep: steps[5],
-    });
+    goForward();
   }
 
   function StepContent() {
-    switch (state.activeStep.step) {
-      case Steps.GetOrInitCis2:
-        return (
-          <Cis2FindInstanceOrInit
-            grpcClient={props.grpcClient}
-            contractInfo={props.contractInfo}
-            address={state.nftContract}
-            onDone={(address) => onGetCollectionAddress(address)}
-          />
-        );
+    switch (step) {
       case Steps.ConnectPinata:
         return <ConnectPinata onDone={onPinataConnected} onSkip={onPinataSkipped} jwt={state.pinataJwt} />;
       case Steps.UploadFiles:
@@ -164,7 +140,7 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
         return (
           <Cis2BatchMint
             contractInfo={props.contractInfo}
-            tokenContractAddress={state.nftContract!}
+            tokenContractAddress={tokenContract!}
             tokenMetadataMap={state.tokens}
             onDone={onTokensMinted}
           />
@@ -177,15 +153,21 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
   }
 
   function goBack(): void {
-    const activeStepIndex = steps.findIndex((s) => s.step === state.activeStep.step);
-    const previousStepIndex = Math.max(activeStepIndex - 1, 0);
+    let previousStepIndex = Math.max(step - 1, 0);
+    if (previousStepIndex == Steps.UploadFiles && !state.pinataJwt) { 
+      previousStepIndex = Steps.ConnectPinata;
+    }
+    setStep(previousStepIndex);
+  }
 
-    setState({ ...state, activeStep: steps[previousStepIndex] });
+  function goForward(skip = 1): void {
+    const nextStepIndex = Math.min(step + skip, steps.length - 1);
+    setStep(nextStepIndex);
   }
 
   return (
     <Container sx={{ maxWidth: "xl", pt: "10px" }}>
-      <Stepper activeStep={state.activeStep.step} alternativeLabel sx={{ padding: "20px" }}>
+      <Stepper activeStep={step} alternativeLabel sx={{ padding: "20px" }}>
         {steps.map((step) => (
           <Step key={step.step}>
             <StepLabel>{step.title}</StepLabel>
@@ -193,15 +175,20 @@ function MintPage(props: { grpcClient: ConcordiumGRPCClient; contractInfo: Cis2C
         ))}
       </Stepper>
       <Paper sx={{ padding: "20px" }} variant="outlined">
-        <Grid container>
+        <Grid container justifyContent="center">
           <Grid item xs={1}>
-            <IconButton sx={{ border: "1px solid black", borderRadius: "100px" }} onClick={() => goBack()}>
-              <ArrowBackRounded></ArrowBackRounded>
+            <IconButton
+              onClick={() => goBack()}
+              disabled={step == 0}
+              size="large"
+              sx={{ display: "flex", alignItems: "center", margin: "auto", padding: "auto" }}
+            >
+              <ArrowBackOutlined sx={{padding: "auto", margin: "auto"}} />
             </IconButton>
           </Grid>
           <Grid item xs={11}>
             <Typography variant="h4" gutterBottom sx={{ pt: "20px", width: "100%" }} textAlign="center">
-              {state.activeStep.title}
+              {steps[step].title}
             </Typography>
           </Grid>
         </Grid>

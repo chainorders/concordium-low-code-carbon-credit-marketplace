@@ -13,13 +13,14 @@ pub enum MarketplaceError {
     Cis2ClientError(Cis2ClientError),
     InvalidAmountPaid,
     InvokeTransferError,
-    NoBalance,
     InvalidCommission,
     InvalidTokenQuantity,
     InvalidRoyalty,
     TokenNotInCustody,
     CalledByAnAccount,
     LogError,
+    InvalidVerifierContract,
+    TokenNotVerified
 }
 
 impl From<Cis2ClientError> for MarketplaceError {

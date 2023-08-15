@@ -5,12 +5,12 @@ import { Button, Stack, TextField, Typography } from '@mui/material';
 
 function ContractFindInstance(props: {
   grpcClient: ConcordiumGRPCClient;
-  defaultContractAddress: ContractAddress;
+  defaultContractAddress?: ContractAddress;
   onDone: (address: ContractAddress) => void
 }) {
   const [form, setForm] = useState({
-    index: props.defaultContractAddress.index.toString(),
-    subindex: props.defaultContractAddress.subindex.toString(),
+    index: props.defaultContractAddress?.index.toString(),
+    subindex: props.defaultContractAddress?.subindex.toString(),
   });
 
   const [state, setState] = useState({
@@ -21,6 +21,11 @@ function ContractFindInstance(props: {
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setState({ ...state, error: "", checking: true });
+    if (!form.index || !form.subindex) { 
+      setState({ ...state, error: "Invalid Contract Address" });
+      return;
+    }
+
     const index = BigInt(form.index);
     const subindex = BigInt(form.subindex);
 

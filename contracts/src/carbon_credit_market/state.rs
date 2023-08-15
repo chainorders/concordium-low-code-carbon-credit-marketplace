@@ -96,10 +96,7 @@ pub struct TokenOwnedListItem {
 
 #[derive(Serial, DeserialWithState, StateClone)]
 #[concordium(state_parameter = "S")]
-pub struct TokenListState<S>
-where
-    S: HasStateApi,
-{
+pub struct TokenListState<S: HasStateApi> {
     pub token_royalty: TokenRoyaltyState,
     pub token_prices: StateMap<AccountAddress, Amount, S>,
 }
@@ -127,13 +124,12 @@ impl<S: HasStateApi> TokenListState<S> {
 
 #[derive(Serial, DeserialWithState, StateClone)]
 #[concordium(state_parameter = "S")]
-pub struct State<S>
-where
-    S: HasStateApi,
-{
+pub struct State<S: HasStateApi> {
     pub commission: Commission,
     pub tokens_owned: StateMap<TokenOwnerInfo, ContractTokenAmount, S>,
     pub tokens_listed: StateMap<TokenInfo, TokenListState<S>, S>,
+    // Contracts from which incoming CIS2 transfers will be accepted
+    pub verifier_contracts: StateSet<ContractAddress, S>,
 }
 
 impl<S> State<S>
@@ -142,14 +138,30 @@ where
 {
     /// Creates a new state with the given commission.
     /// The commission is given as a percentage basis, i.e. 10000 is 100%.
-    pub fn new(state_builder: &mut StateBuilder<S>, commission: u16) -> Self {
+    pub fn new(
+        state_builder: &mut StateBuilder<S>,
+        commission: u16,
+        verifier_contracts: Vec<ContractAddress>,
+    ) -> Self {
         State {
             commission: Commission {
                 percentage_basis: commission,
             },
             tokens_owned: state_builder.new_map(),
             tokens_listed: state_builder.new_map(),
+            verifier_contracts: {
+                let mut set = state_builder.new_set();
+                for contract in verifier_contracts {
+                    set.insert(contract);
+                }
+                set
+            },
         }
+    }
+
+    /// Check if the given address is a verifier contract.
+    pub fn is_verifier_contract(&self, contract: &ContractAddress) -> bool {
+        self.verifier_contracts.contains(contract)
     }
 
     pub fn add_owned_token(

@@ -1,6 +1,6 @@
 use crate::{
     client_utils::types::ContractMetadataUrl,
-    project_token::{contract_types::*, error::*, events::*, state::*},
+    project_token::{contract_types::*, events::*, state::*},
 };
 use concordium_std::*;
 
@@ -42,7 +42,7 @@ pub struct MintResponse(Vec<ContractTokenId>);
     contract = "project_token",
     name = "mint",
     parameter = "MintParams",
-    error = "ContractError",
+    error = "super::error::ContractError",
     enable_logger,
     mutable,
     return_value = "MintResponse"
@@ -52,12 +52,9 @@ fn mint<S: HasStateApi>(
     host: &mut impl HasHost<State<S>, StateApiType = S>,
     logger: &mut impl HasLogger,
 ) -> ContractResult<MintResponse> {
-    // Get the contract owner
-    let owner = ctx.owner();
-    // Get the sender of the transaction
-    let sender = ctx.sender();
-
-    ensure!(sender.matches_account(&owner), ContractError::Unauthorized);
+    // Mint function is unauthorized
+    // Anyone having an account on the chain can call this function
+    // Represents that anyone can create a Carbon Credit Project
 
     // Parse the parameter.
     let params: MintParams = ctx.parameter_cursor().get()?;

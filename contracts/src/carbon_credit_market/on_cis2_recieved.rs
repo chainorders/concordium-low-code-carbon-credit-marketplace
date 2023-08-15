@@ -1,7 +1,7 @@
 use concordium_std::*;
 
 use super::{contract_types::*, error::*, events::*, state::*};
-use crate::client_utils::types::*;
+use crate::client_utils::{types::*, client::Client};
 
 /// This functions should be invoked by any CIS2 Contract whose token is being transferred.
 /// TO this contract
@@ -27,14 +27,25 @@ fn on_cis2_received<S: HasStateApi>(
     logger: &mut impl HasLogger,
 ) -> ContractResult<()> {
     // Ensure the sender is a contract.
-    let token_contract = match ctx.sender() {
-        Address::Contract(contract) => contract,
-        _ => bail!(MarketplaceError::CalledByAnAccount),
+    let sender = match ctx.sender() {
+        Address::Account(_) => bail!(MarketplaceError::CalledByAnAccount),
+        Address::Contract(contract) => {
+            ensure!(
+                // Check if the sender is a verifier contract.
+                host.state().is_verifier_contract(&contract),
+                MarketplaceError::InvalidVerifierContract
+            );
+            contract
+        }
     };
 
     // Parse the parameter.
     let params: ContractOnReceivingCis2Params = ctx.parameter_cursor().get()?;
 
+    let is_verified: bool = Client::is_verified(host, params.token_id, sender)?;
+    // Ensure the token is verified.
+    ensure!(is_verified, MarketplaceError::TokenNotVerified);
+    
     let token_owner = match params.from {
         Address::Account(a) => a,
         Address::Contract(_) => bail!(MarketplaceError::CalledByAContract),
@@ -43,15 +54,15 @@ fn on_cis2_received<S: HasStateApi>(
     host.state_mut().add_owned_token(
         &TokenOwnerInfo {
             id: params.token_id,
-            address: token_contract,
+            address: sender,
             owner: token_owner,
         },
         params.amount,
     );
 
-    logger.log(&ContractEvent::TokenReceived(TokenTokenReceivedEvent {
+    logger.log(&ContractEvent::TokenReceived(TokenReceivedEvent {
         token_id: params.token_id,
-        token_contract,
+        token_contract: sender,
         owner: Address::Account(token_owner),
         amount: params.amount,
     }))?;
@@ -95,7 +106,7 @@ mod test {
         ctx.set_parameter(&parameter_bytes);
 
         let mut state_builder = TestStateBuilder::new();
-        let state = State::new(&mut state_builder, 250);
+        let state = State::new(&mut state_builder, 250, vec![CIS_CONTRACT_ADDRESS]);
         let mut host = TestHost::new(state, state_builder);
         let mut logger = TestLogger::init();
 

@@ -1,15 +1,9 @@
+import { Buffer } from 'buffer/';
+
 import {
-  AccountAddress,
-  CIS0,
-  CIS2Contract,
-  ConcordiumGRPCClient,
-  ContractAddress,
-  InstanceInfo,
-  cis0Supports,
-  deserializeTypeValue,
-  serializeTypeValue,
-} from "@concordium/web-sdk";
-import { Buffer } from "buffer/";
+    AccountAddress, CIS0, cis0Supports, CIS2Contract, ConcordiumGRPCClient, ContractAddress,
+    deserializeTypeValue, InstanceInfo, serializeTypeValue
+} from '@concordium/web-sdk';
 
 export default class CCContract extends CIS2Contract {
   private contractName2: string;

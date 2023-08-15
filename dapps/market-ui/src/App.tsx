@@ -1,39 +1,40 @@
 import './App.css';
 
 import { useState } from 'react';
-import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
 
-import { createConcordiumClient } from '@concordium/web-sdk';
+import { ContractAddress, createConcordiumClient } from '@concordium/web-sdk';
 import {
-    AppBar, Box, Button, Container, createTheme, Link, styled, ThemeProvider, Toolbar, Typography
+    AppBar, Box, Button, Container, createTheme, Link, ThemeProvider, Toolbar, Typography
 } from '@mui/material';
 
 import GuardedRoute from './components/auth/GuardedRoute';
 import UserAuth from './components/auth/UserAuth';
 import FractionalizerEvents from './components/cis2-fractionalizer/FractionalizerEvents';
+import { FractionalizerRetire } from './components/cis2-fractionalizer/FractionalizerRetire';
+import { FractionalizerRetract } from './components/cis2-fractionalizer/FractionalizerRetract';
 import MarketEvents from './components/cis2-market/MarketEvents';
 import Cis2BalanceOf from './components/cis2/Cis2BalanceOf';
 import ProjectEvents from './components/cis2/ProjectEvents';
+import { ProjectRetire } from './components/cis2/ProjectRetire';
+import { ProjectRetract } from './components/cis2/ProjectRetract';
 import AddVerifier from './components/cis2/verifier/AddVerifier';
 import RemoveVerifier from './components/cis2/verifier/RemoveVerifier';
 import Verify from './components/cis2/verifier/Verify';
 import MarketplaceTokensList from './components/MarketplaceTokensList';
-import { useParamsContractAddress } from './components/utils';
+import ContractsSetup from './components/setup/ContractsSetup';
 import {
-    CIS2_MULTI_CONTRACT_INFO, CONCORDIUM_NODE_PORT, CONNCORDIUM_NODE_ENDPOINT,
-    CARBON_CREDIT_CONTRACT_ADDRESS, CARBON_CREDIT_CONTRACT_INFO, MARKET_CONTRACT_ADDRESS,
-    MARKETPLACE_CONTRACT_INFO
+    CARBON_CREDIT_CONTRACT_ADDRESS, CARBON_CREDIT_CONTRACT_INFO, CONCORDIUM_NODE_PORT,
+    CONNCORDIUM_NODE_ENDPOINT, MARKET_CONTRACT_ADDRESS, MARKETPLACE_CONTRACT_INFO,
+    PROJECT_TOKEN_CONTRACT_ADDRESS, PROJECT_TOKEN_CONTRACT_INFO
 } from './Constants';
 import CIS2Page from './pages/cis2/CIS2Page';
 import MintPage from './pages/cis2/MintPage';
-import ProjectRetirePage from './pages/cis2/ProjectRetirePage';
-import ProjectRetractPage from './pages/cis2/ProjectRetractPage';
 import FractionalizerPage from './pages/fractionalizer/FractionalizerPage';
-import FractionalizerRetirePage from './pages/fractionalizer/FractionalizerRetirePage';
 import FractionalizeTokenPage from './pages/fractionalizer/FractionalizeTokenPage';
-import MarketFindOrInit from './pages/marketplace/MarketFindOrInit';
 import MarketPage from './pages/marketplace/MarketPage';
 import SellPage from './pages/marketplace/SellPage';
+import AdminPage from './pages/setup/AdminPage';
 import VerifyPage from './pages/verification/VerificationPage';
 import { User } from './types/user';
 
@@ -48,23 +49,19 @@ const theme = createTheme({
   },
 });
 
-const HeaderButton = styled(Button)({
-  "&&[disabled]": {
-    color: "grey",
-  },
-});
-
 const loggedOutUser: User = { account: "", accountType: "", email: "" };
 
 function App() {
   const navigate = useNavigate();
-  const marketContractAddress = useParamsContractAddress() || MARKET_CONTRACT_ADDRESS;
-  const fracContract = useParamsContractAddress() || CARBON_CREDIT_CONTRACT_ADDRESS;
 
   const [user, setUser] = useState<User>(loggedOutUser);
   const [state] = useState({
     grpcClient: createConcordiumClient(CONNCORDIUM_NODE_ENDPOINT, Number(CONCORDIUM_NODE_PORT)),
   });
+
+  const [marketContract, setMarketContract] = useState<ContractAddress>(MARKET_CONTRACT_ADDRESS);
+  const [fracContract, setFracContract] = useState<ContractAddress>(CARBON_CREDIT_CONTRACT_ADDRESS);
+  const [projectContract, setProjectContract] = useState<ContractAddress>(PROJECT_TOKEN_CONTRACT_ADDRESS);
 
   const isWalletUser = () => {
     return user && user.accountType === "wallet" && user.account;
@@ -81,18 +78,33 @@ function App() {
                   Concordium
                 </Typography>
               </Box>
-              <HeaderButton color="inherit" onClick={() => navigate("/market")}>
+              <Button component={NavLink} className="nav-link" to="/market" color="inherit">
                 Market
-              </HeaderButton>
-              <HeaderButton color="inherit" onClick={() => navigate("/fractionalizer")} disabled={!isWalletUser()}>
-                Fractionalizer
-              </HeaderButton>
-              <HeaderButton color="inherit" onClick={() => navigate("/cis2")} disabled={!isWalletUser()}>
-                NFT
-              </HeaderButton>
-              <HeaderButton color="inherit" onClick={() => navigate("/verifier")} disabled={!isWalletUser()}>
+              </Button>
+              <Button
+                component={NavLink}
+                className="nav-link"
+                to="/fractionalizer"
+                color="inherit"
+                disabled={!isWalletUser()}
+              >
+                Carbon Credits
+              </Button>
+              <Button component={NavLink} className="nav-link" to="/cis2" color="inherit" disabled={!isWalletUser()}>
+                Projects
+              </Button>
+              <Button
+                component={NavLink}
+                className="nav-link"
+                to="/verifier"
+                color="inherit"
+                disabled={!isWalletUser()}
+              >
                 verifier
-              </HeaderButton>
+              </Button>
+              <Button component={NavLink} className="nav-link" to="/admin" color="inherit" disabled={!isWalletUser()}>
+                Admin
+              </Button>
               <UserAuth user={user} onLogin={setUser} onLogout={() => setUser(loggedOutUser)} />
             </Toolbar>
           </Container>
@@ -100,57 +112,89 @@ function App() {
         <Box className="App">
           <Container maxWidth={"lg"}>
             <Routes>
-              <Route path="/market" element={<MarketPage user={user} />} key="market">
+              <Route path="/market" element={<MarketPage user={user} marketContract={marketContract} />} key="market">
                 <Route
-                  path="buy/:index/:subindex"
-                  element={<MarketplaceTokensList grpcClient={state.grpcClient!} user={user} />}
+                  path="buy"
+                  element={
+                    <MarketplaceTokensList grpcClient={state.grpcClient!} user={user} marketContract={marketContract} />
+                  }
                 />
                 <Route element={<GuardedRoute isRouteAccessible={!!user?.account} redirectRoute="/market" />}>
                   <Route
                     path="sell"
-                    element={<SellPage grpcClient={state.grpcClient!} contractInfo={CIS2_MULTI_CONTRACT_INFO} />}
-                  />
-                  <Route
-                    path="create"
                     element={
-                      <MarketFindOrInit
+                      <SellPage
                         grpcClient={state.grpcClient!}
-                        contractInfo={MARKETPLACE_CONTRACT_INFO}
-                        defaultContractAddress={marketContractAddress}
-                        onDone={(address) => navigate(`buy/${address.index.toString()}/${address.subindex.toString()}`)}
+                        contractInfo={PROJECT_TOKEN_CONTRACT_INFO}
+                        marketContract={marketContract}
+                        projectContract={projectContract}
+                        fracContract={fracContract}
                       />
                     }
                   />
-                  <Route path="events" element={<MarketEvents defaultContractAddress={marketContractAddress} />} />
+                  <Route path="events" element={<MarketEvents defaultContractAddress={marketContract} />} />
+                  <Route path="" element={<Navigate to={"/market/buy"} replace={true} />} />
                 </Route>
-                <Route
-                  path=""
-                  element={
-                    <Navigate
-                      to={`buy/${marketContractAddress.index.toString()}/${marketContractAddress.subindex.toString()}`}
-                      replace={true}
-                    />
-                  }
-                />
               </Route>
               <Route element={<GuardedRoute isRouteAccessible={!!user?.account} redirectRoute="/market" />}>
-                <Route path="/cis2" element={<CIS2Page />} key="cis2">
+                <Route path="/admin" element={<AdminPage />} key="admin">
+                  <Route
+                    path="contracts-setup"
+                    element={
+                      <ContractsSetup
+                        grpcClient={state.grpcClient!}
+                        tokenContract={projectContract}
+                        marketContract={marketContract}
+                        fracContract={fracContract}
+                        tokenContractInfo={PROJECT_TOKEN_CONTRACT_INFO}
+                        marketContractInfo={MARKETPLACE_CONTRACT_INFO}
+                        fracContractInfo={CARBON_CREDIT_CONTRACT_INFO}
+                        onDone={(contracts) => {
+                          setMarketContract(contracts.marketContract);
+                          setFracContract(contracts.fracContract);
+                          setProjectContract(contracts.tokenContract);
+                          navigate(`admin/add-verifier`);
+                        }}
+                      />
+                    }
+                  />
+                  <Route
+                    path="add-verifier"
+                    element={
+                      <AddVerifier contractInfo={PROJECT_TOKEN_CONTRACT_INFO} projectContract={projectContract} />
+                    }
+                    key="add-verifier"
+                  />
+                  <Route
+                    path="remove-verifier"
+                    element={
+                      <RemoveVerifier contractInfo={PROJECT_TOKEN_CONTRACT_INFO} projectContract={projectContract} />
+                    }
+                    key="remove-verifier"
+                  />
+                  <Route path="" element={<Navigate to={"/admin/contracts-setup"} replace={true} />} />
+                </Route>
+              </Route>
+              <Route element={<GuardedRoute isRouteAccessible={!!user?.account} redirectRoute="/market" />}>
+                <Route path="/cis2" element={<CIS2Page tokenContract={projectContract} />} key="cis2">
                   <Route
                     path="mint"
                     element={
                       <MintPage
                         grpcClient={state.grpcClient!}
-                        key={CIS2_MULTI_CONTRACT_INFO.contractName}
-                        contractInfo={CIS2_MULTI_CONTRACT_INFO}
+                        key={PROJECT_TOKEN_CONTRACT_INFO.contractName}
+                        contractInfo={PROJECT_TOKEN_CONTRACT_INFO}
+                        tokenContract={projectContract}
                       />
                     }
                   />
                   <Route
                     path="retire"
                     element={
-                      <ProjectRetirePage
+                      <ProjectRetire
                         grpcClient={state.grpcClient}
-                        contractInfo={CIS2_MULTI_CONTRACT_INFO}
+                        contractInfo={PROJECT_TOKEN_CONTRACT_INFO}
+                        address={projectContract}
                         onDone={() => alert("tokens retireds")}
                       />
                     }
@@ -158,20 +202,22 @@ function App() {
                   <Route
                     path="retract"
                     element={
-                      <ProjectRetractPage
+                      <ProjectRetract
                         grpcClient={state.grpcClient}
-                        contractInfo={CIS2_MULTI_CONTRACT_INFO}
+                        contractInfo={PROJECT_TOKEN_CONTRACT_INFO}
+                        address={projectContract}
                         onDone={() => alert("tokens retracted")}
                       />
                     }
                   />
-                  <Route path="events" element={<ProjectEvents />} />
+                  <Route path="events" element={<ProjectEvents defaultContractAddress={projectContract} />} />
                   <Route
                     path="balanceOf"
                     element={
                       <Cis2BalanceOf
                         grpcClient={state.grpcClient}
-                        contractName={CIS2_MULTI_CONTRACT_INFO.contractName}
+                        contractName={PROJECT_TOKEN_CONTRACT_INFO.contractName}
+                        contract={projectContract}
                         defaultAccount={user?.account}
                       />
                     }
@@ -180,25 +226,37 @@ function App() {
                 </Route>
               </Route>
               <Route element={<GuardedRoute isRouteAccessible={!!user?.account} redirectRoute="/market" />}>
-                <Route path="/fractionalizer" element={<FractionalizerPage />}>
+                <Route path="/fractionalizer" element={<FractionalizerPage fracContract={fracContract} />}>
                   <Route
                     path="fractionalize"
                     element={
                       <FractionalizeTokenPage
                         grpcClient={state.grpcClient!}
                         contractInfo={CARBON_CREDIT_CONTRACT_INFO}
-                        defaultContractAddress={fracContract}
+                        fracContract={fracContract}
+                        tokenContract={projectContract}
                       />
                     }
                   />
                   <Route
                     path="retire"
                     element={
-                      <FractionalizerRetirePage
+                      <FractionalizerRetire
                         onDone={() => alert("tokens retireds")}
                         grpcClient={state.grpcClient!}
                         contractInfo={CARBON_CREDIT_CONTRACT_INFO}
-                        defaultContractAddress={fracContract}
+                        address={fracContract}
+                      />
+                    }
+                  />
+                  <Route
+                    path="retract"
+                    element={
+                      <FractionalizerRetract
+                        onDone={() => alert("tokens retracted")}
+                        grpcClient={state.grpcClient!}
+                        contractInfo={CARBON_CREDIT_CONTRACT_INFO}
+                        address={fracContract}
                       />
                     }
                   />
@@ -210,7 +268,7 @@ function App() {
                         grpcClient={state.grpcClient}
                         contractName={CARBON_CREDIT_CONTRACT_INFO.contractName}
                         defaultAccount={user?.account}
-                        defaultContractAddress={fracContract}
+                        contract={fracContract}
                       />
                     }
                   />
@@ -218,10 +276,22 @@ function App() {
                 </Route>
               </Route>
               <Route element={<GuardedRoute isRouteAccessible={!!user?.account} redirectRoute="/market" />}>
-                <Route path="/verifier" element={<VerifyPage />} key="verifier">
-                  <Route path="verify" element={<Verify contractInfo={CIS2_MULTI_CONTRACT_INFO} />} />
-                  <Route path="add" element={<AddVerifier contractInfo={CIS2_MULTI_CONTRACT_INFO} />} />
-                  <Route path="remove" element={<RemoveVerifier contractInfo={CIS2_MULTI_CONTRACT_INFO} />} />
+                <Route path="/verifier" element={<VerifyPage tokenContract={projectContract} />} key="verifier">
+                  <Route
+                    path="verify"
+                    element={<Verify contractInfo={PROJECT_TOKEN_CONTRACT_INFO} projectContract={projectContract} />}
+                  />
+                  <Route
+                    path="retract"
+                    element={
+                      <ProjectRetract
+                        contractInfo={PROJECT_TOKEN_CONTRACT_INFO}
+                        address={projectContract}
+                        grpcClient={state.grpcClient}
+                        onDone={() => alert("Project(s) Retracted")}
+                      />
+                    }
+                  />
                   <Route path="" element={<Navigate to={"verify"} replace={true} />} />
                 </Route>
               </Route>

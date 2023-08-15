@@ -3,7 +3,7 @@ use concordium_std::{Address, ContractAddress, Amount, SchemaType, Serial};
 use crate::carbon_credits::contract_types::{ContractTokenAmount, ContractTokenId};
 
 #[derive(Serial, SchemaType)]
-pub struct TokenTokenReceivedEvent {
+pub struct TokenReceivedEvent {
     pub token_id: ContractTokenId,
     pub token_contract: ContractAddress,
     pub owner: Address,
@@ -29,7 +29,7 @@ pub struct TokenTransferredEvent {
 
 #[derive(Serial, SchemaType)]
 pub enum ContractEvent {
-    TokenReceived(TokenTokenReceivedEvent),
+    TokenReceived(TokenReceivedEvent),
     TokenListed(TokenListedEvent),
     TokenTransferred(TokenTransferredEvent),
 }

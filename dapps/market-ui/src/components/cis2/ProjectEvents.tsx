@@ -1,9 +1,10 @@
 import { useState } from 'react';
+import { v4 as uuid } from 'uuid';
 
 import { ContractAddress } from '@concordium/web-sdk';
 import {
-    Button, Container, Divider, FormControl, InputLabel, List, ListItem, ListItemText, MenuItem,
-    Pagination, Select, Stack, TextField, Typography
+    Button, Container, FormControl, InputLabel, List, ListItem, ListItemText, MenuItem, Pagination,
+    Select, Stack, TextField, Typography
 } from '@mui/material';
 
 import {
@@ -21,6 +22,7 @@ const eventTypes = [
   "Transfer",
   "Retire",
   "Retract",
+  "Burn",
   "VerifierAdded",
   "VerifierRemoved",
   "Verification",
@@ -117,7 +119,7 @@ function BurnEvent(props: { event: Cis2BurnEvent; name: string }) {
   );
 }
 
-function VerifierUpdatedEvent(props: { event: ProjectNftVerifierUpdatedEvent, name: string }) {
+function VerifierUpdatedEvent(props: { event: ProjectNftVerifierUpdatedEvent; name: string }) {
   const { event, name } = props;
 
   return (
@@ -154,6 +156,10 @@ function VerificationEvent(props: { event: ProjectNftVerificationEvent }) {
 
 function Event(props: { event: ProjectNftEvent }) {
   const { event } = props;
+  if (!event) {
+    return <></>;
+  }
+
   const eventType = Object.keys(event)[0];
 
   switch (eventType) {
@@ -166,9 +172,9 @@ function Event(props: { event: ProjectNftEvent }) {
     case "Transfer":
       return <TransferEvent event={event[eventType]!} />;
     case "Retire":
-      return <BurnEvent event={event[eventType]!} name="Retire" />;
     case "Retract":
-      return <BurnEvent event={event[eventType]!} name="Retract" />;
+    case "Burn":
+      return <BurnEvent event={event[eventType]!} name={eventType} />;
     case "VerifierAdded":
       return <VerifierUpdatedEvent event={event[eventType]!} name="Verifier Added" />;
     case "VerifierRemoved":
@@ -199,7 +205,6 @@ export default function ProjectEvents({ defaultContractAddress }: { defaultContr
     setState({ ...state, error: "", checking: true });
     getContractEventsByContractAddress(form.index, form.subindex, form.account, form.eventType, page)
       .then((res) => {
-        console.log(res);
         setState({ ...state, checking: false, error: "" });
         setEvents(res.events);
         setPageCount(res.pageCount);
@@ -270,10 +275,7 @@ export default function ProjectEvents({ defaultContractAddress }: { defaultContr
       <Container>
         <List sx={{ width: "100%", bgcolor: "background.paper" }}>
           {events.map((contractEvent) => (
-            <>
-              <Event event={contractEvent as ProjectNftEvent} />
-              <Divider variant="inset" component="li" />
-            </>
+            <Event event={contractEvent as ProjectNftEvent} key={uuid()} />
           ))}
         </List>
         {pageCount > 1 && <Pagination count={pageCount} onChange={(_, v) => onFormSubmitted(v - 1)} />}

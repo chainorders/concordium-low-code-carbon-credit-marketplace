@@ -40,7 +40,7 @@ export function ProjectRetire(props: {
           wallet.account,
           props.address,
           props.contractInfo,
-          [form.tokenId],
+          { owner: { Account: [wallet.account] }, tokens: [{ token_id: form.tokenId, amount: "1" }] },
           BigInt(9999),
           (status, hash) => setTxn({ status, hash }),
         ),
@@ -59,8 +59,10 @@ export function ProjectRetire(props: {
     <>
       <Stack spacing={2} component={"form"} onSubmit={onsubmit}>
         <TextField
+          name="tokenId"
+          id="tokenId"
           label="Token ID"
-          variant="outlined"
+          variant="standard"
           fullWidth
           onChange={(e) => setForm({ ...form, tokenId: e.target.value })}
         />

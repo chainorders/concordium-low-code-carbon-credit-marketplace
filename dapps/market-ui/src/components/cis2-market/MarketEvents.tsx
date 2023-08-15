@@ -84,6 +84,10 @@ function TokenTransferredEvent(props: { event: MarketTokenTransferredEvent }) {
 
 function Event(props: { event: MarketEvent }) {
   const { event } = props;
+  if (!event) { 
+    return <></>
+  }
+  
   const eventType = Object.keys(event)[0];
 
   switch (eventType) {
@@ -117,7 +121,6 @@ export default function MarketEvents({ defaultContractAddress }: { defaultContra
     setState({ ...state, error: "", checking: true });
     getContractEventsByContractAddress(form.index, form.subindex, form.account, form.eventType, page)
       .then((res) => {
-        console.log(res);
         setState({ ...state, checking: false, error: "" });
         setEvents(res.events);
         setPageCount(res.pageCount);

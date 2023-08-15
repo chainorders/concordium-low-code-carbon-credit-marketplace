@@ -9,14 +9,11 @@ import {
     UpdateContractPayload
 } from '@concordium/web-sdk';
 
+export type ContractName = "project_token" | "carbon_credits" | "carbon_credit_market";
 export interface ContractInfo {
   schemaBuffer: Buffer;
-  contractName: "project_token" | "Market-NFT" | string;
+  contractName: ContractName;
   moduleRef?: ModuleReference;
-}
-
-export interface Cis2ContractInfo extends ContractInfo {
-  tokenIdByteSize: number;
 }
 
 export async function connectToWallet(): Promise<{ provider: WalletApi; account: string }> {

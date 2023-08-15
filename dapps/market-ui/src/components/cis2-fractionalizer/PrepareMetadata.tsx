@@ -23,15 +23,17 @@ export default function PrepareMetadata(props: {
   });
 
   const mergeMetadata = (defaultMetadata: Metadata, metadata: Metadata): Metadata => {
-    return {
+    const metadataRes = {
       ...metadata,
       attributes: metadata.attributes || defaultMetadata.attributes,
       name: metadata.name || defaultMetadata.name,
       description: metadata.description || defaultMetadata.description,
       display: metadata.display || defaultMetadata.display,
-      unique: false,
       artifact: metadata.artifact || defaultMetadata.artifact,
+      unique: true
     };
+
+    return metadataRes;
   };
 
   useEffectOnce(() => {

@@ -188,7 +188,7 @@ impl<S: HasStateApi> State<S> {
         }
 
         // Remove token from from address.
-        self.remove(from, token_id)?;
+        self.remove_balances(from, token_id)?;
 
         // Add token to to address.
         self.add(to, state_builder, *token_id);
@@ -200,9 +200,11 @@ impl<S: HasStateApi> State<S> {
         ensure!(self.contains_token(token_id), ContractError::InvalidTokenId);
 
         // Remove token from address.
-        self.remove(address, token_id)?;
-        // Should we remove token from state if balance is zero?
-        self.metadatas.remove(token_id);
+        self.remove_balances(address, token_id)?;
+
+        // Token metadata should be kept in the state.
+        // This allows for the wallet to display the token metadata even if the token is burned
+        // self.metadatas.remove(token_id);
         // Remove token from verified tokens.
         self.verified_tokens.remove(token_id);
 
@@ -210,7 +212,7 @@ impl<S: HasStateApi> State<S> {
     }
 
     /// Remove a token from an address.
-    fn remove(
+    fn remove_balances(
         &mut self,
         address: &Address,
         token_id: &TokenIdU8,

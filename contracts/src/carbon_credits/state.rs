@@ -3,9 +3,9 @@ use core::ops::{AddAssign, SubAssign};
 use concordium_cis2::*;
 use concordium_std::*;
 
-use crate::client_utils::types::{ContractMetadataUrl, ContractTokenAmount, ContractTokenId};
+use crate::client_utils::types::ContractMetadataUrl;
 
-use super::{contract_types::*, error::*};
+use super::{error::*, contract_types::{ContractTokenId, ContractTokenAmount, ContractCollateralTokenAmount, ContractResult}};
 
 /// The state for each address.
 #[derive(Serial, DeserialWithState, Deletable, StateClone)]
@@ -47,11 +47,16 @@ pub struct State<S> {
     pub collaterals: StateMap<CollateralToken, ContractCollateralTokenAmount, S>,
     pub used_collaterals: StateMap<ContractTokenId, CollateralToken, S>,
     pub last_token_id: ContractTokenId,
+    // Contracts from which incoming CIS2 transfers will be accepted
+    pub verifier_contracts: StateSet<ContractAddress, S>,
 }
 
 impl<S: HasStateApi> State<S> {
     /// Construct a state with no tokens
-    pub fn empty(state_builder: &mut StateBuilder<S>) -> Self {
+    pub fn new(
+        state_builder: &mut StateBuilder<S>,
+        verifier_contracts: Vec<ContractAddress>,
+    ) -> Self {
         State {
             state: state_builder.new_map(),
             tokens: state_builder.new_map(),
@@ -59,7 +64,19 @@ impl<S: HasStateApi> State<S> {
             last_token_id: 0.into(),
             collaterals: state_builder.new_map(),
             used_collaterals: state_builder.new_map(),
+            verifier_contracts: {
+                let mut set = state_builder.new_set();
+                for contract in verifier_contracts {
+                    set.insert(contract);
+                }
+                set
+            },
         }
+    }
+
+    /// Check if the given address is a verifier contract.
+    pub fn is_verifier_contract(&self, contract: &ContractAddress) -> bool {
+        self.verifier_contracts.contains(contract)
     }
 
     /// Mints an amount of tokens with a given address as the owner.
@@ -81,7 +98,11 @@ impl<S: HasStateApi> State<S> {
                     .and_modify(|a| *a += amount)
                     .or_insert(amount);
             })
-            .or_insert_with(|| AddressState::empty(state_builder));
+            .or_insert_with(|| {
+                let mut address_state = AddressState::empty(state_builder);
+                address_state.balances.insert(token_id, amount);
+                address_state
+            });
 
         self.token_supply
             .entry(token_id)

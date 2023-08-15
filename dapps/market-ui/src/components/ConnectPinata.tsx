@@ -44,6 +44,8 @@ export default function ConnectPinata(props: {
         error={!!state.error}
         onChange={(e) => setState({ ...state, pinataJwt: e.target.value })}
         value={state.pinataJwt}
+        helperText="Enter your Pinata JWT"
+        variant='standard'
       />
       {state.error && <Typography component="div">{state.error}</Typography>}
       {state.processing && <Typography component="div">Connecting..</Typography>}

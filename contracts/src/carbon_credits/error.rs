@@ -21,12 +21,14 @@ pub enum CustomContractError {
     ContractOnly, //-5
     /// Failed to invoke a contract.
     InvokeContractError, //-6
-    TokenAlreadyMinted,               //-7
-    InvalidCollateral,                //-8
-    NoBalanceToBurn,                  //-9
-    AccountsOnly,                     //-10
-    Cis2ClientError(Cis2ClientError), //-11
-    NotImplemented,                   //-12
+    InvalidCollateral,                //-7
+    AccountsOnly,                     //-8
+    Cis2ClientError(Cis2ClientError), //-9
+    NotImplemented,                   //-10
+    InvalidVerifierContract,          //-11
+    TokenNotMature,                   //-12
+    TokenNotVerified,                 //-13
+    TokenVerifiedOrMature
 }
 
 /// Mapping the logging errors to ContractError.

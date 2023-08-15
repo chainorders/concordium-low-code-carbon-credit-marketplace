@@ -1,16 +1,13 @@
 use concordium_std::*;
 
-use super::{contract_types::*, error::*, events::*, state::*};
+use crate::client_utils::types::BurnParam;
 
-#[derive(Serial, Deserial, SchemaType)]
-struct RetractParams {
-    tokens: Vec<ContractTokenId>,
-}
+use super::{contract_types::*, error::*, events::*, state::*};
 
 #[receive(
     contract = "project_token",
     name = "retract",
-    parameter = "RetractParams",
+    parameter = "ContractBurnParams",
     error = "ContractError",
     enable_logger,
     mutable
@@ -20,35 +17,50 @@ fn retract<S: HasStateApi>(
     host: &mut impl HasHost<State<S>, StateApiType = S>,
     logger: &mut impl HasLogger,
 ) -> ContractResult<()> {
-    let sender = ctx.sender();
-    let params: RetractParams = ctx.parameter_cursor().get()?;
-
+    let ContractBurnParams { owner, tokens } = ctx.parameter_cursor().get()?;
     let state = host.state_mut();
-    for token_id in params.tokens {
-        let token = state.get_token(&token_id);
-        // Ensure that the token exists.
-        ensure!(token.is_some(), ContractError::InvalidTokenId);
-        let token = token.unwrap();
+    let sender = ctx.sender();
+    let is_verifier = state.is_verifier(&sender);
+    ensure!(
+        sender == owner || is_verifier,
+        ContractError::Unauthorized
+    );
 
-        // Ensure that the token is mature.
+    for BurnParam { token_id, amount } in tokens {
+        ensure!(amount == 1.into(), ContractError::InsufficientFunds);
+
+        // Ensure that the token exists.
+        let token = state
+            .get_token(&token_id)
+            .ok_or(ContractError::InvalidTokenId)?;
+
+        // Ensure token is NOT verified
         ensure!(
-            !token.is_mature(&ctx.metadata().slot_time()),
-            ContractError::Custom(CustomContractError::TokenNotMature)
+            !state.is_verified(&token_id) || !token.is_mature(&ctx.metadata().slot_time()),
+            ContractError::Custom(CustomContractError::TokenVerifiedOrMature)
         );
+
         // Ensure that the sender has token balance or is a verifier.
+        let balance = state.balance(&token_id, &owner)?;
         ensure!(
-            state.balance(&token_id, &sender)?.cmp(&0.into()).is_gt() || state.is_verifier(&sender),
-            ContractError::Unauthorized
+            balance >= amount,
+            ContractError::InsufficientFunds
         );
 
         // Retire token.
-        state.burn(&token_id, &sender)?;
+        state.burn(&token_id, &owner)?;
 
-        //log token retire event.
+        // log token retire event.
         logger.log(&ContractEvent::Retract(BurnEvent {
             token_id,
-            owner: sender,
-            amount: 1.into(),
+            owner,
+            amount,
+        }))?;
+        // log burn event
+        logger.log(&ContractEvent::Burn(BurnEvent {
+            token_id,
+            owner,
+            amount,
         }))?;
     }
 
